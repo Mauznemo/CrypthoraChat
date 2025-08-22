@@ -1,18 +1,29 @@
 import { form, getRequestEvent } from "$app/server";
 import { createSession, validateUser } from "$lib/auth";
+import { collectErrorMessagesString, LoginSchema } from "$lib/validation";
 import { error, redirect } from "@sveltejs/kit";
+import * as v from 'valibot';
 
 export const login = form(async (data) => {
 	// Check the user is logged in
 	const username = data.get('username');
 	const password = data.get('password');
 
-	// Check the data is valid
-	if (typeof username !== 'string' || typeof password !== 'string') {
-		error(400, 'Invalid username or password');
-	}
+	 const input = {
+        username: typeof username === 'string' ? username : '', // Fallback to empty string if not string (Valibot will catch it)
+        password: typeof password === 'string' ? password : ''
+      };
+  
+      // Validate against the schema
+      const result = v.safeParse(LoginSchema, input);
+  
+      if (!result.success) {
+        let errorMessage = collectErrorMessagesString(result.issues)
+  
+        error(400, errorMessage);
+      }
 
-	const user = await validateUser(username, password);
+	const user = await validateUser(result.output.username, result.output.password);
     
     if (!user) {
       error(400, 'Invalid username or password')
@@ -27,7 +38,7 @@ export const login = form(async (data) => {
       httpOnly: true,
       secure: false, // Set to true in production with HTTPS
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30 // 30 days
+      maxAge: 60 * 60 * 24 * 360 // 30 days
     });
     
 	redirect(303, '/chat');

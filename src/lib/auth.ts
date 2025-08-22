@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { db } from './db.js';
+import { db } from './db';
 import type { User } from '../generated/prisma/client.js';
 
 export async function hashPassword(password: string): Promise<string> {
@@ -13,11 +13,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function createUser(username: string, password: string) {
   const hashedPassword = await hashPassword(password);
   
+  const userCount = await db.user.count();
+
   return db.user.create({
     data: {
       displayName: username,
       username,
-      password: hashedPassword
+      password: hashedPassword,
+      isAdmin: userCount === 0  // First user becomes admin
     }
   });
 }

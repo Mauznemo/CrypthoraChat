@@ -21,8 +21,10 @@
 			try {
 				await submit();
 				form.reset();
-			} catch (error) {
-				errorText = 'Error: ' + error;
+			} catch (error: any) {
+				const errorObj: Error | undefined = JSON.parse(error);
+				if (errorObj !== undefined) errorText = errorObj.message;
+				else errorText = 'Something went wrong! ' + error;
 			}
 		})}
 	>
@@ -52,7 +54,7 @@
 			>Login</button
 		>
 
-		<p class="text-red-500">{errorText}</p>
+		<p class="text-center text-red-500">{errorText}</p>
 	</form>
 
 	<p><a href="/register">Don't have an account? Register</a></p>

@@ -12,6 +12,7 @@
 	<p><strong>Username:</strong> {data.user?.username}</p>
 	<p><strong>User ID:</strong> {data.user?.id}</p>
 	<p><strong>Created:</strong> {new Date(data.user?.createdAt).toLocaleDateString()}</p>
+	<p><strong>Is Server Admin:</strong> {data.user?.isAdmin ? 'True' : 'False'}</p>
 
 	<button
 		onclick={async () => {
