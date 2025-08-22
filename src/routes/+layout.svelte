@@ -32,7 +32,7 @@
 	</div>
 
 	<!-- Content area -->
-	<div class="relative z-10 flex min-h-dvh items-center justify-center p-8 text-white">
+	<div class="relative z-10 min-h-dvh text-white">
 		{@render children?.()}
 	</div>
 </div>
