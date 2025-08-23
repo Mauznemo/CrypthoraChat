@@ -198,6 +198,7 @@ export type MessageWhereInput = {
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
   readBy?: Prisma.UserListRelationFilter
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   chat?: Prisma.XOR<Prisma.ChatScalarRelationFilter, Prisma.ChatWhereInput>
 }
 
@@ -211,6 +212,7 @@ export type MessageOrderByWithRelationInput = {
   isEdited?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
   readBy?: Prisma.UserOrderByRelationAggregateInput
+  user?: Prisma.UserOrderByWithRelationInput
   chat?: Prisma.ChatOrderByWithRelationInput
 }
 
@@ -227,6 +229,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
   readBy?: Prisma.UserListRelationFilter
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   chat?: Prisma.XOR<Prisma.ChatScalarRelationFilter, Prisma.ChatWhereInput>
 }, "id">
 
@@ -260,13 +263,13 @@ export type MessageScalarWhereWithAggregatesInput = {
 
 export type MessageCreateInput = {
   id?: string
-  senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
   encryptedContent: Uint8Array
   isEdited?: boolean
   timestamp?: Date | string
-  readBy?: Prisma.UserCreateNestedManyWithoutMessagesInput
+  readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
+  user: Prisma.UserCreateNestedOneWithoutMessagesInput
   chat: Prisma.ChatCreateNestedOneWithoutMessagesInput
 }
 
@@ -279,18 +282,18 @@ export type MessageUncheckedCreateInput = {
   encryptedContent: Uint8Array
   isEdited?: boolean
   timestamp?: Date | string
-  readBy?: Prisma.UserUncheckedCreateNestedManyWithoutMessagesInput
+  readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
 }
 
 export type MessageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  readBy?: Prisma.UserUpdateManyWithoutMessagesNestedInput
+  readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
   chat?: Prisma.ChatUpdateOneRequiredWithoutMessagesNestedInput
 }
 
@@ -303,7 +306,7 @@ export type MessageUncheckedUpdateInput = {
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  readBy?: Prisma.UserUncheckedUpdateManyWithoutMessagesNestedInput
+  readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
 }
 
 export type MessageCreateManyInput = {
@@ -319,7 +322,6 @@ export type MessageCreateManyInput = {
 
 export type MessageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
@@ -385,9 +387,23 @@ export type MessageMinOrderByAggregateInput = {
   timestamp?: Prisma.SortOrder
 }
 
+export type MessageCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput> | Prisma.MessageCreateWithoutUserInput[] | Prisma.MessageUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.MessageCreateOrConnectWithoutUserInput | Prisma.MessageCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.MessageCreateManyUserInputEnvelope
+  connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+}
+
 export type MessageCreateNestedManyWithoutReadByInput = {
   create?: Prisma.XOR<Prisma.MessageCreateWithoutReadByInput, Prisma.MessageUncheckedCreateWithoutReadByInput> | Prisma.MessageCreateWithoutReadByInput[] | Prisma.MessageUncheckedCreateWithoutReadByInput[]
   connectOrCreate?: Prisma.MessageCreateOrConnectWithoutReadByInput | Prisma.MessageCreateOrConnectWithoutReadByInput[]
+  connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+}
+
+export type MessageUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput> | Prisma.MessageCreateWithoutUserInput[] | Prisma.MessageUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.MessageCreateOrConnectWithoutUserInput | Prisma.MessageCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.MessageCreateManyUserInputEnvelope
   connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
 }
 
@@ -395,6 +411,20 @@ export type MessageUncheckedCreateNestedManyWithoutReadByInput = {
   create?: Prisma.XOR<Prisma.MessageCreateWithoutReadByInput, Prisma.MessageUncheckedCreateWithoutReadByInput> | Prisma.MessageCreateWithoutReadByInput[] | Prisma.MessageUncheckedCreateWithoutReadByInput[]
   connectOrCreate?: Prisma.MessageCreateOrConnectWithoutReadByInput | Prisma.MessageCreateOrConnectWithoutReadByInput[]
   connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+}
+
+export type MessageUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput> | Prisma.MessageCreateWithoutUserInput[] | Prisma.MessageUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.MessageCreateOrConnectWithoutUserInput | Prisma.MessageCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.MessageUpsertWithWhereUniqueWithoutUserInput | Prisma.MessageUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.MessageCreateManyUserInputEnvelope
+  set?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  disconnect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  delete?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  update?: Prisma.MessageUpdateWithWhereUniqueWithoutUserInput | Prisma.MessageUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.MessageUpdateManyWithWhereWithoutUserInput | Prisma.MessageUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.MessageScalarWhereInput | Prisma.MessageScalarWhereInput[]
 }
 
 export type MessageUpdateManyWithoutReadByNestedInput = {
@@ -407,6 +437,20 @@ export type MessageUpdateManyWithoutReadByNestedInput = {
   connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
   update?: Prisma.MessageUpdateWithWhereUniqueWithoutReadByInput | Prisma.MessageUpdateWithWhereUniqueWithoutReadByInput[]
   updateMany?: Prisma.MessageUpdateManyWithWhereWithoutReadByInput | Prisma.MessageUpdateManyWithWhereWithoutReadByInput[]
+  deleteMany?: Prisma.MessageScalarWhereInput | Prisma.MessageScalarWhereInput[]
+}
+
+export type MessageUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput> | Prisma.MessageCreateWithoutUserInput[] | Prisma.MessageUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.MessageCreateOrConnectWithoutUserInput | Prisma.MessageCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.MessageUpsertWithWhereUniqueWithoutUserInput | Prisma.MessageUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.MessageCreateManyUserInputEnvelope
+  set?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  disconnect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  delete?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  connect?: Prisma.MessageWhereUniqueInput | Prisma.MessageWhereUniqueInput[]
+  update?: Prisma.MessageUpdateWithWhereUniqueWithoutUserInput | Prisma.MessageUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.MessageUpdateManyWithWhereWithoutUserInput | Prisma.MessageUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.MessageScalarWhereInput | Prisma.MessageScalarWhereInput[]
 }
 
@@ -483,14 +527,46 @@ export type MessageUpdatereactionsInput = {
   push?: string | string[]
 }
 
-export type MessageCreateWithoutReadByInput = {
+export type MessageCreateWithoutUserInput = {
   id?: string
-  senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
   encryptedContent: Uint8Array
   isEdited?: boolean
   timestamp?: Date | string
+  readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
+  chat: Prisma.ChatCreateNestedOneWithoutMessagesInput
+}
+
+export type MessageUncheckedCreateWithoutUserInput = {
+  id?: string
+  chatId: string
+  attachments?: Prisma.MessageCreateattachmentsInput | string[]
+  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedContent: Uint8Array
+  isEdited?: boolean
+  timestamp?: Date | string
+  readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
+}
+
+export type MessageCreateOrConnectWithoutUserInput = {
+  where: Prisma.MessageWhereUniqueInput
+  create: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput>
+}
+
+export type MessageCreateManyUserInputEnvelope = {
+  data: Prisma.MessageCreateManyUserInput | Prisma.MessageCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type MessageCreateWithoutReadByInput = {
+  id?: string
+  attachments?: Prisma.MessageCreateattachmentsInput | string[]
+  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedContent: Uint8Array
+  isEdited?: boolean
+  timestamp?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutMessagesInput
   chat: Prisma.ChatCreateNestedOneWithoutMessagesInput
 }
 
@@ -510,20 +586,20 @@ export type MessageCreateOrConnectWithoutReadByInput = {
   create: Prisma.XOR<Prisma.MessageCreateWithoutReadByInput, Prisma.MessageUncheckedCreateWithoutReadByInput>
 }
 
-export type MessageUpsertWithWhereUniqueWithoutReadByInput = {
+export type MessageUpsertWithWhereUniqueWithoutUserInput = {
   where: Prisma.MessageWhereUniqueInput
-  update: Prisma.XOR<Prisma.MessageUpdateWithoutReadByInput, Prisma.MessageUncheckedUpdateWithoutReadByInput>
-  create: Prisma.XOR<Prisma.MessageCreateWithoutReadByInput, Prisma.MessageUncheckedCreateWithoutReadByInput>
+  update: Prisma.XOR<Prisma.MessageUpdateWithoutUserInput, Prisma.MessageUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.MessageCreateWithoutUserInput, Prisma.MessageUncheckedCreateWithoutUserInput>
 }
 
-export type MessageUpdateWithWhereUniqueWithoutReadByInput = {
+export type MessageUpdateWithWhereUniqueWithoutUserInput = {
   where: Prisma.MessageWhereUniqueInput
-  data: Prisma.XOR<Prisma.MessageUpdateWithoutReadByInput, Prisma.MessageUncheckedUpdateWithoutReadByInput>
+  data: Prisma.XOR<Prisma.MessageUpdateWithoutUserInput, Prisma.MessageUncheckedUpdateWithoutUserInput>
 }
 
-export type MessageUpdateManyWithWhereWithoutReadByInput = {
+export type MessageUpdateManyWithWhereWithoutUserInput = {
   where: Prisma.MessageScalarWhereInput
-  data: Prisma.XOR<Prisma.MessageUpdateManyMutationInput, Prisma.MessageUncheckedUpdateManyWithoutReadByInput>
+  data: Prisma.XOR<Prisma.MessageUpdateManyMutationInput, Prisma.MessageUncheckedUpdateManyWithoutUserInput>
 }
 
 export type MessageScalarWhereInput = {
@@ -540,15 +616,31 @@ export type MessageScalarWhereInput = {
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
 }
 
+export type MessageUpsertWithWhereUniqueWithoutReadByInput = {
+  where: Prisma.MessageWhereUniqueInput
+  update: Prisma.XOR<Prisma.MessageUpdateWithoutReadByInput, Prisma.MessageUncheckedUpdateWithoutReadByInput>
+  create: Prisma.XOR<Prisma.MessageCreateWithoutReadByInput, Prisma.MessageUncheckedCreateWithoutReadByInput>
+}
+
+export type MessageUpdateWithWhereUniqueWithoutReadByInput = {
+  where: Prisma.MessageWhereUniqueInput
+  data: Prisma.XOR<Prisma.MessageUpdateWithoutReadByInput, Prisma.MessageUncheckedUpdateWithoutReadByInput>
+}
+
+export type MessageUpdateManyWithWhereWithoutReadByInput = {
+  where: Prisma.MessageScalarWhereInput
+  data: Prisma.XOR<Prisma.MessageUpdateManyMutationInput, Prisma.MessageUncheckedUpdateManyWithoutReadByInput>
+}
+
 export type MessageCreateWithoutChatInput = {
   id?: string
-  senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
   encryptedContent: Uint8Array
   isEdited?: boolean
   timestamp?: Date | string
-  readBy?: Prisma.UserCreateNestedManyWithoutMessagesInput
+  readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
+  user: Prisma.UserCreateNestedOneWithoutMessagesInput
 }
 
 export type MessageUncheckedCreateWithoutChatInput = {
@@ -559,7 +651,7 @@ export type MessageUncheckedCreateWithoutChatInput = {
   encryptedContent: Uint8Array
   isEdited?: boolean
   timestamp?: Date | string
-  readBy?: Prisma.UserUncheckedCreateNestedManyWithoutMessagesInput
+  readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
 }
 
 export type MessageCreateOrConnectWithoutChatInput = {
@@ -588,14 +680,56 @@ export type MessageUpdateManyWithWhereWithoutChatInput = {
   data: Prisma.XOR<Prisma.MessageUpdateManyMutationInput, Prisma.MessageUncheckedUpdateManyWithoutChatInput>
 }
 
-export type MessageUpdateWithoutReadByInput = {
+export type MessageCreateManyUserInput = {
+  id?: string
+  chatId: string
+  attachments?: Prisma.MessageCreateattachmentsInput | string[]
+  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedContent: Uint8Array
+  isEdited?: boolean
+  timestamp?: Date | string
+}
+
+export type MessageUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
+  chat?: Prisma.ChatUpdateOneRequiredWithoutMessagesNestedInput
+}
+
+export type MessageUncheckedUpdateWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  chatId?: Prisma.StringFieldUpdateOperationsInput | string
+  attachments?: Prisma.MessageUpdateattachmentsInput | string[]
+  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
+}
+
+export type MessageUncheckedUpdateManyWithoutUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  chatId?: Prisma.StringFieldUpdateOperationsInput | string
+  attachments?: Prisma.MessageUpdateattachmentsInput | string[]
+  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type MessageUpdateWithoutReadByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  attachments?: Prisma.MessageUpdateattachmentsInput | string[]
+  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
   chat?: Prisma.ChatUpdateOneRequiredWithoutMessagesNestedInput
 }
 
@@ -633,13 +767,13 @@ export type MessageCreateManyChatInput = {
 
 export type MessageUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  readBy?: Prisma.UserUpdateManyWithoutMessagesNestedInput
+  readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
 }
 
 export type MessageUncheckedUpdateWithoutChatInput = {
@@ -650,7 +784,7 @@ export type MessageUncheckedUpdateWithoutChatInput = {
   encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  readBy?: Prisma.UserUncheckedUpdateManyWithoutMessagesNestedInput
+  readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
 }
 
 export type MessageUncheckedUpdateManyWithoutChatInput = {
@@ -704,6 +838,7 @@ export type MessageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   isEdited?: boolean
   timestamp?: boolean
   readBy?: boolean | Prisma.Message$readByArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.MessageCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["message"]>
@@ -717,6 +852,7 @@ export type MessageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["message"]>
 
@@ -729,6 +865,7 @@ export type MessageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["message"]>
 
@@ -746,13 +883,16 @@ export type MessageSelectScalar = {
 export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chatId" | "senderId" | "attachments" | "reactions" | "encryptedContent" | "isEdited" | "timestamp", ExtArgs["result"]["message"]>
 export type MessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   readBy?: boolean | Prisma.Message$readByArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.MessageCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MessageIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
 }
 export type MessageIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   chat?: boolean | Prisma.ChatDefaultArgs<ExtArgs>
 }
 
@@ -760,6 +900,7 @@ export type $MessagePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "Message"
   objects: {
     readBy: Prisma.$UserPayload<ExtArgs>[]
+    user: Prisma.$UserPayload<ExtArgs>
     chat: Prisma.$ChatPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1166,6 +1307,7 @@ readonly fields: MessageFieldRefs;
 export interface Prisma__MessageClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   readBy<T extends Prisma.Message$readByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Message$readByArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   chat<T extends Prisma.ChatDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChatDefaultArgs<ExtArgs>>): Prisma.Prisma__ChatClient<runtime.Types.Result.GetResult<Prisma.$ChatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.

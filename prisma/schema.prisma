@@ -26,7 +26,8 @@ model User {
   createdAt    DateTime      @default(now())
   sessions     Session[]
   chats        Chat[]
-  messages     Message[]
+  messages     Message[]     @relation("SentMessages")
+  readMessages Message[]     @relation("ReadMessages")
 }
 
 model UserChatKey {
@@ -62,9 +63,10 @@ model Message {
   senderId         String
   attachments      String[]
   reactions        String[]
-  readBy           User[]
+  readBy           User[]   @relation("ReadMessages")
   encryptedContent Bytes // Encrypted message blob
   isEdited         Boolean  @default(false)
   timestamp        DateTime @default(now())
+  user             User     @relation("SentMessages", fields: [senderId], references: [id])
   chat             Chat     @relation(fields: [chatId], references: [id])
 }

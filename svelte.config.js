@@ -10,6 +10,9 @@ const config = {
 		adapter: adapter(),
 		experimental: {
 			remoteFunctions: true
+		},
+		alias: {
+			$prisma: 'src/generated/prisma/client.js'
 		}
 	},
 	compilerOptions: {

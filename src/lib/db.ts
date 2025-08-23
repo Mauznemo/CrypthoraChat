@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaClient } from '$prisma';
 import { DATABASE_URL } from '$env/static/private';
 
 const globalForPrisma = globalThis as unknown as {
