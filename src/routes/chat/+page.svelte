@@ -217,6 +217,10 @@
 		console.log('Delete message:', message.id);
 	}
 
+	function handleInfoMessage(message: MessageWithRelations): void {
+		console.log('Show message info:', message.id);
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -303,6 +307,7 @@
 		onEdit={handleEditMessage}
 		onReply={handleReplyMessage}
 		onDelete={handleDeleteMessage}
+		onInfo={handleInfoMessage}
 	></ChatMessages>
 
 	{#if socketStore.typing.length > 0}

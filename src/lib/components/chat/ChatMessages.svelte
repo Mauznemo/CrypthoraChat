@@ -20,7 +20,8 @@
 		handleScroll,
 		onEdit,
 		onReply,
-		onDelete
+		onDelete,
+		onInfo
 	} = $props<{
 		messages: MessageWithRelations[];
 		user: User | null;
@@ -29,6 +30,7 @@
 		onEdit: (message: MessageWithRelations) => void;
 		onReply: (message: MessageWithRelations) => void;
 		onDelete: (message: MessageWithRelations) => void;
+		onInfo: (message: MessageWithRelations) => void;
 	}>();
 
 	// State using Svelte 5 runes
@@ -58,7 +60,7 @@
 			10;
 
 		return {
-			x: 40,
+			x: 20,
 			y: relativeY
 		};
 	}
@@ -184,6 +186,13 @@
 	function handleDelete(): void {
 		if (activeMessage) {
 			onDelete(activeMessage);
+			activeMessage = null;
+		}
+	}
+
+	function handleInfo(): void {
+		if (activeMessage) {
+			onInfo(activeMessage);
 			activeMessage = null;
 		}
 	}
@@ -330,6 +339,31 @@
 					</svg>
 				</button>
 			{/if}
+			<button
+				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+				onclick={handleInfo}
+				title="Delete"
+				aria-label="Delete message"
+				type="button"
+			>
+				<svg
+					class="h-4 w-4"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+					/>
+				</svg>
+			</button>
 		</div>
 	{/if}
 </div>
