@@ -221,6 +221,10 @@
 		console.log('Show message info:', message.id);
 	}
 
+	function handleReaction(message: MessageWithRelations): void {
+		console.log('Reaction message:', message.id);
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -308,6 +312,7 @@
 		onReply={handleReplyMessage}
 		onDelete={handleDeleteMessage}
 		onInfo={handleInfoMessage}
+		onReaction={handleReaction}
 	></ChatMessages>
 
 	{#if socketStore.typing.length > 0}

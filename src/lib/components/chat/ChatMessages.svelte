@@ -21,7 +21,8 @@
 		onEdit,
 		onReply,
 		onDelete,
-		onInfo
+		onInfo,
+		onReaction
 	} = $props<{
 		messages: MessageWithRelations[];
 		user: User | null;
@@ -31,6 +32,7 @@
 		onReply: (message: MessageWithRelations) => void;
 		onDelete: (message: MessageWithRelations) => void;
 		onInfo: (message: MessageWithRelations) => void;
+		onReaction: (message: MessageWithRelations) => void;
 	}>();
 
 	// State using Svelte 5 runes
@@ -197,6 +199,13 @@
 		}
 	}
 
+	function handleReaction(): void {
+		if (activeMessage) {
+			onReaction(activeMessage);
+			activeMessage = null;
+		}
+	}
+
 	onMount(() => {
 		// Listen for clicks outside
 		document.addEventListener('click', handleClickOutside);
@@ -274,6 +283,7 @@
 			{/if}
 		</div>
 	{/each}
+	<div class="h-4"></div>
 
 	<!-- Single floating toolbar -->
 	{#if activeMessage}
@@ -302,7 +312,29 @@
 				</svg>
 			</button>
 
-			<!-- Edit Button (only show for own messages) -->
+			<button
+				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+				onclick={handleReaction}
+				title="Add Reaction"
+				aria-label="Add Reaction"
+				type="button"
+			>
+				<svg
+					class="size-4"
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="2"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z"
+					/>
+				</svg>
+			</button>
+
 			{#if activeMessageFromMe}
 				<button
 					class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
@@ -342,8 +374,8 @@
 			<button
 				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
 				onclick={handleInfo}
-				title="Delete"
-				aria-label="Delete message"
+				title="Show info"
+				aria-label="Show info"
 				type="button"
 			>
 				<svg
