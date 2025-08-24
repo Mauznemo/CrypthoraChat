@@ -33,6 +33,10 @@ const config: runtime.GetPrismaClientConfig = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -46,6 +50,7 @@ const config: runtime.GetPrismaClientConfig = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -54,8 +59,8 @@ const config: runtime.GetPrismaClientConfig = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id           String        @id @default(cuid())\n  username     String        @unique\n  displayName  String\n  password     String\n  profilePic   String? // path to encrypted blob\n  profileIv    String? //IV for decryption, base64\n  userChatKeys UserChatKey[] // encrypted keys for each chat\n  isAdmin      Boolean       @default(false)\n  createdAt    DateTime      @default(now())\n  sessions     Session[]\n  chats        Chat[]\n  messages     Message[]     @relation(\"SentMessages\")\n  readMessages Message[]     @relation(\"ReadMessages\")\n}\n\nmodel UserChatKey {\n  userId       String\n  chatId       String\n  encryptedKey String //base64\n  user         User   @relation(fields: [userId], references: [id])\n\n  @@id([userId, chatId])\n}\n\nmodel Session {\n  id        String   @id @default(cuid())\n  userId    String\n  expiresAt DateTime\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nmodel Chat {\n  id           String    @id @default(uuid())\n  name         String? // Group name, null for DM\n  type         String // 'dm' or 'group'\n  image        String? // path to encrypted blob\n  imageIv      String? //IV for decryption, base64\n  participants User[]\n  messages     Message[]\n  salt         Bytes // salt for encryption\n}\n\nmodel Message {\n  id               String   @id @default(uuid())\n  chatId           String\n  senderId         String\n  attachments      String[]\n  reactions        String[]\n  readBy           User[]   @relation(\"ReadMessages\")\n  encryptedContent String // Encrypted message blob, base64\n  isEdited         Boolean  @default(false)\n  timestamp        DateTime @default(now())\n  user             User     @relation(\"SentMessages\", fields: [senderId], references: [id])\n  chat             Chat     @relation(fields: [chatId], references: [id])\n}\n",
-  "inlineSchemaHash": "6aa57df5c480f17f5cf5ca8d5fee8e26ff4727105077f00c06863f24219d8a41",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client\"\n  output        = \"../src/generated/prisma\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"] //Change this to match your target environment\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id           String        @id @default(cuid())\n  username     String        @unique\n  displayName  String\n  password     String\n  profilePic   String? // path to encrypted blob\n  profileIv    String? //IV for decryption, base64\n  userChatKeys UserChatKey[] // encrypted keys for each chat\n  isAdmin      Boolean       @default(false)\n  createdAt    DateTime      @default(now())\n  sessions     Session[]\n  chats        Chat[]\n  messages     Message[]     @relation(\"SentMessages\")\n  readMessages Message[]     @relation(\"ReadMessages\")\n}\n\nmodel UserChatKey {\n  userId       String\n  chatId       String\n  encryptedKey String //base64\n  user         User   @relation(fields: [userId], references: [id])\n\n  @@id([userId, chatId])\n}\n\nmodel Session {\n  id        String   @id @default(cuid())\n  userId    String\n  expiresAt DateTime\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nmodel Chat {\n  id           String    @id @default(uuid())\n  name         String? // Group name, null for DM\n  type         String // 'dm' or 'group'\n  image        String? // path to encrypted blob\n  imageIv      String? //IV for decryption, base64\n  participants User[]\n  messages     Message[]\n  salt         Bytes // salt for encryption\n}\n\nmodel Message {\n  id               String   @id @default(uuid())\n  chatId           String\n  senderId         String\n  attachments      String[]\n  reactions        String[]\n  readBy           User[]   @relation(\"ReadMessages\")\n  encryptedContent String // Encrypted message blob, base64\n  isEdited         Boolean  @default(false)\n  timestamp        DateTime @default(now())\n  user             User     @relation(\"SentMessages\", fields: [senderId], references: [id])\n  chat             Chat     @relation(fields: [chatId], references: [id])\n}\n",
+  "inlineSchemaHash": "24eb37ceef1e223e5894491ca76abd56c63e725dc82221a1304a7d8ac069c198",
   "copyEngine": true,
   "runtimeDataModel": {
     "models": {},
