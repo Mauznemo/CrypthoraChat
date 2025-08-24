@@ -7,6 +7,7 @@
 	import { decryptMessage, encryptMessage } from '$lib/messageCrypto';
 	import { getMessagesByChatId, getUserById, testQuery } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
+	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
 	type MessageWithRelations = Prisma.MessageGetPayload<{
 		include: { user: true; chat: true; readBy: true };
@@ -204,6 +205,18 @@
 		}
 	};
 
+	function handleEditMessage(message: MessageWithRelations): void {
+		console.log('Edit message:', message.id);
+	}
+
+	function handleReplyMessage(message: MessageWithRelations): void {
+		console.log('Reply to message:', message.id);
+	}
+
+	function handleDeleteMessage(message: MessageWithRelations): void {
+		console.log('Delete message:', message.id);
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -282,25 +295,15 @@
 		</div>
 	</div>
 
-	<div
-		bind:this={messageContainer}
-		onscroll={handleScroll}
-		class="no-scrollbar min-h-0 flex-1 overflow-y-auto p-2"
-	>
-		{#each messages as message, index}
-			{@const isFromMe = message.senderId === data.user?.id}
-			{@const isFirstInGroup = index === 0 || messages[index - 1].senderId !== message.senderId}
-			{@const showProfile = isFirstInGroup}
-
-			{#if isFromMe}
-				{@const isLast =
-					index === messages.length - 1 || !(messages[index + 1].senderId === data.user?.id)}
-				<MyChatMessage {message} userId={data.user?.id || ''} {showProfile} {isLast} />
-			{:else}
-				<ChatMessage {message} {showProfile} />
-			{/if}
-		{/each}
-	</div>
+	<ChatMessages
+		{messages}
+		user={data.user}
+		bind:messageContainer
+		{handleScroll}
+		onEdit={handleEditMessage}
+		onReply={handleReplyMessage}
+		onDelete={handleDeleteMessage}
+	></ChatMessages>
 
 	{#if socketStore.typing.length > 0}
 		<div class="p-2 text-sm font-bold text-gray-400">

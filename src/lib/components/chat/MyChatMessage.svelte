@@ -5,11 +5,13 @@
 		include: { user: true; chat: true; readBy: true };
 	}>;
 
-	const { message, userId, showProfile, isLast } = $props<{
+	const { message, userId, showProfile, isLast, onHover, onTouchStart } = $props<{
 		message: MessageWithRelations;
 		userId: string;
 		showProfile: boolean;
 		isLast: boolean;
+		onHover: (event: MouseEvent) => void;
+		onTouchStart: (event: TouchEvent) => void;
 	}>();
 </script>
 
@@ -29,7 +31,12 @@
 	</div>
 
 	<!-- Chat message container -->
-	<div class="relative flex flex-col items-end">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		onmouseenter={onHover}
+		ontouchstart={onTouchStart}
+		class="message-bubble relative flex flex-col items-end"
+	>
 		<!-- Chat message bubble -->
 		<div class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3">
 			<svelte:boundary>

@@ -5,9 +5,11 @@
 		include: { user: true; chat: true; readBy: true };
 	}>;
 
-	const { message, showProfile } = $props<{
+	const { message, showProfile, onHover, onTouchStart } = $props<{
 		message: MessageWithRelations;
 		showProfile: boolean;
+		onHover: (event: MouseEvent) => void;
+		onTouchStart: (event: TouchEvent) => void;
 	}>();
 </script>
 
@@ -27,7 +29,12 @@
 	</div>
 
 	<!-- Chat message container -->
-	<div class="relative flex flex-col items-start">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		onmouseenter={onHover}
+		ontouchstart={onTouchStart}
+		class="message-bubble relative flex flex-col items-start"
+	>
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
 			<div class="mb-0.5 px-1.5">
