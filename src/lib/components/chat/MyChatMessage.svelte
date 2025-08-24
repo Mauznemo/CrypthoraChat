@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { decryptMessage } from '$lib/messageCrypto';
+	import { processLinks } from '$lib/linkUtils';
 	import type { Prisma, User } from '$prisma';
 	type MessageWithRelations = Prisma.MessageGetPayload<{
 		include: { user: true; chat: true; readBy: true };
@@ -41,7 +42,7 @@
 		<div class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3">
 			<svelte:boundary>
 				<p class="pr-9 whitespace-pre-line text-white">
-					{await decryptMessage(message.encryptedContent)}
+					{@html processLinks(await decryptMessage(message.encryptedContent))}
 				</p>
 				{#snippet pending()}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
