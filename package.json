@@ -19,7 +19,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"start": "tsx server/index.ts",
-		"postinstall": "npx prisma generate"
+		"deploy-build": "npm run build && npx prisma generate"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
