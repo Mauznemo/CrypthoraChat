@@ -128,10 +128,10 @@ export function initializeSocket(server: HTTPServer) {
 		);
 
 		// Handle typing indicators
-		socket.on('typing-start', (data: { chatId: string; userId: string; userName: string }) => {
+		socket.on('typing-start', (data: { chatId: string; userId: string; username: string }) => {
 			socket.to(data.chatId).emit('user-typing', {
 				userId: data.userId,
-				userName: data.userName,
+				username: data.username,
 				isTyping: true
 			});
 		});

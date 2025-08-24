@@ -23,10 +23,9 @@
 
 	let messages: MessageWithRelations[] = $state([]);
 
-	function autoGrow(element: any) {
-		console.log(element);
-		element.target.style.height = '5px';
-		element.target.style.height = element.target.scrollHeight + 'px';
+	function autoGrow(element: HTMLTextAreaElement) {
+		element.style.height = '5px';
+		element.style.height = element.scrollHeight + 'px';
 	}
 
 	// Auto-scroll to bottom when new messages arrive
@@ -134,6 +133,7 @@
 	};
 
 	const handleInput = () => {
+		autoGrow(chatInput);
 		if (!data.user?.id) return;
 
 		// Handle typing indicators
@@ -142,7 +142,7 @@
 			socketStore.startTyping({
 				chatId: chatId,
 				userId: data.user.id,
-				userName: data.user.username || 'User'
+				username: data.user.username || 'User'
 			});
 		}
 
@@ -180,6 +180,9 @@
 
 	const handleVisibilityChange = () => {
 		if (!document.hidden && data.user?.id) {
+			//Maybe re-query messages here instead if problems occur late
+			//messages = await getMessagesByChatId(chatId);
+
 			// Mark all unread messages as read
 			if (unreadMessages.length > 0) {
 				socketStore.markMessagesAsRead({
@@ -298,6 +301,26 @@
 			{/if}
 		{/each}
 	</div>
+
+	{#if socketStore.typing.length > 0}
+		<div class="p-2 text-sm font-bold text-gray-400">
+			{socketStore.typing.map((user) => user.username).join(', ')}
+			{socketStore.typing.length === 1 ? 'is' : 'are'} typing
+
+			<!-- Wave animation dots with enhanced movement -->
+			<span class="ml-1 inline-flex space-x-1">
+				<span
+					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s] [animation-duration:0.8s]"
+				></span>
+				<span
+					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s] [animation-duration:0.8s]"
+				></span>
+				<span
+					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:0s] [animation-duration:0.8s]"
+				></span>
+			</span>
+		</div>
+	{/if}
 
 	<!-- Input Field -->
 	<div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">

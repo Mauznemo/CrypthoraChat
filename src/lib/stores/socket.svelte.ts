@@ -10,7 +10,7 @@ type MessageWithRelations = Prisma.MessageGetPayload<{
 class SocketStore {
 	private socket: typeof Socket | null = null;
 	public connected = $state(false);
-	public typing = $state<{ userId: string; userName: string; isTyping: boolean }[]>([]);
+	public typing = $state<{ userId: string; username: string; isTyping: boolean }[]>([]);
 
 	connect(serverUrl: string = 'http://localhost:3000') {
 		console.log('Connecting to server...');
@@ -33,7 +33,7 @@ class SocketStore {
 
 		this.socket.on(
 			'user-typing',
-			(data: { userId: string; userName: string; isTyping: boolean }) => {
+			(data: { userId: string; username: string; isTyping: boolean }) => {
 				const existingIndex = this.typing.findIndex((t) => t.userId === data.userId);
 
 				if (data.isTyping) {
@@ -86,7 +86,7 @@ class SocketStore {
 		this.socket?.emit('mark-messages-read', data);
 	}
 
-	startTyping(data: { chatId: string; userId: string; userName: string }) {
+	startTyping(data: { chatId: string; userId: string; username: string }) {
 		this.socket?.emit('typing-start', data);
 	}
 
