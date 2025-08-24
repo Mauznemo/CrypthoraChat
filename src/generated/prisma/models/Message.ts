@@ -27,7 +27,7 @@ export type MessageMinAggregateOutputType = {
   id: string | null
   chatId: string | null
   senderId: string | null
-  encryptedContent: Uint8Array | null
+  encryptedContent: string | null
   isEdited: boolean | null
   timestamp: Date | null
 }
@@ -36,7 +36,7 @@ export type MessageMaxAggregateOutputType = {
   id: string | null
   chatId: string | null
   senderId: string | null
-  encryptedContent: Uint8Array | null
+  encryptedContent: string | null
   isEdited: boolean | null
   timestamp: Date | null
 }
@@ -162,7 +162,7 @@ export type MessageGroupByOutputType = {
   senderId: string
   attachments: string[]
   reactions: string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited: boolean
   timestamp: Date
   _count: MessageCountAggregateOutputType | null
@@ -194,7 +194,7 @@ export type MessageWhereInput = {
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
   reactions?: Prisma.StringNullableListFilter<"Message">
-  encryptedContent?: Prisma.BytesFilter<"Message"> | Uint8Array
+  encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
   readBy?: Prisma.UserListRelationFilter
@@ -225,7 +225,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
   reactions?: Prisma.StringNullableListFilter<"Message">
-  encryptedContent?: Prisma.BytesFilter<"Message"> | Uint8Array
+  encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
   readBy?: Prisma.UserListRelationFilter
@@ -256,7 +256,7 @@ export type MessageScalarWhereWithAggregatesInput = {
   senderId?: Prisma.StringWithAggregatesFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
   reactions?: Prisma.StringNullableListFilter<"Message">
-  encryptedContent?: Prisma.BytesWithAggregatesFilter<"Message"> | Uint8Array
+  encryptedContent?: Prisma.StringWithAggregatesFilter<"Message"> | string
   isEdited?: Prisma.BoolWithAggregatesFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeWithAggregatesFilter<"Message"> | Date | string
 }
@@ -265,7 +265,7 @@ export type MessageCreateInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
@@ -279,7 +279,7 @@ export type MessageUncheckedCreateInput = {
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
@@ -289,7 +289,7 @@ export type MessageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
@@ -303,7 +303,7 @@ export type MessageUncheckedUpdateInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
@@ -315,7 +315,7 @@ export type MessageCreateManyInput = {
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
 }
@@ -324,7 +324,7 @@ export type MessageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -335,7 +335,7 @@ export type MessageUncheckedUpdateManyInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -531,7 +531,7 @@ export type MessageCreateWithoutUserInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
@@ -543,7 +543,7 @@ export type MessageUncheckedCreateWithoutUserInput = {
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
@@ -563,7 +563,7 @@ export type MessageCreateWithoutReadByInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMessagesInput
@@ -576,7 +576,7 @@ export type MessageUncheckedCreateWithoutReadByInput = {
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
 }
@@ -611,7 +611,7 @@ export type MessageScalarWhereInput = {
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
   reactions?: Prisma.StringNullableListFilter<"Message">
-  encryptedContent?: Prisma.BytesFilter<"Message"> | Uint8Array
+  encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
 }
@@ -636,7 +636,7 @@ export type MessageCreateWithoutChatInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserCreateNestedManyWithoutReadMessagesInput
@@ -648,7 +648,7 @@ export type MessageUncheckedCreateWithoutChatInput = {
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
   readBy?: Prisma.UserUncheckedCreateNestedManyWithoutReadMessagesInput
@@ -685,7 +685,7 @@ export type MessageCreateManyUserInput = {
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
 }
@@ -694,7 +694,7 @@ export type MessageUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
@@ -706,7 +706,7 @@ export type MessageUncheckedUpdateWithoutUserInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
@@ -717,7 +717,7 @@ export type MessageUncheckedUpdateManyWithoutUserInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -726,7 +726,7 @@ export type MessageUpdateWithoutReadByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
@@ -739,7 +739,7 @@ export type MessageUncheckedUpdateWithoutReadByInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -750,7 +750,7 @@ export type MessageUncheckedUpdateManyWithoutReadByInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -760,7 +760,7 @@ export type MessageCreateManyChatInput = {
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   reactions?: Prisma.MessageCreatereactionsInput | string[]
-  encryptedContent: Uint8Array
+  encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
 }
@@ -769,7 +769,7 @@ export type MessageUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUpdateManyWithoutReadMessagesNestedInput
@@ -781,7 +781,7 @@ export type MessageUncheckedUpdateWithoutChatInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   readBy?: Prisma.UserUncheckedUpdateManyWithoutReadMessagesNestedInput
@@ -792,7 +792,7 @@ export type MessageUncheckedUpdateManyWithoutChatInput = {
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   reactions?: Prisma.MessageUpdatereactionsInput | string[]
-  encryptedContent?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -909,7 +909,7 @@ export type $MessagePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     senderId: string
     attachments: string[]
     reactions: string[]
-    encryptedContent: Uint8Array
+    encryptedContent: string
     isEdited: boolean
     timestamp: Date
   }, ExtArgs["result"]["message"]>
@@ -1343,7 +1343,7 @@ export interface MessageFieldRefs {
   readonly senderId: Prisma.FieldRef<"Message", 'String'>
   readonly attachments: Prisma.FieldRef<"Message", 'String[]'>
   readonly reactions: Prisma.FieldRef<"Message", 'String[]'>
-  readonly encryptedContent: Prisma.FieldRef<"Message", 'Bytes'>
+  readonly encryptedContent: Prisma.FieldRef<"Message", 'String'>
   readonly isEdited: Prisma.FieldRef<"Message", 'Boolean'>
   readonly timestamp: Prisma.FieldRef<"Message", 'DateTime'>
 }

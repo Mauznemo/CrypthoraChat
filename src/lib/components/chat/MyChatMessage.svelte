@@ -1,12 +1,16 @@
 <script lang="ts">
-	import type { Prisma } from '$prisma';
+	import { decryptMessage } from '$lib/messageCrypto';
+	import type { Prisma, User } from '$prisma';
 	type MessageWithRelations = Prisma.MessageGetPayload<{
 		include: { user: true; chat: true; readBy: true };
 	}>;
 
-	export let message: MessageWithRelations;
-	export let showProfile: boolean;
-	export let isLast: boolean;
+	const { message, userId, showProfile, isLast } = $props<{
+		message: MessageWithRelations;
+		userId: string;
+		showProfile: boolean;
+		isLast: boolean;
+	}>();
 </script>
 
 <div class="m-2 flex flex-row-reverse items-start space-x-2 space-x-reverse">
@@ -27,19 +31,27 @@
 	<!-- Chat message container -->
 	<div class="relative flex flex-col items-end">
 		<!-- Chat message bubble -->
-		<div class="bg-teal-700/60' frosted-glass-shadow relative rounded-2xl p-3">
-			<p class="pr-9 whitespace-pre-line text-white">{message.encryptedContent}</p>
+		<div class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3">
+			<svelte:boundary>
+				<p class="pr-9 whitespace-pre-line text-white">
+					{await decryptMessage(message.encryptedContent)}
+				</p>
+				{#snippet pending()}
+					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
+				{/snippet}
+			</svelte:boundary>
 			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
-				{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+				{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 			</div>
 		</div>
 
 		<!-- Read receipt avatars or checkmark (only for last message sent by me) -->
 		{#if isLast}
+			{@const readers = message.readBy.filter((reader: User) => reader.id !== userId)}
 			<div class="absolute right-2 -bottom-3 z-10 flex">
-				{#if message.readBy && message.readBy.length > 0}
-					{#each message.readBy.slice(0, 3) as reader, readIndex}
+				{#if readers && readers.length > 0}
+					{#each readers as reader, readIndex}
 						<div
 							class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-xs font-medium text-white shadow-lg"
 							style="margin-left: {readIndex > 0 ? '-8px' : '0'}"
@@ -47,12 +59,12 @@
 							{reader.username.charAt(0).toUpperCase()}
 						</div>
 					{/each}
-					{#if message.readBy.length > 3}
+					{#if readers.length > 3}
 						<div
 							class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-600 text-xs font-medium text-white shadow-lg"
 							style="margin-left: -8px"
 						>
-							+{message.readBy.length - 3}
+							+{readers.length - 3}
 						</div>
 					{/if}
 				{:else}

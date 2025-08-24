@@ -2,19 +2,19 @@ import { PrismaClient } from '$prisma';
 import { DATABASE_URL } from '$env/static/private';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+	prisma: PrismaClient | undefined;
 };
 
 export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    datasources: {
-      db: {
-        url: DATABASE_URL,
-      },
-    },
-  });
+	globalForPrisma.prisma ??
+	new PrismaClient({
+		datasources: {
+			db: {
+				url: DATABASE_URL
+			}
+		}
+	});
 
 if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
+	globalForPrisma.prisma = db;
 }

@@ -29,7 +29,7 @@ export type UserMinAggregateOutputType = {
   displayName: string | null
   password: string | null
   profilePic: string | null
-  profileIv: Uint8Array | null
+  profileIv: string | null
   isAdmin: boolean | null
   createdAt: Date | null
 }
@@ -40,7 +40,7 @@ export type UserMaxAggregateOutputType = {
   displayName: string | null
   password: string | null
   profilePic: string | null
-  profileIv: Uint8Array | null
+  profileIv: string | null
   isAdmin: boolean | null
   createdAt: Date | null
 }
@@ -170,7 +170,7 @@ export type UserGroupByOutputType = {
   displayName: string
   password: string
   profilePic: string | null
-  profileIv: Uint8Array | null
+  profileIv: string | null
   isAdmin: boolean
   createdAt: Date
   _count: UserCountAggregateOutputType | null
@@ -202,7 +202,7 @@ export type UserWhereInput = {
   displayName?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
   profilePic?: Prisma.StringNullableFilter<"User"> | string | null
-  profileIv?: Prisma.BytesNullableFilter<"User"> | Uint8Array | null
+  profileIv?: Prisma.StringNullableFilter<"User"> | string | null
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userChatKeys?: Prisma.UserChatKeyListRelationFilter
@@ -237,7 +237,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   displayName?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
   profilePic?: Prisma.StringNullableFilter<"User"> | string | null
-  profileIv?: Prisma.BytesNullableFilter<"User"> | Uint8Array | null
+  profileIv?: Prisma.StringNullableFilter<"User"> | string | null
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userChatKeys?: Prisma.UserChatKeyListRelationFilter
@@ -270,7 +270,7 @@ export type UserScalarWhereWithAggregatesInput = {
   displayName?: Prisma.StringWithAggregatesFilter<"User"> | string
   password?: Prisma.StringWithAggregatesFilter<"User"> | string
   profilePic?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
-  profileIv?: Prisma.BytesNullableWithAggregatesFilter<"User"> | Uint8Array | null
+  profileIv?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   isAdmin?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -281,7 +281,7 @@ export type UserCreateInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyCreateNestedManyWithoutUserInput
@@ -297,7 +297,7 @@ export type UserUncheckedCreateInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedCreateNestedManyWithoutUserInput
@@ -313,7 +313,7 @@ export type UserUpdateInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUpdateManyWithoutUserNestedInput
@@ -329,7 +329,7 @@ export type UserUncheckedUpdateInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedUpdateManyWithoutUserNestedInput
@@ -345,7 +345,7 @@ export type UserCreateManyInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
 }
@@ -356,7 +356,7 @@ export type UserUpdateManyMutationInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -367,7 +367,7 @@ export type UserUncheckedUpdateManyInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -426,10 +426,6 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
-}
-
-export type NullableBytesFieldUpdateOperationsInput = {
-  set?: Uint8Array | null
 }
 
 export type BoolFieldUpdateOperationsInput = {
@@ -564,7 +560,7 @@ export type UserCreateWithoutUserChatKeysInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
@@ -579,7 +575,7 @@ export type UserUncheckedCreateWithoutUserChatKeysInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
@@ -610,7 +606,7 @@ export type UserUpdateWithoutUserChatKeysInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
@@ -625,7 +621,7 @@ export type UserUncheckedUpdateWithoutUserChatKeysInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -640,7 +636,7 @@ export type UserCreateWithoutSessionsInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyCreateNestedManyWithoutUserInput
@@ -655,7 +651,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedCreateNestedManyWithoutUserInput
@@ -686,7 +682,7 @@ export type UserUpdateWithoutSessionsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUpdateManyWithoutUserNestedInput
@@ -701,7 +697,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedUpdateManyWithoutUserNestedInput
@@ -716,7 +712,7 @@ export type UserCreateWithoutChatsInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyCreateNestedManyWithoutUserInput
@@ -731,7 +727,7 @@ export type UserUncheckedCreateWithoutChatsInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedCreateNestedManyWithoutUserInput
@@ -770,7 +766,7 @@ export type UserScalarWhereInput = {
   displayName?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
   profilePic?: Prisma.StringNullableFilter<"User"> | string | null
-  profileIv?: Prisma.BytesNullableFilter<"User"> | Uint8Array | null
+  profileIv?: Prisma.StringNullableFilter<"User"> | string | null
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
@@ -781,7 +777,7 @@ export type UserCreateWithoutReadMessagesInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyCreateNestedManyWithoutUserInput
@@ -796,7 +792,7 @@ export type UserUncheckedCreateWithoutReadMessagesInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedCreateNestedManyWithoutUserInput
@@ -816,7 +812,7 @@ export type UserCreateWithoutMessagesInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyCreateNestedManyWithoutUserInput
@@ -831,7 +827,7 @@ export type UserUncheckedCreateWithoutMessagesInput = {
   displayName: string
   password: string
   profilePic?: string | null
-  profileIv?: Uint8Array | null
+  profileIv?: string | null
   isAdmin?: boolean
   createdAt?: Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedCreateNestedManyWithoutUserInput
@@ -878,7 +874,7 @@ export type UserUpdateWithoutMessagesInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUpdateManyWithoutUserNestedInput
@@ -893,7 +889,7 @@ export type UserUncheckedUpdateWithoutMessagesInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedUpdateManyWithoutUserNestedInput
@@ -908,7 +904,7 @@ export type UserUpdateWithoutChatsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUpdateManyWithoutUserNestedInput
@@ -923,7 +919,7 @@ export type UserUncheckedUpdateWithoutChatsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedUpdateManyWithoutUserNestedInput
@@ -938,7 +934,7 @@ export type UserUncheckedUpdateManyWithoutChatsInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -949,7 +945,7 @@ export type UserUpdateWithoutReadMessagesInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUpdateManyWithoutUserNestedInput
@@ -964,7 +960,7 @@ export type UserUncheckedUpdateWithoutReadMessagesInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userChatKeys?: Prisma.UserChatKeyUncheckedUpdateManyWithoutUserNestedInput
@@ -979,7 +975,7 @@ export type UserUncheckedUpdateManyWithoutReadMessagesInput = {
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   profilePic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profileIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  profileIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1128,7 +1124,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     displayName: string
     password: string
     profilePic: string | null
-    profileIv: Uint8Array | null
+    profileIv: string | null
     isAdmin: boolean
     createdAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1564,7 +1560,7 @@ export interface UserFieldRefs {
   readonly displayName: Prisma.FieldRef<"User", 'String'>
   readonly password: Prisma.FieldRef<"User", 'String'>
   readonly profilePic: Prisma.FieldRef<"User", 'String'>
-  readonly profileIv: Prisma.FieldRef<"User", 'Bytes'>
+  readonly profileIv: Prisma.FieldRef<"User", 'String'>
   readonly isAdmin: Prisma.FieldRef<"User", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }

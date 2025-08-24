@@ -1,11 +1,14 @@
 <script lang="ts">
+	import { decryptMessage } from '$lib/messageCrypto';
 	import type { Prisma } from '$prisma';
 	type MessageWithRelations = Prisma.MessageGetPayload<{
 		include: { user: true; chat: true; readBy: true };
 	}>;
 
-	export let message: MessageWithRelations;
-	export let showProfile: boolean;
+	const { message, showProfile } = $props<{
+		message: MessageWithRelations;
+		showProfile: boolean;
+	}>();
 </script>
 
 <div class="m-2 flex items-start space-x-2">
@@ -34,10 +37,17 @@
 
 		<!-- Chat message bubble -->
 		<div class="frosted-glass-shadow relative rounded-2xl bg-gray-700/60 p-3">
-			<p class="pr-9 whitespace-pre-line text-white">{message.encryptedContent}</p>
+			<svelte:boundary>
+				<p class="pr-9 whitespace-pre-line text-white">
+					{await decryptMessage(message.encryptedContent)}
+				</p>
+				{#snippet pending()}
+					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
+				{/snippet}
+			</svelte:boundary>
 			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
-				{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+				{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 			</div>
 		</div>
 	</div>

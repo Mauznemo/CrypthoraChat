@@ -28,7 +28,7 @@ export type ChatMinAggregateOutputType = {
   name: string | null
   type: string | null
   image: string | null
-  imageIv: Uint8Array | null
+  imageIv: string | null
   salt: Uint8Array | null
 }
 
@@ -37,7 +37,7 @@ export type ChatMaxAggregateOutputType = {
   name: string | null
   type: string | null
   image: string | null
-  imageIv: Uint8Array | null
+  imageIv: string | null
   salt: Uint8Array | null
 }
 
@@ -157,7 +157,7 @@ export type ChatGroupByOutputType = {
   name: string | null
   type: string
   image: string | null
-  imageIv: Uint8Array | null
+  imageIv: string | null
   salt: Uint8Array
   _count: ChatCountAggregateOutputType | null
   _min: ChatMinAggregateOutputType | null
@@ -187,7 +187,7 @@ export type ChatWhereInput = {
   name?: Prisma.StringNullableFilter<"Chat"> | string | null
   type?: Prisma.StringFilter<"Chat"> | string
   image?: Prisma.StringNullableFilter<"Chat"> | string | null
-  imageIv?: Prisma.BytesNullableFilter<"Chat"> | Uint8Array | null
+  imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
   salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
   participants?: Prisma.UserListRelationFilter
   messages?: Prisma.MessageListRelationFilter
@@ -212,7 +212,7 @@ export type ChatWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringNullableFilter<"Chat"> | string | null
   type?: Prisma.StringFilter<"Chat"> | string
   image?: Prisma.StringNullableFilter<"Chat"> | string | null
-  imageIv?: Prisma.BytesNullableFilter<"Chat"> | Uint8Array | null
+  imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
   salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
   participants?: Prisma.UserListRelationFilter
   messages?: Prisma.MessageListRelationFilter
@@ -238,7 +238,7 @@ export type ChatScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"Chat"> | string | null
   type?: Prisma.StringWithAggregatesFilter<"Chat"> | string
   image?: Prisma.StringNullableWithAggregatesFilter<"Chat"> | string | null
-  imageIv?: Prisma.BytesNullableWithAggregatesFilter<"Chat"> | Uint8Array | null
+  imageIv?: Prisma.StringNullableWithAggregatesFilter<"Chat"> | string | null
   salt?: Prisma.BytesWithAggregatesFilter<"Chat"> | Uint8Array
 }
 
@@ -247,7 +247,7 @@ export type ChatCreateInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   participants?: Prisma.UserCreateNestedManyWithoutChatsInput
   messages?: Prisma.MessageCreateNestedManyWithoutChatInput
@@ -258,7 +258,7 @@ export type ChatUncheckedCreateInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   participants?: Prisma.UserUncheckedCreateNestedManyWithoutChatsInput
   messages?: Prisma.MessageUncheckedCreateNestedManyWithoutChatInput
@@ -269,7 +269,7 @@ export type ChatUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   participants?: Prisma.UserUpdateManyWithoutChatsNestedInput
   messages?: Prisma.MessageUpdateManyWithoutChatNestedInput
@@ -280,7 +280,7 @@ export type ChatUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   participants?: Prisma.UserUncheckedUpdateManyWithoutChatsNestedInput
   messages?: Prisma.MessageUncheckedUpdateManyWithoutChatNestedInput
@@ -291,7 +291,7 @@ export type ChatCreateManyInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
 }
 
@@ -300,7 +300,7 @@ export type ChatUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
 }
 
@@ -309,7 +309,7 @@ export type ChatUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
 }
 
@@ -393,6 +393,10 @@ export type ChatUncheckedUpdateManyWithoutParticipantsNestedInput = {
   deleteMany?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
 }
 
+export type BytesFieldUpdateOperationsInput = {
+  set?: Uint8Array
+}
+
 export type ChatCreateNestedOneWithoutMessagesInput = {
   create?: Prisma.XOR<Prisma.ChatCreateWithoutMessagesInput, Prisma.ChatUncheckedCreateWithoutMessagesInput>
   connectOrCreate?: Prisma.ChatCreateOrConnectWithoutMessagesInput
@@ -412,7 +416,7 @@ export type ChatCreateWithoutParticipantsInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   messages?: Prisma.MessageCreateNestedManyWithoutChatInput
 }
@@ -422,7 +426,7 @@ export type ChatUncheckedCreateWithoutParticipantsInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   messages?: Prisma.MessageUncheckedCreateNestedManyWithoutChatInput
 }
@@ -456,7 +460,7 @@ export type ChatScalarWhereInput = {
   name?: Prisma.StringNullableFilter<"Chat"> | string | null
   type?: Prisma.StringFilter<"Chat"> | string
   image?: Prisma.StringNullableFilter<"Chat"> | string | null
-  imageIv?: Prisma.BytesNullableFilter<"Chat"> | Uint8Array | null
+  imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
   salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
 }
 
@@ -465,7 +469,7 @@ export type ChatCreateWithoutMessagesInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   participants?: Prisma.UserCreateNestedManyWithoutChatsInput
 }
@@ -475,7 +479,7 @@ export type ChatUncheckedCreateWithoutMessagesInput = {
   name?: string | null
   type: string
   image?: string | null
-  imageIv?: Uint8Array | null
+  imageIv?: string | null
   salt: Uint8Array
   participants?: Prisma.UserUncheckedCreateNestedManyWithoutChatsInput
 }
@@ -501,7 +505,7 @@ export type ChatUpdateWithoutMessagesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   participants?: Prisma.UserUpdateManyWithoutChatsNestedInput
 }
@@ -511,7 +515,7 @@ export type ChatUncheckedUpdateWithoutMessagesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   participants?: Prisma.UserUncheckedUpdateManyWithoutChatsNestedInput
 }
@@ -521,7 +525,7 @@ export type ChatUpdateWithoutParticipantsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   messages?: Prisma.MessageUpdateManyWithoutChatNestedInput
 }
@@ -531,7 +535,7 @@ export type ChatUncheckedUpdateWithoutParticipantsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
   messages?: Prisma.MessageUncheckedUpdateManyWithoutChatNestedInput
 }
@@ -541,7 +545,7 @@ export type ChatUncheckedUpdateManyWithoutParticipantsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  imageIv?: Prisma.NullableBytesFieldUpdateOperationsInput | Uint8Array | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
 }
 
@@ -644,7 +648,7 @@ export type $ChatPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string | null
     type: string
     image: string | null
-    imageIv: Uint8Array | null
+    imageIv: string | null
     salt: Uint8Array
   }, ExtArgs["result"]["chat"]>
   composites: {}
@@ -1075,7 +1079,7 @@ export interface ChatFieldRefs {
   readonly name: Prisma.FieldRef<"Chat", 'String'>
   readonly type: Prisma.FieldRef<"Chat", 'String'>
   readonly image: Prisma.FieldRef<"Chat", 'String'>
-  readonly imageIv: Prisma.FieldRef<"Chat", 'Bytes'>
+  readonly imageIv: Prisma.FieldRef<"Chat", 'String'>
   readonly salt: Prisma.FieldRef<"Chat", 'Bytes'>
 }
     

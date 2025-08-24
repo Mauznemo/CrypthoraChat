@@ -20,7 +20,7 @@ model User {
   displayName  String
   password     String
   profilePic   String? // path to encrypted blob
-  profileIv    Bytes? //IV for decryption
+  profileIv    String? //IV for decryption, base64
   userChatKeys UserChatKey[] // encrypted keys for each chat
   isAdmin      Boolean       @default(false)
   createdAt    DateTime      @default(now())
@@ -33,7 +33,7 @@ model User {
 model UserChatKey {
   userId       String
   chatId       String
-  encryptedKey Bytes
+  encryptedKey String //base64
   user         User   @relation(fields: [userId], references: [id])
 
   @@id([userId, chatId])
@@ -51,7 +51,7 @@ model Chat {
   name         String? // Group name, null for DM
   type         String // 'dm' or 'group'
   image        String? // path to encrypted blob
-  imageIv      Bytes? //IV for decryption
+  imageIv      String? //IV for decryption, base64
   participants User[]
   messages     Message[]
   salt         Bytes // salt for encryption
@@ -64,7 +64,7 @@ model Message {
   attachments      String[]
   reactions        String[]
   readBy           User[]   @relation("ReadMessages")
-  encryptedContent Bytes // Encrypted message blob
+  encryptedContent String // Encrypted message blob, base64
   isEdited         Boolean  @default(false)
   timestamp        DateTime @default(now())
   user             User     @relation("SentMessages", fields: [senderId], references: [id])
