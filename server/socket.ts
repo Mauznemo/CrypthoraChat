@@ -1,9 +1,8 @@
 // server/socket.ts or in your main server file
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
-import type { Prisma } from '$prisma';
-import { db } from '$lib/db';
-import { decryptMessage } from '$lib/messageCrypto';
+import type { Prisma } from '../src/generated/prisma/client';
+import { db } from '../src/lib/db';
 
 type MessageWithRelations = Prisma.MessageGetPayload<{
 	include: { user: true; chat: true; readBy: true };

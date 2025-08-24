@@ -1,5 +1,3 @@
-// src/lib/linkUtils.ts
-
 /**
  * Converts URLs in text to clickable links
  * Supports http, https, ftp protocols and www. prefixed URLs
