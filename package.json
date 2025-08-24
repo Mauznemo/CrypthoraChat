@@ -4,6 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
 	"main": "server/index.js",
+	"engines": {
+		"node": "22"
+	},
 	"scripts": {
 		"dev": "vite dev --host",
 		"build:kit": "vite build",
