@@ -67,6 +67,42 @@ export function initializeSocket(server: HTTPServer) {
 			}
 		);
 
+		// Handle message editing
+		socket.on(
+			'edit-message',
+			async (data: { messageId: string; encryptedContent: string; userId: string }) => {
+				try {
+					// Verify user owns the message and update it
+					const updatedMessage = await db.message.update({
+						where: {
+							id: data.messageId,
+							senderId: data.userId // Ensure user owns the message
+						},
+						data: {
+							encryptedContent: data.encryptedContent,
+							isEdited: true
+						},
+						include: {
+							user: true,
+							chat: true,
+							readBy: true,
+							replyTo: {
+								include: {
+									user: true
+								}
+							}
+						}
+					});
+
+					// Emit to all users in the chat
+					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+				} catch (error) {
+					console.error('Error editing message:', error);
+					socket.emit('message-error', { error: 'Failed to edit message' });
+				}
+			}
+		);
+
 		// Handle message reactions
 		socket.on(
 			'react-to-message',

@@ -78,6 +78,10 @@ class SocketStore {
 		this.socket?.emit('send-message', data);
 	}
 
+	editMessage(data: { messageId: string; encryptedContent: string; userId: string }) {
+		this.socket?.emit('edit-message', data);
+	}
+
 	reactToMessage(data: { messageId: string; reaction: string; userId: string }) {
 		this.socket?.emit('react-to-message', data);
 	}
