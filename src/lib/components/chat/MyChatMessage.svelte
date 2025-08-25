@@ -45,7 +45,11 @@
 		class="message-bubble relative flex flex-col items-end"
 	>
 		<!-- Chat message bubble -->
-		<div class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3">
+		<div
+			class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3 {message.isEdited
+				? 'pb-5'
+				: ''}"
+		>
 			<Reply replyToMessage={message} />
 
 			<svelte:boundary>
@@ -58,7 +62,10 @@
 			</svelte:boundary>
 			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
-				{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+				{new Date(message.timestamp).toLocaleTimeString([], {
+					hour: '2-digit',
+					minute: '2-digit'
+				})}{message.isEdited ? ' edited' : ''}
 			</div>
 		</div>
 

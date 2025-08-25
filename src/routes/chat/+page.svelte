@@ -19,6 +19,7 @@
 	let chatId: string = 'chat';
 
 	let messageReplying: MessageWithRelations | null = $state(null);
+	let messageEditing: MessageWithRelations | null = $state(null);
 
 	let messages: MessageWithRelations[] = $state([]);
 
@@ -116,6 +117,18 @@
 			isTyping = false;
 		}
 
+		if (messageEditing) {
+			const encryptedContent = await encryptMessage(messageContent);
+			socketStore.editMessage({
+				messageId: messageEditing.id,
+				encryptedContent: encryptedContent,
+				userId: data.user.id
+			});
+
+			messageEditing = null;
+			return;
+		}
+
 		try {
 			const encryptedContent = await encryptMessage(messageContent);
 
@@ -206,8 +219,10 @@
 		}
 	};
 
-	function handleEditMessage(message: MessageWithRelations): void {
+	async function handleEditMessage(message: MessageWithRelations): Promise<void> {
 		console.log('Edit message:', message.id);
+		messageEditing = message;
+		chatValue = await decryptMessage(message.encryptedContent);
 	}
 
 	function handleReplyMessage(message: MessageWithRelations): void {
@@ -231,6 +246,15 @@
 
 	function handleReaction(message: MessageWithRelations): void {
 		console.log('Reaction message:', message.id);
+	}
+
+	function handleCloseEdit(): void {
+		messageEditing = null;
+		chatValue = '';
+	}
+
+	function handleCloseReply(): void {
+		messageReplying = null;
 	}
 
 	onMount(async () => {
@@ -345,10 +369,23 @@
 
 	{#if messageReplying}
 		<svelte:boundary>
-			<div class="p-2 text-sm font-bold text-gray-400">
+			<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
+				<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
 				Replying to {messageReplying.user.username}: {await decryptMessage(
 					messageReplying.encryptedContent
 				)}
+			</div>
+			{#snippet pending()}
+				<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
+			{/snippet}
+		</svelte:boundary>
+	{/if}
+
+	{#if messageEditing}
+		<svelte:boundary>
+			<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
+				<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
+				<span>Editing message: {await decryptMessage(messageEditing.encryptedContent)}</span>
 			</div>
 			{#snippet pending()}
 				<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
