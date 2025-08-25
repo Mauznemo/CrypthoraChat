@@ -70,5 +70,10 @@ export type Chat = Prisma.ChatModel
  * 
  */
 export type Message = Prisma.MessageModel
+/**
+ * Model ServerSettings
+ * 
+ */
+export type ServerSettings = Prisma.ServerSettingsModel
 
 
