@@ -2,17 +2,60 @@
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
 import { db } from '../src/lib/db';
+import { validateSession } from '$lib/auth';
+
+interface AuthenticatedSocket extends Socket {
+	user?: {
+		id: string;
+		username: string;
+	};
+}
 
 export function initializeSocket(server: HTTPServer) {
 	const io = new Server(server);
-	console.log('Socket server initialized');
+
+	// Authentication middleware
+	io.use(async (socket: AuthenticatedSocket, next) => {
+		try {
+			// Extract session cookie from handshake
+			const cookies = socket.handshake.headers.cookie;
+			if (!cookies) {
+				return next(new Error('No cookies found'));
+			}
+
+			// Parse session ID from cookies
+			const sessionMatch = cookies.match(/session=([^;]+)/);
+			if (!sessionMatch) {
+				return next(new Error('No session cookie found'));
+			}
+
+			const sessionId = decodeURIComponent(sessionMatch[1]);
+
+			// Validate session using your existing function
+			const session = await validateSession(sessionId);
+			if (!session) {
+				return next(new Error('Invalid session'));
+			}
+
+			// Attach user to socket
+			socket.user = session.user;
+			console.log(`User authenticated: ${session.user.username} (${session.user.id})`);
+
+			next();
+		} catch (error) {
+			console.error('Socket authentication error:', error);
+			next(new Error('Authentication failed'));
+		}
+	});
+
+	console.log('Socket server initialized with authentication');
 
 	io.engine.on('connection_error', (err) => {
 		console.log('Connection error on server:', err.message);
 	});
 
-	io.on('connection', (socket: Socket) => {
-		console.log('User connected:', socket.id);
+	io.on('connection', (socket: AuthenticatedSocket) => {
+		console.log('User connected:', socket.id, 'User:', socket.user?.username);
 		// Join chat room
 		socket.on('join-chat', (chatId: string) => {
 			socket.join(chatId);
@@ -30,17 +73,18 @@ export function initializeSocket(server: HTTPServer) {
 			'send-message',
 			async (data: {
 				chatId: string;
-				senderId: string;
+				//senderId: string;
 				encryptedContent: string;
 				replyToId?: string | null;
 				attachments?: string[];
 			}) => {
 				try {
+					//TODO: Check if user is in chat
 					// Save message to database
 					const newMessage = await db.message.create({
 						data: {
 							chatId: data.chatId,
-							senderId: data.senderId,
+							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
 							attachments: data.attachments || [],
 							reactions: [],
@@ -68,114 +112,105 @@ export function initializeSocket(server: HTTPServer) {
 		);
 
 		// Handle message editing
-		socket.on(
-			'edit-message',
-			async (data: { messageId: string; encryptedContent: string; userId: string }) => {
-				try {
-					// Verify user owns the message and update it
-					const updatedMessage = await db.message.update({
-						where: {
-							id: data.messageId,
-							senderId: data.userId // Ensure user owns the message
-						},
-						data: {
-							encryptedContent: data.encryptedContent,
-							isEdited: true
-						},
-						include: {
-							user: true,
-							chat: true,
-							readBy: true,
-							replyTo: {
-								include: {
-									user: true
-								}
+		socket.on('edit-message', async (data: { messageId: string; encryptedContent: string }) => {
+			try {
+				// Verify user owns the message and update it
+				const updatedMessage = await db.message.update({
+					where: {
+						id: data.messageId,
+						senderId: socket.user!.id // Ensure user owns the message
+					},
+					data: {
+						encryptedContent: data.encryptedContent,
+						isEdited: true
+					},
+					include: {
+						user: true,
+						chat: true,
+						readBy: true,
+						replyTo: {
+							include: {
+								user: true
 							}
 						}
-					});
+					}
+				});
 
-					// Emit to all users in the chat
-					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
-				} catch (error) {
-					console.error('Error editing message:', error);
-					socket.emit('message-error', { error: 'Failed to edit message' });
-				}
+				// Emit to all users in the chat
+				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+			} catch (error) {
+				console.error('Error editing message:', error);
+				socket.emit('message-error', { error: 'Failed to edit message' });
 			}
-		);
+		});
 
 		// Handle message reactions
-		socket.on(
-			'react-to-message',
-			async (data: { messageId: string; reaction: string; userId: string }) => {
-				try {
-					// Update message with reaction in database
-					const updatedMessage = await db.message.update({
-						where: { id: data.messageId },
-						data: {
-							reactions: {
-								push: `${data.userId}:${data.reaction}`
-							}
-						},
-						include: {
-							user: true,
-							chat: true,
-							readBy: true
+		socket.on('react-to-message', async (data: { messageId: string; reaction: string }) => {
+			try {
+				// Update message with reaction in database
+				const updatedMessage = await db.message.update({
+					where: { id: data.messageId },
+					data: {
+						reactions: {
+							push: `${socket.user!.id}:${data.reaction}`
 						}
-					});
+					},
+					include: {
+						user: true,
+						chat: true,
+						readBy: true
+					}
+				});
 
-					// Emit to all users in the chat
-					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
-				} catch (error) {
-					console.error('Error updating reaction:', error);
-				}
+				// Emit to all users in the chat
+				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+			} catch (error) {
+				console.error('Error updating reaction:', error);
 			}
-		);
+		});
 
 		// Handle message read status
-		socket.on(
-			'mark-messages-read',
-			async (data: { messageIds: string[]; userId: string; chatId: string }) => {
-				try {
-					// Update read status in database
-					await Promise.all(
-						data.messageIds.map((messageId) =>
-							db.message.update({
-								where: {
-									id: messageId,
-									chatId: data.chatId
-								},
-								data: {
-									readBy: {
-										connect: { id: data.userId }
-									}
+		socket.on('mark-messages-read', async (data: { messageIds: string[]; chatId: string }) => {
+			try {
+				// Update read status in database
+				await Promise.all(
+					data.messageIds.map((messageId) =>
+						db.message.update({
+							where: {
+								id: messageId,
+								chatId: data.chatId
+							},
+							data: {
+								readBy: {
+									connect: { id: socket.user!.id }
 								}
-							})
-						)
-					);
+							}
+						})
+					)
+				);
 
-					// Emit read status update
-					io.to(data.chatId).emit('messages-read', {
-						messageIds: data.messageIds,
-						userId: data.userId
-					});
-				} catch (error) {
-					console.error('Error marking messages as read:', error);
-				}
+				// Emit read status update
+				io.to(data.chatId).emit('messages-read', {
+					messageIds: data.messageIds,
+					userId: socket.user!.id
+				});
+			} catch (error) {
+				console.error('Error marking messages as read:', error);
 			}
-		);
+		});
 
 		// Handle typing indicators
-		socket.on('typing-start', (data: { chatId: string; userId: string; username: string }) => {
+		socket.on('typing-start', (data: { chatId: string; username: string }) => {
 			socket.to(data.chatId).emit('user-typing', {
-				userId: data.userId,
+				userId: socket.user!.id,
 				username: data.username,
 				isTyping: true
 			});
 		});
 
-		socket.on('typing-stop', (data: { chatId: string; userId: string }) => {
+		socket.on('typing-stop', (data: { chatId: string }) => {
 			socket.to(data.chatId).emit('user-typing', {
-				userId: data.userId,
+				userId: socket.user!.id,
 				isTyping: false
 			});
 		});

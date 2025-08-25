@@ -7,8 +7,6 @@ import cors from 'cors';
 const app = express();
 const server = http.createServer(app);
 
-initializeSocket(server);
-
 // Add CORS middleware
 app.use(
 	cors({
@@ -19,6 +17,7 @@ app.use(
 		credentials: true
 	})
 );
+initializeSocket(server);
 
 // SvelteKit handlers
 app.use(handler);
