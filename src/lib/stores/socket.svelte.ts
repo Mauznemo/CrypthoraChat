@@ -17,7 +17,9 @@ class SocketStore {
 		if (this.socket?.connected) return;
 		console.log('Not connected, connecting...');
 
-		this.socket = ioClient('http://localhost:3000');
+		const socketUrl = import.meta.env.PROD ? window.location.origin : 'http://localhost:3000';
+
+		this.socket = ioClient(socketUrl);
 
 		this.socket.on('connect_error', (err: any) => console.log('Connect error:', err));
 
