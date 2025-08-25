@@ -2,6 +2,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import Modal from '$lib/components/Modal.svelte';
+	import EmojiPicker from '$lib/components/chat/EmojiPicker.svelte';
 
 	let { children } = $props();
 </script>
@@ -39,3 +40,4 @@
 </div>
 
 <Modal />
+<EmojiPicker />

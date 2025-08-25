@@ -169,12 +169,25 @@ export function initializeSocket(server: HTTPServer) {
 		// Handle message reactions
 		socket.on('react-to-message', async (data: { messageId: string; reaction: string }) => {
 			try {
-				// Update message with reaction in database
+				const message = await db.message.findUnique({
+					where: { id: data.messageId },
+					select: { reactions: true }
+				});
+
+				if (!message) return;
+
+				const reactionKey = `${socket.user!.id}:${data.reaction}`;
+
+				if (message.reactions.includes(reactionKey)) {
+					return;
+				}
+
+				// Add reaction
 				const updatedMessage = await db.message.update({
 					where: { id: data.messageId },
 					data: {
 						reactions: {
-							push: `${socket.user!.id}:${data.reaction}`
+							push: reactionKey
 						}
 					},
 					include: {
@@ -184,12 +197,56 @@ export function initializeSocket(server: HTTPServer) {
 					}
 				});
 
-				// Emit to all users in the chat
+				// Emit updated message
 				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
 			} catch (error) {
 				console.error('Error updating reaction:', error);
 			}
 		});
+
+		socket.on(
+			'update-reaction',
+			async (data: { messageId: string; reaction: string; operation: 'add' | 'remove' }) => {
+				try {
+					const message = await db.message.findUnique({
+						where: { id: data.messageId },
+						select: { reactions: true }
+					});
+
+					if (!message) return;
+
+					const userReaction = `${socket.user!.id}:${data.reaction}`;
+					let updatedReactions = message.reactions ?? [];
+
+					if (data.operation === 'add') {
+						// Prevent duplicates
+						if (!updatedReactions.includes(userReaction)) {
+							updatedReactions = [...updatedReactions, userReaction];
+						}
+					} else if (data.operation === 'remove') {
+						updatedReactions = updatedReactions.filter((r) => r !== userReaction);
+					}
+
+					const updatedMessage = await db.message.update({
+						where: { id: data.messageId },
+						data: {
+							reactions: {
+								set: updatedReactions
+							}
+						},
+						include: {
+							user: true,
+							chat: true,
+							readBy: true
+						}
+					});
+
+					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+				} catch (error) {
+					console.error('Error updating reaction:', error);
+				}
+			}
+		);
 
 		// Handle message read status
 		socket.on('mark-messages-read', async (data: { messageIds: string[]; chatId: string }) => {

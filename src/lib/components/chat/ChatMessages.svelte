@@ -19,7 +19,8 @@
 		onReply,
 		onDelete,
 		onInfo,
-		onReaction
+		onReaction,
+		onUpdateReaction
 	}: {
 		messages: MessageWithRelations[];
 		user: User | null;
@@ -30,6 +31,11 @@
 		onDelete: (message: MessageWithRelations) => void;
 		onInfo: (message: MessageWithRelations) => void;
 		onReaction: (message: MessageWithRelations) => void;
+		onUpdateReaction: (
+			message: MessageWithRelations,
+			emoji: string,
+			operation: 'add' | 'remove'
+		) => void;
 	} = $props();
 
 	// State using Svelte 5 runes
@@ -60,12 +66,7 @@
 		const containerRect = messageContainer.getBoundingClientRect();
 
 		// Calculate position relative to container including scroll offset
-		const relativeY =
-			messageRect.top -
-			containerRect.top +
-			messageContainer.scrollTop +
-			messageRect.height / 2 +
-			10;
+		const relativeY = messageRect.top - containerRect.top + messageContainer.scrollTop - 30;
 
 		return {
 			x: 20,
@@ -79,6 +80,7 @@
 		isFromMe: boolean
 	): void {
 		if (isTouchDevice()) return;
+
 		isHovering = true;
 
 		if (hideTimeout) {
@@ -278,13 +280,16 @@
 					{isLast}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
+					onUpdateReaction={(emoji, operation) => onUpdateReaction(message, emoji, operation)}
 				/>
 			{:else}
 				<ChatMessage
 					{message}
+					userId={user?.id || ''}
 					{showProfile}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
+					onUpdateReaction={(emoji, operation) => onUpdateReaction(message, emoji, operation)}
 				/>
 			{/if}
 		</div>

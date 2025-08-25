@@ -8,6 +8,7 @@
 
 	import type { MessageWithRelations } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
+	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -23,13 +24,13 @@
 
 	let messages: MessageWithRelations[] = $state([]);
 
+	// Auto-scroll to bottom when new messages arrive
+	let shouldAutoScroll = $state(true);
+
 	function autoGrow(element: HTMLTextAreaElement) {
 		element.style.height = '5px';
 		element.style.height = element.scrollHeight + 'px';
 	}
-
-	// Auto-scroll to bottom when new messages arrive
-	let shouldAutoScroll = $state(true);
 
 	const scrollToBottom = () => {
 		if (shouldAutoScroll && messageContainer) {
@@ -250,6 +251,31 @@
 
 	function handleReaction(message: MessageWithRelations): void {
 		console.log('Reaction message:', message.id);
+		const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
+		const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
+		console.log('Message element:', messageBubble);
+		if (messageBubble) {
+			emojiPickerStore.open(messageBubble, (emoji: string) => {
+				console.log('Selected emoji:', emoji);
+				socketStore.reactToMessage({
+					messageId: message.id,
+					reaction: emoji
+				});
+			});
+		}
+	}
+
+	function handleUpdateReaction(
+		message: MessageWithRelations,
+		emoji: string,
+		operation: 'add' | 'remove'
+	): void {
+		console.log('Update reaction:', message.id, emoji, operation);
+		socketStore.updateReaction({
+			messageId: message.id,
+			reaction: emoji,
+			operation
+		});
 	}
 
 	function handleCloseEdit(): void {
@@ -348,6 +374,7 @@
 		onDelete={handleDeleteMessage}
 		onInfo={handleInfoMessage}
 		onReaction={handleReaction}
+		onUpdateReaction={handleUpdateReaction}
 	></ChatMessages>
 
 	{#if socketStore.typing.length > 0}
