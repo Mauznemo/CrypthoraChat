@@ -7,6 +7,7 @@
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
 	import type { MessageWithRelations } from '$lib/types';
+	import { modalStore } from '$lib/stores/modal.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -220,6 +221,12 @@
 
 	function handleInfoMessage(message: MessageWithRelations): void {
 		console.log('Show message info:', message.id);
+		const readerNames =
+			message.readBy.length > 0 ? message.readBy.map((user) => user.username).join(', ') : 'No one';
+		modalStore.alert(
+			'Message Info',
+			'Sent by: ' + message.user.username + '\nRead by: ' + readerNames
+		);
 	}
 
 	function handleReaction(message: MessageWithRelations): void {
