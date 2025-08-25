@@ -7,13 +7,17 @@
 	const {
 		message,
 		showProfile,
+		userId,
 		onHover,
-		onTouchStart
+		onTouchStart,
+		onUpdateReaction
 	}: {
 		message: MessageWithRelations;
 		showProfile: boolean;
+		userId: string;
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
+		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
 	} = $props();
 </script>
 
@@ -70,5 +74,47 @@
 				})}{message.isEdited ? ' edited' : ''}
 			</div>
 		</div>
+		{#if message.reactions.length > 0}
+			{@const emojiData = message.reactions.reduce(
+				(acc, reaction) => {
+					const [reactorId, emoji] = reaction.split(':');
+					if (!acc[emoji]) {
+						acc[emoji] = { count: 0, userIds: [] };
+					}
+					acc[emoji].count++;
+					acc[emoji].userIds.push(reactorId);
+					return acc;
+				},
+				{} as Record<string, { count: number; userIds: string[] }>
+			)}
+
+			<div class="absolute -bottom-4 left-2 flex gap-1">
+				{#each Object.entries(emojiData) as [emoji, data]}
+					{@const userReacted = data.userIds.includes(userId)}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						onclick={() => {
+							if (userReacted) {
+								onUpdateReaction(emoji, 'remove');
+							} else {
+								onUpdateReaction(emoji, 'add');
+							}
+						}}
+						title="React with {emoji}"
+						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
+							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
+							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"
+					>
+						<span>{emoji}</span>
+						{#if data.count > 1}
+							<span class="ml-1 text-xs text-gray-300">{data.count}</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
+{#if message.reactions.length > 0}
+	<div class="h-2"></div>
+{/if}

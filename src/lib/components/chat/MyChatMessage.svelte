@@ -5,13 +5,18 @@
 	import type { MessageWithRelations } from '$lib/types';
 	import Reply from './Reply.svelte';
 
+	function clamp(value: number, min: number, max: number): number {
+		return Math.max(min, Math.min(max, value));
+	}
+
 	const {
 		message,
 		userId,
 		showProfile,
 		isLast,
 		onHover,
-		onTouchStart
+		onTouchStart,
+		onUpdateReaction
 	}: {
 		message: MessageWithRelations;
 		userId: string;
@@ -19,7 +24,14 @@
 		isLast: boolean;
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
+		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
 	} = $props();
+
+	let readers = $state<User[]>([]);
+
+	$effect(() => {
+		readers = message.readBy.filter((reader: User) => reader.id !== userId);
+	});
 </script>
 
 <div class="m-2 flex flex-row-reverse items-start space-x-2 space-x-reverse">
@@ -70,12 +82,56 @@
 			</div>
 		</div>
 
+		{#if message.reactions.length > 0}
+			{@const offset = isLast ? clamp(readers.length - 1, 0, 4) : 0}
+			{@const emojiData = message.reactions.reduce(
+				(acc, reaction) => {
+					const [reactorId, emoji] = reaction.split(':');
+					if (!acc[emoji]) {
+						acc[emoji] = { count: 0, userIds: [] };
+					}
+					acc[emoji].count++;
+					acc[emoji].userIds.push(reactorId);
+					return acc;
+				},
+				{} as Record<string, { count: number; userIds: string[] }>
+			)}
+
+			<div
+				class="absolute -bottom-4 flex gap-1"
+				style="right: {offset * 12 + (isLast ? 36 : 8)}px;"
+			>
+				{#each Object.entries(emojiData) as [emoji, data]}
+					{@const userReacted = data.userIds.includes(userId)}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						onclick={() => {
+							if (userReacted) {
+								onUpdateReaction(emoji, 'remove');
+							} else {
+								onUpdateReaction(emoji, 'add');
+							}
+						}}
+						title="React with {emoji}"
+						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
+							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
+							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"
+					>
+						<span>{emoji}</span>
+						{#if data.count > 1}
+							<span class="ml-1 text-xs text-gray-300">{data.count}</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
+
 		<!-- Read receipt avatars or checkmark (only for last message sent by me) -->
 		{#if isLast}
-			{@const readers = message.readBy.filter((reader: User) => reader.id !== userId)}
+			{@const shownReaders = readers.slice(0, 3)}
 			<div class="absolute right-2 -bottom-3 z-10 flex">
 				{#if readers && readers.length > 0}
-					{#each readers as reader, readIndex}
+					{#each shownReaders as reader, readIndex}
 						<div
 							class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-xs font-medium text-white shadow-lg"
 							style="margin-left: {readIndex > 0 ? '-8px' : '0'}"
@@ -109,3 +165,6 @@
 		{/if}
 	</div>
 </div>
+{#if message.reactions.length > 0}
+	<div class="h-2"></div>
+{/if}

@@ -90,6 +90,10 @@ class SocketStore {
 		this.socket?.emit('react-to-message', data);
 	}
 
+	updateReaction(data: { messageId: string; reaction: string; operation: 'add' | 'remove' }) {
+		this.socket?.emit('update-reaction', data);
+	}
+
 	markMessagesAsRead(data: { messageIds: string[]; chatId: string }) {
 		this.socket?.emit('mark-messages-read', data);
 	}
