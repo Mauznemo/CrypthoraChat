@@ -60,6 +60,7 @@
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{/snippet}
 			</svelte:boundary>
+
 			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
 				{new Date(message.timestamp).toLocaleTimeString([], {

@@ -78,23 +78,27 @@ class SocketStore {
 		this.socket?.emit('send-message', data);
 	}
 
-	editMessage(data: { messageId: string; encryptedContent: string; userId: string }) {
+	editMessage(data: { messageId: string; encryptedContent: string }) {
 		this.socket?.emit('edit-message', data);
 	}
 
-	reactToMessage(data: { messageId: string; reaction: string; userId: string }) {
+	deleteMessage(data: { messageId: string; chatId: string }) {
+		this.socket?.emit('delete-message', data);
+	}
+
+	reactToMessage(data: { messageId: string; reaction: string }) {
 		this.socket?.emit('react-to-message', data);
 	}
 
-	markMessagesAsRead(data: { messageIds: string[]; userId: string; chatId: string }) {
+	markMessagesAsRead(data: { messageIds: string[]; chatId: string }) {
 		this.socket?.emit('mark-messages-read', data);
 	}
 
-	startTyping(data: { chatId: string; userId: string; username: string }) {
+	startTyping(data: { chatId: string; username: string }) {
 		this.socket?.emit('typing-start', data);
 	}
 
-	stopTyping(data: { chatId: string; userId: string }) {
+	stopTyping(data: { chatId: string }) {
 		this.socket?.emit('typing-stop', data);
 	}
 
@@ -104,6 +108,10 @@ class SocketStore {
 
 	onMessageUpdated(callback: (message: MessageWithRelations) => void) {
 		this.socket?.on('message-updated', callback);
+	}
+
+	onMessageDeleted(callback: (messageId: string) => void) {
+		this.socket?.on('message-deleted', callback);
 	}
 
 	onMessagesRead(callback: (data: { messageIds: string[]; userId: string }) => void) {

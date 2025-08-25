@@ -58,7 +58,6 @@
 			if (!document.hidden) {
 				socketStore.markMessagesAsRead({
 					messageIds: [message.id],
-					userId: data.user.id,
 					chatId: chatId
 				});
 			} else {
@@ -73,6 +72,10 @@
 		if (index !== -1) {
 			messages[index] = updatedMessage;
 		}
+	};
+
+	const handleMessageDeleted = (messageId: string) => {
+		messages = messages.filter((m) => m.id !== messageId);
 	};
 
 	const handleMessagesRead = async (data: { messageIds: string[]; userId: string }) => {
@@ -111,8 +114,7 @@
 		// Stop typing indicator
 		if (isTyping) {
 			socketStore.stopTyping({
-				chatId: chatId,
-				userId: data.user.id
+				chatId: chatId
 			});
 			isTyping = false;
 		}
@@ -121,8 +123,7 @@
 			const encryptedContent = await encryptMessage(messageContent);
 			socketStore.editMessage({
 				messageId: messageEditing.id,
-				encryptedContent: encryptedContent,
-				userId: data.user.id
+				encryptedContent: encryptedContent
 			});
 
 			messageEditing = null;
@@ -156,7 +157,6 @@
 			isTyping = true;
 			socketStore.startTyping({
 				chatId: chatId,
-				userId: data.user.id,
 				username: data.user.username || 'User'
 			});
 		}
@@ -171,8 +171,7 @@
 			if (isTyping) {
 				isTyping = false;
 				socketStore.stopTyping({
-					chatId: chatId,
-					userId: data.user!.id
+					chatId: chatId
 				});
 			}
 		}, 1000);
@@ -180,8 +179,7 @@
 		if (!chatValue.trim() && isTyping) {
 			isTyping = false;
 			socketStore.stopTyping({
-				chatId: chatId,
-				userId: data.user.id
+				chatId: chatId
 			});
 		}
 	};
@@ -202,7 +200,6 @@
 			if (unreadMessages.length > 0) {
 				socketStore.markMessagesAsRead({
 					messageIds: unreadMessages,
-					userId: data.user.id,
 					chatId: chatId
 				});
 				unreadMessages = []; // Clear the unread list
@@ -212,7 +209,6 @@
 			if (messages.length > 0) {
 				socketStore.markMessagesAsRead({
 					messageIds: messages.map((message) => message.id),
-					userId: data.user.id,
 					chatId: chatId
 				});
 			}
@@ -232,6 +228,14 @@
 
 	function handleDeleteMessage(message: MessageWithRelations): void {
 		console.log('Delete message:', message.id);
+		modalStore.confirm(
+			'Delete Message',
+			'Are you sure you want to delete this message?',
+			async () => {
+				console.log('Message deleted:', message.id);
+				socketStore.deleteMessage({ messageId: message.id, chatId: chatId });
+			}
+		);
 	}
 
 	function handleInfoMessage(message: MessageWithRelations): void {
@@ -274,7 +278,6 @@
 		if (messages.length > 0 && data.user?.id) {
 			socketStore.markMessagesAsRead({
 				messageIds: messages.map((message) => message.id),
-				userId: data.user.id,
 				chatId: chatId
 			});
 		}
@@ -282,6 +285,7 @@
 		// Set up event listeners
 		socketStore.onNewMessage(handleNewMessage);
 		socketStore.onMessageUpdated(handleMessageUpdated);
+		socketStore.onMessageDeleted(handleMessageDeleted);
 		socketStore.onMessagesRead(handleMessagesRead);
 		socketStore.onMessageError((error) => {
 			console.error('Socket error:', error);
@@ -302,8 +306,7 @@
 		// Stop typing indicator if active
 		if (isTyping && data.user?.id) {
 			socketStore.stopTyping({
-				chatId: chatId,
-				userId: data.user.id
+				chatId: chatId
 			});
 		}
 
