@@ -122,6 +122,9 @@ export function initializeSocket(server: HTTPServer) {
 					},
 					data: {
 						encryptedContent: data.encryptedContent,
+						readBy: {
+							set: [] // Clear read status on edit
+						},
 						isEdited: true
 					},
 					include: {
@@ -141,6 +144,25 @@ export function initializeSocket(server: HTTPServer) {
 			} catch (error) {
 				console.error('Error editing message:', error);
 				socket.emit('message-error', { error: 'Failed to edit message' });
+			}
+		});
+
+		// Handle message deletion
+		socket.on('delete-message', async (data: { messageId: string; chatId: string }) => {
+			try {
+				// Verify user owns the message and update it
+				await db.message.delete({
+					where: {
+						id: data.messageId,
+						senderId: socket.user!.id // Ensure user owns the message
+					}
+				});
+
+				// Emit to all users in the chat
+				io.to(data.chatId).emit('message-deleted', data.messageId);
+			} catch (error) {
+				console.error('Error deleting message:', error);
+				socket.emit('message-error', { error: 'Failed to delete message' });
 			}
 		});
 
