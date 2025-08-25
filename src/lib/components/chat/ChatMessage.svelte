@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { decryptMessage } from '$lib/messageCrypto';
 	import { processLinks } from '$lib/linkUtils';
-	import type { Prisma } from '$prisma';
-	type MessageWithRelations = Prisma.MessageGetPayload<{
-		include: { user: true; chat: true; readBy: true };
-	}>;
+	import type { MessageWithRelations } from '$lib/types';
+	import Reply from './Reply.svelte';
 
-	const { message, showProfile, onHover, onTouchStart } = $props<{
+	const {
+		message,
+		showProfile,
+		onHover,
+		onTouchStart
+	}: {
 		message: MessageWithRelations;
 		showProfile: boolean;
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
-	}>();
+	} = $props();
 </script>
 
 <div class="m-2 flex items-start space-x-2">
@@ -45,6 +48,8 @@
 
 		<!-- Chat message bubble -->
 		<div class="frosted-glass-shadow relative rounded-2xl bg-gray-700/60 p-3">
+			<Reply replyToMessage={message} />
+
 			<svelte:boundary>
 				<p class="pr-9 whitespace-pre-line text-white">
 					{@html processLinks(await decryptMessage(message.encryptedContent))}

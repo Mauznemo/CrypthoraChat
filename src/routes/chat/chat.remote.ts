@@ -59,7 +59,7 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 	const messages = await db.message.findMany({
 		where: { chatId },
 		orderBy: { timestamp: 'asc' },
-		include: { user: true, chat: true, readBy: true }
+		include: { user: true, chat: true, readBy: true, replyTo: { include: { user: true } } }
 	});
 
 	// If user is logged in, mark all messages as read
