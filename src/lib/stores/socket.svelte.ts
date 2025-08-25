@@ -1,11 +1,8 @@
 // lib/stores/socket.svelte.ts
+import type { MessageWithRelations } from '$lib/types';
 import type { Prisma } from '$prisma';
 import { Socket } from 'socket.io-client';
 import ioClient from 'socket.io-client';
-
-type MessageWithRelations = Prisma.MessageGetPayload<{
-	include: { user: true; chat: true; readBy: true };
-}>;
 
 class SocketStore {
 	private socket: typeof Socket | null = null;
@@ -75,6 +72,7 @@ class SocketStore {
 		chatId: string;
 		senderId: string;
 		encryptedContent: string;
+		replyToId?: string | null;
 		attachments?: string[];
 	}) {
 		this.socket?.emit('send-message', data);

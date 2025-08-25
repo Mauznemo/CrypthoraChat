@@ -1,26 +1,23 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { Prisma } from '$prisma';
-	import MyChatMessage from '$lib/components/chat/MyChatMessage.svelte';
-	import ChatMessage from '$lib/components/chat/ChatMessage.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { decryptMessage, encryptMessage } from '$lib/messageCrypto';
-	import { getMessagesByChatId, getUserById, testQuery } from './chat.remote';
+	import { getMessagesByChatId, getUserById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
-	type MessageWithRelations = Prisma.MessageGetPayload<{
-		include: { user: true; chat: true; readBy: true };
-	}>;
+	import type { MessageWithRelations } from '$lib/types';
 
 	let { data }: PageProps = $props();
 
 	let chatValue: string = $state('');
 	let chatInput: HTMLTextAreaElement;
 	let messageContainer: HTMLDivElement;
-	let typingTimeout: NodeJS.Timeout | null = null;
+	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
 	let chatId: string = 'chat';
+
+	let messageReplying: MessageWithRelations | null = $state(null);
 
 	let messages: MessageWithRelations[] = $state([]);
 
@@ -125,12 +122,15 @@
 				chatId: chatId,
 				senderId: data.user.id,
 				encryptedContent: encryptedContent,
+				replyToId: messageReplying ? messageReplying.id : null,
 				attachments: []
 			});
 		} catch (error) {
 			console.error('Failed to send message:', error);
 			// You might want to show an error message to the user
 		}
+
+		messageReplying = null;
 	};
 
 	const handleInput = () => {
@@ -211,6 +211,7 @@
 
 	function handleReplyMessage(message: MessageWithRelations): void {
 		console.log('Reply to message:', message.id);
+		messageReplying = message;
 	}
 
 	function handleDeleteMessage(message: MessageWithRelations): void {
@@ -333,6 +334,19 @@
 				></span>
 			</span>
 		</div>
+	{/if}
+
+	{#if messageReplying}
+		<svelte:boundary>
+			<div class="p-2 text-sm font-bold text-gray-400">
+				Replying to {messageReplying.user.username}: {await decryptMessage(
+					messageReplying.encryptedContent
+				)}
+			</div>
+			{#snippet pending()}
+				<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
+			{/snippet}
+		</svelte:boundary>
 	{/if}
 
 	<!-- Input Field -->

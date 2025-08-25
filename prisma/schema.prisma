@@ -59,15 +59,18 @@ model Chat {
 }
 
 model Message {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   chatId           String
   senderId         String
   attachments      String[]
   reactions        String[]
-  readBy           User[]   @relation("ReadMessages")
+  readBy           User[]    @relation("ReadMessages")
   encryptedContent String // Encrypted message blob, base64
-  isEdited         Boolean  @default(false)
-  timestamp        DateTime @default(now())
-  user             User     @relation("SentMessages", fields: [senderId], references: [id])
-  chat             Chat     @relation(fields: [chatId], references: [id])
+  isEdited         Boolean   @default(false)
+  timestamp        DateTime  @default(now())
+  user             User      @relation("SentMessages", fields: [senderId], references: [id])
+  chat             Chat      @relation(fields: [chatId], references: [id])
+  replyTo          Message?  @relation("Replies", fields: [replyToId], references: [id])
+  replyToId        String?
+  replies          Message[] @relation("Replies")
 }

@@ -3,10 +3,7 @@
 	import { onMount } from 'svelte';
 	import MyChatMessage from './MyChatMessage.svelte';
 	import ChatMessage from './ChatMessage.svelte';
-
-	type MessageWithRelations = Prisma.MessageGetPayload<{
-		include: { user: true; chat: true; readBy: true };
-	}>;
+	import type { MessageWithRelations } from '$lib/types';
 
 	interface ToolbarPosition {
 		x: number;
@@ -23,7 +20,7 @@
 		onDelete,
 		onInfo,
 		onReaction
-	} = $props<{
+	}: {
 		messages: MessageWithRelations[];
 		user: User | null;
 		messageContainer: HTMLDivElement | null;
@@ -33,7 +30,7 @@
 		onDelete: (message: MessageWithRelations) => void;
 		onInfo: (message: MessageWithRelations) => void;
 		onReaction: (message: MessageWithRelations) => void;
-	}>();
+	} = $props();
 
 	// State using Svelte 5 runes
 	let activeMessage = $state<MessageWithRelations | null>(null);
@@ -43,9 +40,18 @@
 	let longPressTimer = $state<ReturnType<typeof setTimeout> | null>(null);
 	let hideTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
-	const isTouchDevice =
-		typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+	const isTouchDevice = $state(() => {
+		if (typeof window === 'undefined') return false;
+		// Check for fine pointer (mouse) as primary input method
+		const hasFinePrimaryPointer = window.matchMedia('(pointer: fine)').matches;
+		// Check if touch is available as a secondary input
+		const hasTouchCapability = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		// Consider it a touch device only if fine pointer is not primary or touch points > 1
+		return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
+	});
 	let isHovering = false;
+
+	console.log('Mobile device:', isTouchDevice());
 
 	function calculateToolbarPosition(messageEl: HTMLElement): ToolbarPosition {
 		if (!messageContainer) return { x: 8, y: 0 };
@@ -72,7 +78,7 @@
 		message: MessageWithRelations,
 		isFromMe: boolean
 	): void {
-		if (isTouchDevice) return;
+		if (isTouchDevice()) return;
 		isHovering = true;
 
 		if (hideTimeout) {

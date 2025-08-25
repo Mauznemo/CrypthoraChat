@@ -1,12 +1,7 @@
 // server/socket.ts or in your main server file
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
-import type { Prisma } from '../src/generated/prisma/client';
 import { db } from '../src/lib/db';
-
-type MessageWithRelations = Prisma.MessageGetPayload<{
-	include: { user: true; chat: true; readBy: true };
-}>;
 
 export function initializeSocket(server: HTTPServer) {
 	const io = new Server(server);
@@ -37,6 +32,7 @@ export function initializeSocket(server: HTTPServer) {
 				chatId: string;
 				senderId: string;
 				encryptedContent: string;
+				replyToId?: string | null;
 				attachments?: string[];
 			}) => {
 				try {
@@ -47,12 +43,18 @@ export function initializeSocket(server: HTTPServer) {
 							senderId: data.senderId,
 							encryptedContent: data.encryptedContent,
 							attachments: data.attachments || [],
-							reactions: []
+							reactions: [],
+							replyToId: data.replyToId
 						},
 						include: {
 							user: true,
 							chat: true,
-							readBy: true
+							readBy: true,
+							replyTo: {
+								include: {
+									user: true
+								}
+							}
 						}
 					});
 

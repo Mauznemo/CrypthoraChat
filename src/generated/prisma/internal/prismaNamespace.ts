@@ -879,7 +879,8 @@ export const MessageScalarFieldEnum = {
   reactions: 'reactions',
   encryptedContent: 'encryptedContent',
   isEdited: 'isEdited',
-  timestamp: 'timestamp'
+  timestamp: 'timestamp',
+  replyToId: 'replyToId'
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
