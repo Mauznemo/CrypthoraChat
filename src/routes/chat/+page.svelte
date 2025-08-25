@@ -9,6 +9,7 @@
 	import type { MessageWithRelations } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
+	import ChatList from '$lib/components/chat/ChatList.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -17,7 +18,7 @@
 	let messageContainer: HTMLDivElement;
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
-	let chatId: string = 'chat';
+	let chatId: string = $state('chat');
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
@@ -51,6 +52,9 @@
 	let unreadMessages: string[] = [];
 
 	const handleNewMessage = (message: MessageWithRelations) => {
+		console.log(
+			'New message on websocket. ChatId: ' + message.chatId + ', User: ' + message.user.username
+		);
 		messages = [...messages, message];
 		scrollToBottom();
 
@@ -287,6 +291,31 @@
 		messageReplying = null;
 	}
 
+	async function handleChatSelected(newChatId: string): Promise<void> {
+		console.log('Chat selected (leaving previous):', newChatId);
+		socketStore.leaveChat(chatId);
+		chatId = newChatId;
+
+		await getMessagesByChatId(chatId).refresh();
+		messages = await getMessagesByChatId(chatId);
+
+		console.log('Joining chat:', chatId);
+		socketStore.joinChat(chatId);
+
+		if (messages.length > 0 && data.user?.id) {
+			socketStore.markMessagesAsRead({
+				messageIds: messages.map((message) => message.id),
+				chatId: chatId
+			});
+		}
+	}
+
+	let sidebarOpen = $state(false);
+
+	function toggleSidebar() {
+		sidebarOpen = !sidebarOpen;
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -349,102 +378,137 @@
 	});
 </script>
 
-<div class="flex h-dvh min-h-0 flex-col p-2">
-	<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">
-		<!-- Profile picture -->
-		<div
-			class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-		>
-			<p>{data.user?.username?.[0]}</p>
+<div class="flex h-dvh min-h-0">
+	<!-- Sidebar - hidden by default on mobile, shown on md+ -->
+	<div
+		class={`
+		fixed
+		z-50
+		h-full w-80
+		min-w-80 border-r
+		border-gray-700
+		bg-gray-900/80 backdrop-blur-sm
+		 transition-transform
+		duration-300 md:static
+		md:bg-transparent
+		${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+	`}
+	>
+		<div class="flex items-center justify-start p-2">
+			<div
+				class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
+			>
+				<p>{data.user?.username?.[0].toUpperCase()}</p>
+			</div>
+			<p class="ml-2 text-2xl font-bold">{data.user?.username}</p>
 		</div>
 
-		<!-- Chat text -->
-		<div class="px-3 py-2 text-4xl font-extrabold text-white">
-			<p>Chat</p>
-		</div>
+		<ChatList onChatSelected={handleChatSelected} />
 	</div>
 
-	<ChatMessages
-		{messages}
-		user={data.user}
-		bind:messageContainer
-		{handleScroll}
-		onEdit={handleEditMessage}
-		onReply={handleReplyMessage}
-		onDelete={handleDeleteMessage}
-		onInfo={handleInfoMessage}
-		onReaction={handleReaction}
-		onUpdateReaction={handleUpdateReaction}
-	></ChatMessages>
+	<!-- Backdrop for mobile -->
+	{#if sidebarOpen}
+		<div class="bg-opacity-50 fixed inset-0 z-40 md:hidden" onclick={toggleSidebar}></div>
+	{/if}
 
-	{#if socketStore.typing.length > 0}
-		<div class="p-2 text-sm font-bold text-gray-400">
-			{socketStore.typing.map((user) => user.username).join(', ')}
-			{socketStore.typing.length === 1 ? 'is' : 'are'} typing
+	<div class="flex min-w-0 flex-1 flex-col p-2">
+		<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">
+			<!-- Menu button - only shown on mobile -->
+			<button
+				class="flex h-12 w-12 items-center justify-center rounded-full hover:bg-gray-700 md:hidden"
+				onclick={toggleSidebar}
+			>
+				☰
+			</button>
 
-			<!-- Wave animation dots with enhanced movement -->
-			<span class="ml-1 inline-flex space-x-1">
-				<span
-					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s] [animation-duration:0.8s]"
-				></span>
-				<span
-					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s] [animation-duration:0.8s]"
-				></span>
-				<span
-					class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:0s] [animation-duration:0.8s]"
-				></span>
-			</span>
+			<!-- Chat text -->
+			<div class="px-3 py-2 text-4xl font-extrabold text-white">
+				<p>Chat ({messages.length} messages)</p>
+			</div>
 		</div>
-	{/if}
 
-	{#if messageReplying}
-		<svelte:boundary>
-			<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
-				<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
-				Replying to {messageReplying.user.username}: {await decryptMessage(
-					messageReplying.encryptedContent
-				)}
+		<ChatMessages
+			{messages}
+			user={data.user}
+			bind:messageContainer
+			{handleScroll}
+			onEdit={handleEditMessage}
+			onReply={handleReplyMessage}
+			onDelete={handleDeleteMessage}
+			onInfo={handleInfoMessage}
+			onReaction={handleReaction}
+			onUpdateReaction={handleUpdateReaction}
+		></ChatMessages>
+
+		{#if socketStore.typing.length > 0}
+			<div class="p-2 text-sm font-bold text-gray-400">
+				{socketStore.typing.map((user) => user.username).join(', ')}
+				{socketStore.typing.length === 1 ? 'is' : 'are'} typing
+
+				<!-- Wave animation dots with enhanced movement -->
+				<span class="ml-1 inline-flex space-x-1">
+					<span
+						class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s] [animation-duration:0.8s]"
+					></span>
+					<span
+						class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s] [animation-duration:0.8s]"
+					></span>
+					<span
+						class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:0s] [animation-duration:0.8s]"
+					></span>
+				</span>
 			</div>
-			{#snippet pending()}
-				<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
-			{/snippet}
-		</svelte:boundary>
-	{/if}
+		{/if}
 
-	{#if messageEditing}
-		<svelte:boundary>
-			<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
-				<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
-				<span>Editing message: {await decryptMessage(messageEditing.encryptedContent)}</span>
-			</div>
-			{#snippet pending()}
-				<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
-			{/snippet}
-		</svelte:boundary>
-	{/if}
+		{#if messageReplying}
+			<svelte:boundary>
+				<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
+					<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
+					Replying to {messageReplying.user.username}: {await decryptMessage(
+						messageReplying.encryptedContent
+					)}
+				</div>
+				{#snippet pending()}
+					<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
+				{/snippet}
+			</svelte:boundary>
+		{/if}
 
-	<!-- Input Field -->
-	<div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
-		<button class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-4xl">+</button>
+		{#if messageEditing}
+			<svelte:boundary>
+				<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
+					<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
+					<span>Editing message: {await decryptMessage(messageEditing.encryptedContent)}</span>
+				</div>
+				{#snippet pending()}
+					<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
+				{/snippet}
+			</svelte:boundary>
+		{/if}
 
-		<textarea
-			bind:value={chatValue}
-			bind:this={chatInput}
-			oninput={handleInput}
-			onkeydown={handleKeydown}
-			placeholder="Type your message here..."
-			spellcheck="true"
-			autocapitalize="sentences"
-			autocomplete="off"
-			inputmode="text"
-			rows="1"
-			class="frosted-glass no-scrollbar max-h-60 min-h-12 flex-1 resize-none rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white placeholder:text-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
-		></textarea>
+		<!-- Input Field -->
+		<div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
+			<button class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-4xl">+</button>
 
-		<button
-			disabled={!chatValue.trim() || !socketStore.connected}
-			onclick={sendMessage}
-			class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-xl">➡️</button
-		>
+			<textarea
+				bind:value={chatValue}
+				bind:this={chatInput}
+				oninput={handleInput}
+				onkeydown={handleKeydown}
+				placeholder="Type your message here..."
+				spellcheck="true"
+				autocapitalize="sentences"
+				autocomplete="off"
+				inputmode="text"
+				rows="1"
+				class="frosted-glass no-scrollbar max-h-60 min-h-12 flex-1 resize-none rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white placeholder:text-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+			></textarea>
+
+			<button
+				disabled={!chatValue.trim() || !socketStore.connected}
+				onclick={sendMessage}
+				class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-xl">➡️</button
+			>
+		</div>
 	</div>
 </div>

@@ -77,6 +77,8 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		});
 	}
 
+	console.log('Queried messages: ', messages.length);
+
 	// Return the messages (the readBy relation will be updated for subsequent queries)
 	return messages;
 });

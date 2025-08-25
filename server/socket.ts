@@ -79,6 +79,7 @@ export function initializeSocket(server: HTTPServer) {
 				attachments?: string[];
 			}) => {
 				try {
+					console.log('Received message from: ' + socket.user!.id + ' in chat: ' + data.chatId);
 					//TODO: Check if user is in chat
 					// Save message to database
 					const newMessage = await db.message.create({
