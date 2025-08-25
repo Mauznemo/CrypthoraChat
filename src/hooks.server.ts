@@ -7,9 +7,18 @@ import { initializeSocket } from '$lib/server/socket';*/
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ['/', '/login', '/register'];
 
+const ADMIN_ROUTES = ['/admin'];
+
 // Check if a route is public
 function isPublicRoute(pathname: string): boolean {
 	return PUBLIC_ROUTES.some((route) => {
+		if (route === '/') return pathname === '/';
+		return pathname.startsWith(route);
+	});
+}
+
+function isAdminRoute(pathname: string): boolean {
+	return ADMIN_ROUTES.some((route) => {
 		if (route === '/') return pathname === '/';
 		return pathname.startsWith(route);
 	});
@@ -34,14 +43,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		throw redirect(302, `/login?redirect=${encodeURIComponent(event.url.pathname)}`);
 	}
 
+	if (isAdminRoute(event.url.pathname) && !event.locals.user?.isAdmin) {
+		throw redirect(302, '/profile');
+	}
+
 	return resolve(event);
 };
-/*
-const httpServer = createServer();
-const io = initializeSocket(httpServer);
-
-// Start the server
-httpServer.listen(6000, () => {
-	console.log('Socket.IO server running on port 6000');
-});
-*/

@@ -398,7 +398,8 @@ export const ModelName = {
   UserChatKey: 'UserChatKey',
   Session: 'Session',
   Chat: 'Chat',
-  Message: 'Message'
+  Message: 'Message',
+  ServerSettings: 'ServerSettings'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userChatKey" | "session" | "chat" | "message"
+    modelProps: "user" | "userChatKey" | "session" | "chat" | "message" | "serverSettings"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -788,6 +789,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ServerSettings: {
+      payload: Prisma.$ServerSettingsPayload<ExtArgs>
+      fields: Prisma.ServerSettingsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ServerSettingsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ServerSettingsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        findFirst: {
+          args: Prisma.ServerSettingsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ServerSettingsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        findMany: {
+          args: Prisma.ServerSettingsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>[]
+        }
+        create: {
+          args: Prisma.ServerSettingsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        createMany: {
+          args: Prisma.ServerSettingsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ServerSettingsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>[]
+        }
+        delete: {
+          args: Prisma.ServerSettingsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        update: {
+          args: Prisma.ServerSettingsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        deleteMany: {
+          args: Prisma.ServerSettingsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ServerSettingsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ServerSettingsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>[]
+        }
+        upsert: {
+          args: Prisma.ServerSettingsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ServerSettingsPayload>
+        }
+        aggregate: {
+          args: Prisma.ServerSettingsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateServerSettings>
+        }
+        groupBy: {
+          args: Prisma.ServerSettingsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServerSettingsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ServerSettingsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ServerSettingsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -884,6 +959,14 @@ export const MessageScalarFieldEnum = {
 } as const
 
 export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
+
+
+export const ServerSettingsScalarFieldEnum = {
+  id: 'id',
+  allowedUsernames: 'allowedUsernames'
+} as const
+
+export type ServerSettingsScalarFieldEnum = (typeof ServerSettingsScalarFieldEnum)[keyof typeof ServerSettingsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1066,6 +1149,7 @@ export type GlobalOmitConfig = {
   session?: Prisma.SessionOmit
   chat?: Prisma.ChatOmit
   message?: Prisma.MessageOmit
+  serverSettings?: Prisma.ServerSettingsOmit
 }
 
 /* Types for Logging */

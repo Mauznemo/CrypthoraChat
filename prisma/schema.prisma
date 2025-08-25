@@ -74,3 +74,10 @@ model Message {
   replyToId        String?
   replies          Message[] @relation("Replies")
 }
+
+model ServerSettings {
+  id               String   @id @default("singleton")
+  allowedUsernames String[]
+
+  @@unique([id]) // Ensure only one instance exists
+}
