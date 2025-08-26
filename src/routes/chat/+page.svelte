@@ -2,11 +2,11 @@
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { decryptMessage, encryptMessage } from '$lib/messageCrypto';
-	import { getMessagesByChatId, getUserById } from './chat.remote';
+	import { getChatById, getMessagesByChatId, getUserById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
-	import type { MessageWithRelations } from '$lib/types';
+	import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
@@ -19,7 +19,7 @@
 	let messageContainer: HTMLDivElement;
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
-	let chatId: string = $state('chat');
+	let activeChat: ChatWithoutMessages | null = $state(null);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
@@ -59,12 +59,17 @@
 		messages = [...messages, message];
 		scrollToBottom();
 
+		if (!activeChat) {
+			console.error('No chatId found, failed to mark new message as read');
+			return;
+		}
+
 		// Mark message as read if it's not from current user and page is visible
 		if (message.senderId !== data.user?.id && data.user?.id) {
 			if (!document.hidden) {
 				socketStore.markMessagesAsRead({
 					messageIds: [message.id],
-					chatId: chatId
+					chatId: activeChat.id
 				});
 			} else {
 				// Store unread message ID for later
@@ -111,6 +116,11 @@
 	};
 
 	const sendMessage = async () => {
+		if (!activeChat) {
+			modalStore.alert('Error', 'Failed to send message: No chat selected');
+			return;
+		}
+
 		if (!chatValue.trim() || !data.user?.id) return;
 
 		const messageContent = chatValue.trim();
@@ -120,7 +130,7 @@
 		// Stop typing indicator
 		if (isTyping) {
 			socketStore.stopTyping({
-				chatId: chatId
+				chatId: activeChat.id
 			});
 			isTyping = false;
 		}
@@ -140,15 +150,14 @@
 			const encryptedContent = await encryptMessage(messageContent);
 
 			socketStore.sendMessage({
-				chatId: chatId,
+				chatId: activeChat.id,
 				senderId: data.user.id,
 				encryptedContent: encryptedContent,
 				replyToId: messageReplying ? messageReplying.id : null,
 				attachments: []
 			});
 		} catch (error) {
-			console.error('Failed to send message:', error);
-			// You might want to show an error message to the user
+			modalStore.alert('Error', 'Failed to send message: ' + error);
 		}
 
 		messageReplying = null;
@@ -157,12 +166,13 @@
 	const handleInput = () => {
 		autoGrow(chatInput);
 		if (!data.user?.id) return;
+		if (!activeChat) return;
 
 		// Handle typing indicators
 		if (!isTyping && chatValue.trim()) {
 			isTyping = true;
 			socketStore.startTyping({
-				chatId: chatId,
+				chatId: activeChat.id,
 				username: data.user.username || 'User'
 			});
 		}
@@ -174,10 +184,10 @@
 
 		// Set new timeout to stop typing indicator
 		typingTimeout = setTimeout(() => {
-			if (isTyping) {
+			if (isTyping && activeChat) {
 				isTyping = false;
 				socketStore.stopTyping({
-					chatId: chatId
+					chatId: activeChat.id
 				});
 			}
 		}, 1000);
@@ -185,7 +195,7 @@
 		if (!chatValue.trim() && isTyping) {
 			isTyping = false;
 			socketStore.stopTyping({
-				chatId: chatId
+				chatId: activeChat.id
 			});
 		}
 	};
@@ -199,6 +209,7 @@
 
 	const handleVisibilityChange = () => {
 		if (!document.hidden && data.user?.id) {
+			if (!activeChat) return;
 			//Maybe re-query messages here instead if problems occur late
 			//messages = await getMessagesByChatId(chatId);
 
@@ -206,7 +217,7 @@
 			if (unreadMessages.length > 0) {
 				socketStore.markMessagesAsRead({
 					messageIds: unreadMessages,
-					chatId: chatId
+					chatId: activeChat.id
 				});
 				unreadMessages = []; // Clear the unread list
 			}
@@ -215,7 +226,7 @@
 			if (messages.length > 0) {
 				socketStore.markMessagesAsRead({
 					messageIds: messages.map((message) => message.id),
-					chatId: chatId
+					chatId: activeChat.id
 				});
 			}
 		}
@@ -233,13 +244,18 @@
 	}
 
 	function handleDeleteMessage(message: MessageWithRelations): void {
+		if (!activeChat) {
+			modalStore.alert('Error', 'Failed to delete message: No chat selected');
+			return;
+		}
 		console.log('Delete message:', message.id);
 		modalStore.confirm(
 			'Delete Message',
 			'Are you sure you want to delete this message?',
 			async () => {
+				if (!activeChat) return;
 				console.log('Message deleted:', message.id);
-				socketStore.deleteMessage({ messageId: message.id, chatId: chatId });
+				socketStore.deleteMessage({ messageId: message.id, chatId: activeChat.id });
 			}
 		);
 	}
@@ -292,28 +308,32 @@
 		messageReplying = null;
 	}
 
-	async function handleChatSelected(newChatId: string): Promise<void> {
-		console.log('Chat selected (leaving previous):', newChatId);
-		socketStore.leaveChat(chatId);
-		chatId = newChatId;
+	async function handleChatSelected(newChat: ChatWithoutMessages): Promise<void> {
+		console.log('Chat selected (leaving previous):', newChat.id);
+		if (activeChat) socketStore.leaveChat(activeChat.id);
+		activeChat = newChat;
+		localStorage.setItem('lastChatId', newChat.id);
 
-		await getMessagesByChatId(chatId).refresh();
-		messages = await getMessagesByChatId(chatId);
+		const success = await tryGetMessages(activeChat);
 
-		console.log('Joining chat:', chatId);
-		socketStore.joinChat(chatId);
+		if (success) {
+			console.log('Joining chat:', activeChat?.id);
+			socketStore.joinChat(activeChat!.id);
 
-		if (messages.length > 0 && data.user?.id) {
-			socketStore.markMessagesAsRead({
-				messageIds: messages.map((message) => message.id),
-				chatId: chatId
-			});
+			if (messages.length > 0 && data.user?.id) {
+				socketStore.markMessagesAsRead({
+					messageIds: messages.map((message) => message.id),
+					chatId: activeChat!.id
+				});
+			}
+		} else {
+			activeChat = null;
 		}
 	}
 
 	function handleCreateChat(): void {
 		console.log('Create new chat');
-		socketStore.leaveChat(chatId);
+		if (activeChat) socketStore.leaveChat(activeChat.id);
 
 		modalStore.open({
 			title: 'New Chat',
@@ -325,6 +345,24 @@
 		});
 	}
 
+	async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
+		if (!chat) {
+			//modalStore.alert('Error', 'Failed to get messages: No chat selected');
+			return false;
+		}
+		try {
+			await getMessagesByChatId(chat.id).refresh();
+			messages = await getMessagesByChatId(chat.id);
+			return true;
+		} catch (error: any) {
+			if (error.body) {
+				modalStore.alert('Error', 'Failed to get messages: ' + error.body.message);
+			}
+		}
+
+		return false;
+	}
+
 	let sidebarOpen = $state(false);
 
 	function toggleSidebar() {
@@ -334,21 +372,34 @@
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		messages = await getMessagesByChatId(chatId);
+		//TODO: Load last used chatId
+		const lastChatId = localStorage.getItem('lastChatId');
+		if (lastChatId) {
+			const chat = await getChatById(lastChatId);
+			if (chat) {
+				activeChat = chat;
+			}
+		}
+
+		const success = await tryGetMessages(activeChat);
+
+		if (!success) {
+			activeChat = null;
+		}
 
 		// Connect to socket server
 		socketStore.connect();
 
 		// Join the chat room
-		if (chatId) {
-			socketStore.joinChat(chatId);
+		if (activeChat) {
+			socketStore.joinChat(activeChat.id);
 		}
 
 		// Mark all messages as read for realtime updates
-		if (messages.length > 0 && data.user?.id) {
+		if (activeChat && messages.length > 0 && data.user?.id) {
 			socketStore.markMessagesAsRead({
 				messageIds: messages.map((message) => message.id),
-				chatId: chatId
+				chatId: activeChat.id
 			});
 		}
 
@@ -374,15 +425,15 @@
 		}
 
 		// Stop typing indicator if active
-		if (isTyping && data.user?.id) {
+		if (activeChat && isTyping && data.user?.id) {
 			socketStore.stopTyping({
-				chatId: chatId
+				chatId: activeChat.id
 			});
 		}
 
 		// Leave chat room
-		if (chatId) {
-			socketStore.leaveChat(chatId);
+		if (activeChat) {
+			socketStore.leaveChat(activeChat.id);
 		}
 
 		// Remove event listeners
@@ -418,7 +469,12 @@
 			<p class="ml-2 text-2xl font-bold">{data.user?.username}</p>
 		</div>
 
-		<ChatList onChatSelected={handleChatSelected} onCreateChat={handleCreateChat} />
+		<ChatList
+			userId={data.user?.id || ''}
+			bind:selectedChat={activeChat}
+			onChatSelected={handleChatSelected}
+			onCreateChat={handleCreateChat}
+		/>
 	</div>
 
 	<!-- Backdrop for mobile -->
@@ -436,11 +492,18 @@
 				☰
 			</button>
 
-			<!-- Chat text -->
+			<!-- Chat text //TODO: Replace with chat name and pic -->
+
 			<div class="px-3 py-2 text-4xl font-extrabold text-white">
-				<p>Chat ({messages.length} messages)</p>
+				<p>Chat</p>
 			</div>
 		</div>
+
+		{#if !activeChat}
+			<div class="flex h-full items-center justify-center">
+				<p class="text-2xl font-bold">No chat selected</p>
+			</div>
+		{/if}
 
 		<ChatMessages
 			{messages}

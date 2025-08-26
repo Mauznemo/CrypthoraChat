@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { safeUserFields } from '$lib/types';
+import { chatWithoutMessagesFields, safeUserFields, type MessageWithRelations } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -55,6 +55,17 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		}
 	});
 
+	if (messages.length === 0) {
+		const chatExists = await db.chat.findUnique({
+			where: { id: chatId },
+			select: { id: true }
+		});
+
+		if (!chatExists) {
+			error(404, 'Chat "' + chatId + '" not found');
+		}
+	}
+
 	// Mark all messages as read
 	if (locals.user?.id) {
 		const messageIds = messages.map((message) => message.id);
@@ -72,4 +83,40 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 	console.log('Queried messages: ', messages.length);
 
 	return messages;
+});
+
+export const getUserChats = query(async () => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const userWithChats = await db.user.findUnique({
+		where: { id: locals.user!.id },
+		select: {
+			chats: {
+				select: chatWithoutMessagesFields
+			}
+		}
+	});
+
+	return userWithChats?.chats ?? [];
+});
+
+export const getChatById = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	//TODO: Check if the user is a member of the chat
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: chatWithoutMessagesFields
+	});
+
+	return chat;
 });

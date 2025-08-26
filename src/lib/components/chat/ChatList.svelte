@@ -1,57 +1,75 @@
 <script lang="ts">
-	const {
+	import { onMount } from 'svelte';
+	import { getUserChats } from '../../../routes/chat/chat.remote';
+	import type { ChatWithoutMessages, SafeUser } from '$lib/types';
+
+	let {
+		userId,
+		selectedChat = $bindable<ChatWithoutMessages | null>(),
 		onChatSelected,
 		onCreateChat
 	}: {
-		onChatSelected: (chatId: string) => void;
+		userId: string;
+		selectedChat?: ChatWithoutMessages | null;
+		onChatSelected: (chat: ChatWithoutMessages) => void;
 		onCreateChat: () => void;
 	} = $props();
 
-	let activeChat: string = $state('chat');
+	let chats: ChatWithoutMessages[] = $state([]);
 
-	const fakeChats = [
-		{
-			name: 'User',
-			type: 'dm',
-			id: 'chat',
-			newestMessage: 'Hello world'
-		},
-		{
-			name: 'Room',
-			type: 'group',
-			id: 'chat2',
-			newestMessage: 'Really long message that should be truncated'
-		}
-	];
+	onMount(async () => {
+		chats = await getUserChats();
+	});
 </script>
 
 <div class="mt-5">
 	<p class="px-2 text-sm font-semibold text-gray-300">Chats</p>
-	{#each fakeChats as chat, index}
+	{#each chats as chat, index}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			onclick={() => {
-				activeChat = chat.id;
-				onChatSelected(chat.id);
+				selectedChat = chat;
+				onChatSelected(chat);
 			}}
 			role="button"
 			tabindex="0"
-			class="flex h-15 w-full cursor-pointer items-center justify-start space-x-2 px-3 transition-colors {activeChat ===
+			class="flex h-15 w-full cursor-pointer items-center justify-start space-x-2 px-3 transition-colors {selectedChat?.id ===
 			chat.id
 				? 'bg-teal-700/30'
 				: 'hover:bg-gray-700/40 '}"
 		>
-			<!-- Profile picture -->
-			<div
-				class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-			>
-				<p>{chat.name.charAt(0)}</p>
-			</div>
+			{#if chat.type === 'dm'}
+				{@const otherUser = chat.participants.find((p) => p.id !== userId)}
+				<!-- Profile picture -->
+				<div
+					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
+				>
+					<p>{chat.name?.charAt(0)}</p>
+				</div>
 
-			<!-- Chat text -->
-			<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-				<div class="flex items-center space-x-2">
-					{#if chat.type === 'group'}
+				<!-- Chat text -->
+				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
+					<div title={otherUser?.username} class="flex items-center space-x-2">
+						<p class="line-clamp-1 break-words text-white">
+							{otherUser?.username}
+						</p>
+					</div>
+
+					<p class="line-clamp-1 text-sm font-semibold break-words text-gray-400">
+						Not implemented
+					</p>
+				</div>
+			{:else}
+				<!-- Profile picture -->
+				<div
+					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
+				>
+					<p>{chat.name?.charAt(0)}</p>
+				</div>
+
+				<!-- Chat text -->
+				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
+					<div title={chat.name} class="flex items-center space-x-2">
 						<svg
 							class="mt-1 h-5 w-5 text-gray-800 dark:text-white"
 							aria-hidden="true"
@@ -67,16 +85,16 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-					{/if}
-					<p>
-						{chat.name}
+						<p class="line-clamp-1 break-words text-white">
+							{chat.name}
+						</p>
+					</div>
+
+					<p class="line-clamp-1 text-sm font-semibold break-words text-gray-400">
+						Not implemented
 					</p>
 				</div>
-
-				<p class="line-clamp-1 text-sm font-semibold break-words text-gray-400">
-					{chat.newestMessage}
-				</p>
-			</div>
+			{/if}
 		</div>
 	{/each}
 	<div class="mt-5 flex items-center justify-center">

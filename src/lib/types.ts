@@ -20,3 +20,18 @@ export type MessageWithRelations = Prisma.MessageGetPayload<{
 export type SafeUser = Prisma.UserGetPayload<{
 	select: typeof safeUserFields;
 }>;
+
+export const chatWithoutMessagesFields = {
+	id: true,
+	name: true,
+	type: true,
+	image: true,
+	imageIv: true,
+	ownerId: true,
+	salt: true,
+	participants: { select: safeUserFields }
+} satisfies Prisma.ChatSelect;
+
+export type ChatWithoutMessages = Prisma.ChatGetPayload<{
+	select: typeof chatWithoutMessagesFields;
+}>;
