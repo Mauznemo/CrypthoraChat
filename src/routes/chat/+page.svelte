@@ -10,6 +10,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
+	import { goto } from '$app/navigation';
 
 	let { data }: PageProps = $props();
 
@@ -310,6 +311,20 @@
 		}
 	}
 
+	function handleCreateChat(): void {
+		console.log('Create new chat');
+		socketStore.leaveChat(chatId);
+
+		modalStore.open({
+			title: 'New Chat',
+			content: 'What type of chat would you like to create?',
+			buttons: [
+				{ text: 'New Direct Message', variant: 'primary', onClick: () => goto('/chat/new/dm') },
+				{ text: 'New Group', variant: 'primary', onClick: () => goto('/chat/new/group') }
+			]
+		});
+	}
+
 	let sidebarOpen = $state(false);
 
 	function toggleSidebar() {
@@ -403,7 +418,7 @@
 			<p class="ml-2 text-2xl font-bold">{data.user?.username}</p>
 		</div>
 
-		<ChatList onChatSelected={handleChatSelected} />
+		<ChatList onChatSelected={handleChatSelected} onCreateChat={handleCreateChat} />
 	</div>
 
 	<!-- Backdrop for mobile -->
@@ -488,7 +503,28 @@
 
 		<!-- Input Field -->
 		<div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
-			<button class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-4xl">+</button>
+			<button
+				class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 transition-colors hover:bg-teal-600/60"
+				aria-label="Add attachments"
+			>
+				<svg
+					class="h-6 w-6 text-white"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 12h14m-7 7V5"
+					/>
+				</svg>
+			</button>
 
 			<textarea
 				bind:value={chatValue}
@@ -507,8 +543,24 @@
 			<button
 				disabled={!chatValue.trim() || !socketStore.connected}
 				onclick={sendMessage}
-				class="frosted-glass h-12 w-12 rounded-full bg-gray-600 text-xl">➡️</button
+				class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-teal-600/60 transition-colors hover:bg-teal-600/80 disabled:bg-gray-600"
+				aria-label="Send Message"
 			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="2"
+					stroke="currentColor"
+					class="ml-0.5 size-6"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+					/>
+				</svg>
+			</button>
 		</div>
 	</div>
 </div>

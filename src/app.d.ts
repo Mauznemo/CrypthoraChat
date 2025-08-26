@@ -12,6 +12,9 @@ declare global {
 			user?: User;
 			sessionId?: string;
 		}
+		interface Error {
+			message?: string;
+		}
 	}
 }
 

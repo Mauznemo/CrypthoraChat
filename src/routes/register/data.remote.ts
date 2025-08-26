@@ -34,7 +34,11 @@ export const register = form(async (data) => {
 		settings.allowedUsernames.length == 0 ||
 		!settings.allowedUsernames.includes(result.output.username)
 	) {
-		error(400, 'Username not allowed (Please contact an admin)');
+		const userCount = await db.user.count();
+
+		if (userCount > 0) {
+			error(400, 'Username not allowed (Please contact an admin)');
+		}
 	}
 
 	try {
