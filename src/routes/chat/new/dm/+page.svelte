@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
+	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
@@ -11,9 +12,15 @@
 
 	async function handleDmGroup() {
 		try {
-			let success = await createDm({ userId: selectedUser!.id });
+			let result = await createDm({ userId: selectedUser!.id });
 
-			if (success) {
+			if (result.success) {
+				socketStore.notifyNewChat({
+					chatId: result.chatId,
+					userIds: [selectedUser!.id],
+					type: 'dm'
+				});
+				localStorage.setItem('lastChatId', result.chatId);
 				goto('/chat');
 			}
 		} catch (err: any) {
