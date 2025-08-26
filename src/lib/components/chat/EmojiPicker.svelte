@@ -422,7 +422,7 @@
 	>
 		<div
 			bind:this={pickerElement}
-			class="fixed flex h-96 w-80 flex-col rounded-lg border border-gray-600 bg-gray-800 shadow-2xl"
+			class="frosted-glass-shadow fixed flex h-96 w-80 flex-col rounded-4xl bg-gray-800/60"
 			style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px;"
 		>
 			<!-- Header with search -->
@@ -431,7 +431,7 @@
 					type="text"
 					placeholder="Search emojis..."
 					bind:value={searchTerm}
-					class="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full border border-gray-700 bg-gray-700/20 px-3 py-2 text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				/>
 			</div>
 
@@ -455,7 +455,7 @@
 			{/if}
 
 			<!-- Emoji grid -->
-			<div class="flex-1 overflow-y-auto p-3">
+			<div class="no-scrollbar flex-1 overflow-y-auto p-3">
 				<div class="grid grid-cols-8 gap-1">
 					{#each filteredEmojis as emoji}
 						<button

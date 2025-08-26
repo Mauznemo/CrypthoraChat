@@ -64,7 +64,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="frosted-glass-shadow m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/40 p-6 shadow-xl"
+			class="frosted-glass-shadow m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/60 p-6"
 		>
 			<!-- Header -->
 			<div class="mb-4 flex items-center justify-between">

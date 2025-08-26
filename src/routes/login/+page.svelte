@@ -14,7 +14,7 @@
 </script>
 
 <div class="flex min-h-dvh items-center justify-center">
-	<div class="frosted-glass max-w-[400px] rounded-4xl bg-white/10 p-4">
+	<div class="frosted-glass m-4 w-[400px] rounded-4xl bg-gray-800/60 p-5">
 		<h1 class="mb-4 text-2xl">Login</h1>
 
 		<form
@@ -32,7 +32,7 @@
 			<div class="mb-4">
 				<label class="mb-2" for="username">Username:</label>
 				<input
-					class="w-full rounded-full p-2 pl-4 text-black"
+					class="frosted-glass w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type="text"
 					id="username"
 					name="username"
@@ -43,7 +43,7 @@
 			<div class="mb-10">
 				<label class="mb-2" for="password">Password:</label>
 				<input
-					class="w-full rounded-full p-2 pl-4 text-black"
+					class="frosted-glass w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type="password"
 					id="password"
 					name="password"
@@ -51,8 +51,9 @@
 				/>
 			</div>
 
-			<button class="frosted-glass mb-4 w-full rounded-full bg-teal-600/40 py-4" type="submit"
-				>Login</button
+			<button
+				class="frosted-glass mb-4 w-full cursor-pointer rounded-full bg-teal-600/40 py-3 text-white hover:bg-teal-500/40 focus:ring-blue-500"
+				type="submit">Login</button
 			>
 
 			<p class="text-center text-red-500">{errorText}</p>
