@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { decryptMessage } from '$lib/messageCrypto';
 	import { processLinks } from '$lib/linkUtils';
-	import type { User } from '$prisma';
-	import type { MessageWithRelations } from '$lib/types';
+	import type { MessageWithRelations, SafeUser } from '$lib/types';
 	import Reply from './Reply.svelte';
 
 	function clamp(value: number, min: number, max: number): number {
@@ -27,10 +26,10 @@
 		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
 	} = $props();
 
-	let readers = $state<User[]>([]);
+	let readers = $state<SafeUser[]>([]);
 
 	$effect(() => {
-		readers = message.readBy.filter((reader: User) => reader.id !== userId);
+		readers = message.readBy.filter((reader: SafeUser) => reader.id !== userId);
 	});
 </script>
 

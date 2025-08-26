@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import type { Prisma } from '$prisma';
+import { safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -9,34 +9,26 @@ const userCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const getUserById = query(v.string(), async (userId) => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
-	// Check cache first
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
 	const cached = userCache.get(userId);
 	if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
 		return cached.user;
 	}
 
-	// Fetch from database
 	const user = await db.user.findUnique({
 		where: { id: userId },
-		select: {
-			id: true,
-			username: true,
-			displayName: true,
-			password: true,
-			profilePic: true,
-			profileIv: true,
-			isAdmin: true,
-			createdAt: true
-		}
+		select: safeUserFields
 	});
 
 	if (!user) {
-		throw error(404, 'User not found');
+		error(404, 'User not found');
 	}
 
-	// Cache the result
 	userCache.set(userId, {
 		user,
 		timestamp: Date.now()
@@ -45,28 +37,28 @@ export const getUserById = query(v.string(), async (userId) => {
 	return user;
 });
 
-export const testQuery = query(async () => {
-	let buffer = Buffer.from('Hello World!');
-	console.log('Buffer: ', buffer);
-	console.log('Buffer Length: ', buffer.length);
-	return buffer;
-});
-
 export const getMessagesByChatId = query(v.string(), async (chatId) => {
 	const { locals } = getRequestEvent();
 
-	// First, get all messages
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
 	const messages = await db.message.findMany({
 		where: { chatId },
 		orderBy: { timestamp: 'asc' },
-		include: { user: true, chat: true, readBy: true, replyTo: { include: { user: true } } }
+		include: {
+			user: { select: safeUserFields },
+			chat: true,
+			readBy: { select: safeUserFields },
+			replyTo: { include: { user: { select: safeUserFields } } }
+		}
 	});
 
-	// If user is logged in, mark all messages as read
+	// Mark all messages as read
 	if (locals.user?.id) {
 		const messageIds = messages.map((message) => message.id);
 
-		// Update all messages to include current user in readBy relation
 		await db.user.update({
 			where: { id: locals.user.id },
 			data: {
@@ -79,6 +71,5 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 
 	console.log('Queried messages: ', messages.length);
 
-	// Return the messages (the readBy relation will be updated for subsequent queries)
 	return messages;
 });

@@ -1,13 +1,14 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
+import { error } from '@sveltejs/kit';
 
 import * as v from 'valibot';
 
 export const getUsers = query(async () => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
-		throw new Error('Unauthorized');
+		error(401, 'Unauthorized');
 	}
 
 	const users = await db.user.findMany();
@@ -15,11 +16,12 @@ export const getUsers = query(async () => {
 });
 
 export const deleteUser = command(v.string(), async (userId: string) => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
-		throw new Error('Unauthorized');
+		error(401, 'Unauthorized');
 	}
+
 	// Does not work at the moment since it would require cascading deletes (all messages by that user)
 	await db.user.delete({
 		where: { id: userId }
@@ -27,10 +29,10 @@ export const deleteUser = command(v.string(), async (userId: string) => {
 });
 
 export const getAvailableUsernames = query(async () => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
-		throw new Error('Unauthorized');
+		error(401, 'Unauthorized');
 	}
 
 	const settings = await db.serverSettings.upsert({
@@ -43,10 +45,10 @@ export const getAvailableUsernames = query(async () => {
 });
 
 export const removeUsername = command(v.string(), async (username: string) => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
-		throw new Error('Unauthorized');
+		error(401, 'Unauthorized');
 	}
 
 	const settings = await db.serverSettings.upsert({
@@ -65,10 +67,10 @@ export const removeUsername = command(v.string(), async (username: string) => {
 });
 
 export const addUsername = command(v.string(), async (username: string) => {
-	const { cookies, locals } = getRequestEvent();
+	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
-		throw new Error('Unauthorized');
+		error(401, 'Unauthorized');
 	}
 
 	const settings = await db.serverSettings.upsert({

@@ -26,7 +26,8 @@ model User {
   isAdmin      Boolean       @default(false)
   createdAt    DateTime      @default(now())
   sessions     Session[]
-  chats        Chat[]
+  ownedChats   Chat[]        @relation("OwnedChats")
+  chats        Chat[]        @relation("ChatParticipants")
   messages     Message[]     @relation("SentMessages")
   readMessages Message[]     @relation("ReadMessages")
 }
@@ -53,9 +54,11 @@ model Chat {
   type         String // 'dm' or 'group'
   image        String? // path to encrypted blob
   imageIv      String? //IV for decryption, base64
-  participants User[]
+  ownerId      String
+  owner        User      @relation("OwnedChats", fields: [ownerId], references: [id])
+  participants User[]    @relation("ChatParticipants")
   messages     Message[]
-  salt         Bytes // salt for encryption
+  salt         String // salt for encryption, base64
 }
 
 model Message {

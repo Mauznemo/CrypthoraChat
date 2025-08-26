@@ -1,8 +1,7 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleValidationError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { validateSession } from '$lib/auth.js';
-/*import { createServer } from 'http';
-import { initializeSocket } from '$lib/server/socket';*/
+import * as v from 'valibot';
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ['/', '/login', '/register'];
@@ -48,4 +47,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	return resolve(event);
+};
+
+export const handleValidationError: HandleValidationError = async ({ issues }) => {
+	const messages = (issues as any[]).map((issue: any) => {
+		//const dot = v.getDotPath(issue as any);
+		const text = issue?.message ?? 'Invalid value';
+		return text;
+		//return dot ? `${dot}: ${text}` : text;
+	});
+
+	const unique = Array.from(new Set(messages));
+	const joined = unique.join(', ');
+	return {
+		message: joined
+	} as unknown as App.Error;
 };

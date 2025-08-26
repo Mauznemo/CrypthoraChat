@@ -301,14 +301,14 @@
 	{#if activeMessage}
 		<div
 			bind:this={toolbarElement}
-			class="pointer-events-auto absolute z-20 flex items-center space-x-1 rounded-lg border border-gray-200 bg-white p-1 shadow-lg transition-all duration-200 dark:border-gray-600 dark:bg-gray-800"
+			class="pointer-events-auto frosted-glass-shadow absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 transition-all duration-200"
 			style="top: {toolbarPosition.y}px; {activeMessageFromMe
 				? `right: ${toolbarPosition.x}px`
 				: `left: ${toolbarPosition.x}px`};"
 		>
 			<!-- Reply Button -->
 			<button
-				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+				class="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 				onclick={handleReply}
 				title="Reply"
 				aria-label="Reply to message"
@@ -325,7 +325,7 @@
 			</button>
 
 			<button
-				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+				class="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 				onclick={handleReaction}
 				title="Add Reaction"
 				aria-label="Add Reaction"
@@ -349,7 +349,7 @@
 
 			{#if activeMessageFromMe}
 				<button
-					class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+					class="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 					onclick={handleEdit}
 					title="Edit"
 					aria-label="Edit message"
@@ -367,7 +367,7 @@
 
 				<!-- Delete Button -->
 				<button
-					class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+					class="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
 					onclick={handleDelete}
 					title="Delete"
 					aria-label="Delete message"
@@ -384,7 +384,7 @@
 				</button>
 			{/if}
 			<button
-				class="rounded-md p-1.5 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+				class="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 				onclick={handleInfo}
 				title="Show info"
 				aria-label="Show info"

@@ -29,7 +29,8 @@ export type ChatMinAggregateOutputType = {
   type: string | null
   image: string | null
   imageIv: string | null
-  salt: Uint8Array | null
+  ownerId: string | null
+  salt: string | null
 }
 
 export type ChatMaxAggregateOutputType = {
@@ -38,7 +39,8 @@ export type ChatMaxAggregateOutputType = {
   type: string | null
   image: string | null
   imageIv: string | null
-  salt: Uint8Array | null
+  ownerId: string | null
+  salt: string | null
 }
 
 export type ChatCountAggregateOutputType = {
@@ -47,6 +49,7 @@ export type ChatCountAggregateOutputType = {
   type: number
   image: number
   imageIv: number
+  ownerId: number
   salt: number
   _all: number
 }
@@ -58,6 +61,7 @@ export type ChatMinAggregateInputType = {
   type?: true
   image?: true
   imageIv?: true
+  ownerId?: true
   salt?: true
 }
 
@@ -67,6 +71,7 @@ export type ChatMaxAggregateInputType = {
   type?: true
   image?: true
   imageIv?: true
+  ownerId?: true
   salt?: true
 }
 
@@ -76,6 +81,7 @@ export type ChatCountAggregateInputType = {
   type?: true
   image?: true
   imageIv?: true
+  ownerId?: true
   salt?: true
   _all?: true
 }
@@ -158,7 +164,8 @@ export type ChatGroupByOutputType = {
   type: string
   image: string | null
   imageIv: string | null
-  salt: Uint8Array
+  ownerId: string
+  salt: string
   _count: ChatCountAggregateOutputType | null
   _min: ChatMinAggregateOutputType | null
   _max: ChatMaxAggregateOutputType | null
@@ -188,7 +195,9 @@ export type ChatWhereInput = {
   type?: Prisma.StringFilter<"Chat"> | string
   image?: Prisma.StringNullableFilter<"Chat"> | string | null
   imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
-  salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
+  ownerId?: Prisma.StringFilter<"Chat"> | string
+  salt?: Prisma.StringFilter<"Chat"> | string
+  owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   participants?: Prisma.UserListRelationFilter
   messages?: Prisma.MessageListRelationFilter
 }
@@ -199,7 +208,9 @@ export type ChatOrderByWithRelationInput = {
   type?: Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   imageIv?: Prisma.SortOrderInput | Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   salt?: Prisma.SortOrder
+  owner?: Prisma.UserOrderByWithRelationInput
   participants?: Prisma.UserOrderByRelationAggregateInput
   messages?: Prisma.MessageOrderByRelationAggregateInput
 }
@@ -213,7 +224,9 @@ export type ChatWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.StringFilter<"Chat"> | string
   image?: Prisma.StringNullableFilter<"Chat"> | string | null
   imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
-  salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
+  ownerId?: Prisma.StringFilter<"Chat"> | string
+  salt?: Prisma.StringFilter<"Chat"> | string
+  owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   participants?: Prisma.UserListRelationFilter
   messages?: Prisma.MessageListRelationFilter
 }, "id">
@@ -224,6 +237,7 @@ export type ChatOrderByWithAggregationInput = {
   type?: Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
   imageIv?: Prisma.SortOrderInput | Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   salt?: Prisma.SortOrder
   _count?: Prisma.ChatCountOrderByAggregateInput
   _max?: Prisma.ChatMaxOrderByAggregateInput
@@ -239,7 +253,8 @@ export type ChatScalarWhereWithAggregatesInput = {
   type?: Prisma.StringWithAggregatesFilter<"Chat"> | string
   image?: Prisma.StringNullableWithAggregatesFilter<"Chat"> | string | null
   imageIv?: Prisma.StringNullableWithAggregatesFilter<"Chat"> | string | null
-  salt?: Prisma.BytesWithAggregatesFilter<"Chat"> | Uint8Array
+  ownerId?: Prisma.StringWithAggregatesFilter<"Chat"> | string
+  salt?: Prisma.StringWithAggregatesFilter<"Chat"> | string
 }
 
 export type ChatCreateInput = {
@@ -248,7 +263,8 @@ export type ChatCreateInput = {
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  salt: string
+  owner: Prisma.UserCreateNestedOneWithoutOwnedChatsInput
   participants?: Prisma.UserCreateNestedManyWithoutChatsInput
   messages?: Prisma.MessageCreateNestedManyWithoutChatInput
 }
@@ -259,7 +275,8 @@ export type ChatUncheckedCreateInput = {
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  ownerId: string
+  salt: string
   participants?: Prisma.UserUncheckedCreateNestedManyWithoutChatsInput
   messages?: Prisma.MessageUncheckedCreateNestedManyWithoutChatInput
 }
@@ -270,7 +287,8 @@ export type ChatUpdateInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedChatsNestedInput
   participants?: Prisma.UserUpdateManyWithoutChatsNestedInput
   messages?: Prisma.MessageUpdateManyWithoutChatNestedInput
 }
@@ -281,7 +299,8 @@ export type ChatUncheckedUpdateInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
   participants?: Prisma.UserUncheckedUpdateManyWithoutChatsNestedInput
   messages?: Prisma.MessageUncheckedUpdateManyWithoutChatNestedInput
 }
@@ -292,7 +311,8 @@ export type ChatCreateManyInput = {
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  ownerId: string
+  salt: string
 }
 
 export type ChatUpdateManyMutationInput = {
@@ -301,7 +321,7 @@ export type ChatUpdateManyMutationInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type ChatUncheckedUpdateManyInput = {
@@ -310,7 +330,8 @@ export type ChatUncheckedUpdateManyInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type ChatListRelationFilter = {
@@ -329,6 +350,7 @@ export type ChatCountOrderByAggregateInput = {
   type?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageIv?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   salt?: Prisma.SortOrder
 }
 
@@ -338,6 +360,7 @@ export type ChatMaxOrderByAggregateInput = {
   type?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageIv?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   salt?: Prisma.SortOrder
 }
 
@@ -347,6 +370,7 @@ export type ChatMinOrderByAggregateInput = {
   type?: Prisma.SortOrder
   image?: Prisma.SortOrder
   imageIv?: Prisma.SortOrder
+  ownerId?: Prisma.SortOrder
   salt?: Prisma.SortOrder
 }
 
@@ -355,9 +379,23 @@ export type ChatScalarRelationFilter = {
   isNot?: Prisma.ChatWhereInput
 }
 
+export type ChatCreateNestedManyWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput> | Prisma.ChatCreateWithoutOwnerInput[] | Prisma.ChatUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.ChatCreateOrConnectWithoutOwnerInput | Prisma.ChatCreateOrConnectWithoutOwnerInput[]
+  createMany?: Prisma.ChatCreateManyOwnerInputEnvelope
+  connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+}
+
 export type ChatCreateNestedManyWithoutParticipantsInput = {
   create?: Prisma.XOR<Prisma.ChatCreateWithoutParticipantsInput, Prisma.ChatUncheckedCreateWithoutParticipantsInput> | Prisma.ChatCreateWithoutParticipantsInput[] | Prisma.ChatUncheckedCreateWithoutParticipantsInput[]
   connectOrCreate?: Prisma.ChatCreateOrConnectWithoutParticipantsInput | Prisma.ChatCreateOrConnectWithoutParticipantsInput[]
+  connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+}
+
+export type ChatUncheckedCreateNestedManyWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput> | Prisma.ChatCreateWithoutOwnerInput[] | Prisma.ChatUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.ChatCreateOrConnectWithoutOwnerInput | Prisma.ChatCreateOrConnectWithoutOwnerInput[]
+  createMany?: Prisma.ChatCreateManyOwnerInputEnvelope
   connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
 }
 
@@ -365,6 +403,20 @@ export type ChatUncheckedCreateNestedManyWithoutParticipantsInput = {
   create?: Prisma.XOR<Prisma.ChatCreateWithoutParticipantsInput, Prisma.ChatUncheckedCreateWithoutParticipantsInput> | Prisma.ChatCreateWithoutParticipantsInput[] | Prisma.ChatUncheckedCreateWithoutParticipantsInput[]
   connectOrCreate?: Prisma.ChatCreateOrConnectWithoutParticipantsInput | Prisma.ChatCreateOrConnectWithoutParticipantsInput[]
   connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+}
+
+export type ChatUpdateManyWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput> | Prisma.ChatCreateWithoutOwnerInput[] | Prisma.ChatUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.ChatCreateOrConnectWithoutOwnerInput | Prisma.ChatCreateOrConnectWithoutOwnerInput[]
+  upsert?: Prisma.ChatUpsertWithWhereUniqueWithoutOwnerInput | Prisma.ChatUpsertWithWhereUniqueWithoutOwnerInput[]
+  createMany?: Prisma.ChatCreateManyOwnerInputEnvelope
+  set?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  disconnect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  delete?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  update?: Prisma.ChatUpdateWithWhereUniqueWithoutOwnerInput | Prisma.ChatUpdateWithWhereUniqueWithoutOwnerInput[]
+  updateMany?: Prisma.ChatUpdateManyWithWhereWithoutOwnerInput | Prisma.ChatUpdateManyWithWhereWithoutOwnerInput[]
+  deleteMany?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
 }
 
 export type ChatUpdateManyWithoutParticipantsNestedInput = {
@@ -377,6 +429,20 @@ export type ChatUpdateManyWithoutParticipantsNestedInput = {
   connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
   update?: Prisma.ChatUpdateWithWhereUniqueWithoutParticipantsInput | Prisma.ChatUpdateWithWhereUniqueWithoutParticipantsInput[]
   updateMany?: Prisma.ChatUpdateManyWithWhereWithoutParticipantsInput | Prisma.ChatUpdateManyWithWhereWithoutParticipantsInput[]
+  deleteMany?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
+}
+
+export type ChatUncheckedUpdateManyWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput> | Prisma.ChatCreateWithoutOwnerInput[] | Prisma.ChatUncheckedCreateWithoutOwnerInput[]
+  connectOrCreate?: Prisma.ChatCreateOrConnectWithoutOwnerInput | Prisma.ChatCreateOrConnectWithoutOwnerInput[]
+  upsert?: Prisma.ChatUpsertWithWhereUniqueWithoutOwnerInput | Prisma.ChatUpsertWithWhereUniqueWithoutOwnerInput[]
+  createMany?: Prisma.ChatCreateManyOwnerInputEnvelope
+  set?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  disconnect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  delete?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  connect?: Prisma.ChatWhereUniqueInput | Prisma.ChatWhereUniqueInput[]
+  update?: Prisma.ChatUpdateWithWhereUniqueWithoutOwnerInput | Prisma.ChatUpdateWithWhereUniqueWithoutOwnerInput[]
+  updateMany?: Prisma.ChatUpdateManyWithWhereWithoutOwnerInput | Prisma.ChatUpdateManyWithWhereWithoutOwnerInput[]
   deleteMany?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
 }
 
@@ -393,10 +459,6 @@ export type ChatUncheckedUpdateManyWithoutParticipantsNestedInput = {
   deleteMany?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
 }
 
-export type BytesFieldUpdateOperationsInput = {
-  set?: Uint8Array
-}
-
 export type ChatCreateNestedOneWithoutMessagesInput = {
   create?: Prisma.XOR<Prisma.ChatCreateWithoutMessagesInput, Prisma.ChatUncheckedCreateWithoutMessagesInput>
   connectOrCreate?: Prisma.ChatCreateOrConnectWithoutMessagesInput
@@ -411,13 +473,46 @@ export type ChatUpdateOneRequiredWithoutMessagesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ChatUpdateToOneWithWhereWithoutMessagesInput, Prisma.ChatUpdateWithoutMessagesInput>, Prisma.ChatUncheckedUpdateWithoutMessagesInput>
 }
 
+export type ChatCreateWithoutOwnerInput = {
+  id?: string
+  name?: string | null
+  type: string
+  image?: string | null
+  imageIv?: string | null
+  salt: string
+  participants?: Prisma.UserCreateNestedManyWithoutChatsInput
+  messages?: Prisma.MessageCreateNestedManyWithoutChatInput
+}
+
+export type ChatUncheckedCreateWithoutOwnerInput = {
+  id?: string
+  name?: string | null
+  type: string
+  image?: string | null
+  imageIv?: string | null
+  salt: string
+  participants?: Prisma.UserUncheckedCreateNestedManyWithoutChatsInput
+  messages?: Prisma.MessageUncheckedCreateNestedManyWithoutChatInput
+}
+
+export type ChatCreateOrConnectWithoutOwnerInput = {
+  where: Prisma.ChatWhereUniqueInput
+  create: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput>
+}
+
+export type ChatCreateManyOwnerInputEnvelope = {
+  data: Prisma.ChatCreateManyOwnerInput | Prisma.ChatCreateManyOwnerInput[]
+  skipDuplicates?: boolean
+}
+
 export type ChatCreateWithoutParticipantsInput = {
   id?: string
   name?: string | null
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  salt: string
+  owner: Prisma.UserCreateNestedOneWithoutOwnedChatsInput
   messages?: Prisma.MessageCreateNestedManyWithoutChatInput
 }
 
@@ -427,13 +522,43 @@ export type ChatUncheckedCreateWithoutParticipantsInput = {
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  ownerId: string
+  salt: string
   messages?: Prisma.MessageUncheckedCreateNestedManyWithoutChatInput
 }
 
 export type ChatCreateOrConnectWithoutParticipantsInput = {
   where: Prisma.ChatWhereUniqueInput
   create: Prisma.XOR<Prisma.ChatCreateWithoutParticipantsInput, Prisma.ChatUncheckedCreateWithoutParticipantsInput>
+}
+
+export type ChatUpsertWithWhereUniqueWithoutOwnerInput = {
+  where: Prisma.ChatWhereUniqueInput
+  update: Prisma.XOR<Prisma.ChatUpdateWithoutOwnerInput, Prisma.ChatUncheckedUpdateWithoutOwnerInput>
+  create: Prisma.XOR<Prisma.ChatCreateWithoutOwnerInput, Prisma.ChatUncheckedCreateWithoutOwnerInput>
+}
+
+export type ChatUpdateWithWhereUniqueWithoutOwnerInput = {
+  where: Prisma.ChatWhereUniqueInput
+  data: Prisma.XOR<Prisma.ChatUpdateWithoutOwnerInput, Prisma.ChatUncheckedUpdateWithoutOwnerInput>
+}
+
+export type ChatUpdateManyWithWhereWithoutOwnerInput = {
+  where: Prisma.ChatScalarWhereInput
+  data: Prisma.XOR<Prisma.ChatUpdateManyMutationInput, Prisma.ChatUncheckedUpdateManyWithoutOwnerInput>
+}
+
+export type ChatScalarWhereInput = {
+  AND?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
+  OR?: Prisma.ChatScalarWhereInput[]
+  NOT?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
+  id?: Prisma.StringFilter<"Chat"> | string
+  name?: Prisma.StringNullableFilter<"Chat"> | string | null
+  type?: Prisma.StringFilter<"Chat"> | string
+  image?: Prisma.StringNullableFilter<"Chat"> | string | null
+  imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
+  ownerId?: Prisma.StringFilter<"Chat"> | string
+  salt?: Prisma.StringFilter<"Chat"> | string
 }
 
 export type ChatUpsertWithWhereUniqueWithoutParticipantsInput = {
@@ -452,25 +577,14 @@ export type ChatUpdateManyWithWhereWithoutParticipantsInput = {
   data: Prisma.XOR<Prisma.ChatUpdateManyMutationInput, Prisma.ChatUncheckedUpdateManyWithoutParticipantsInput>
 }
 
-export type ChatScalarWhereInput = {
-  AND?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
-  OR?: Prisma.ChatScalarWhereInput[]
-  NOT?: Prisma.ChatScalarWhereInput | Prisma.ChatScalarWhereInput[]
-  id?: Prisma.StringFilter<"Chat"> | string
-  name?: Prisma.StringNullableFilter<"Chat"> | string | null
-  type?: Prisma.StringFilter<"Chat"> | string
-  image?: Prisma.StringNullableFilter<"Chat"> | string | null
-  imageIv?: Prisma.StringNullableFilter<"Chat"> | string | null
-  salt?: Prisma.BytesFilter<"Chat"> | Uint8Array
-}
-
 export type ChatCreateWithoutMessagesInput = {
   id?: string
   name?: string | null
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  salt: string
+  owner: Prisma.UserCreateNestedOneWithoutOwnedChatsInput
   participants?: Prisma.UserCreateNestedManyWithoutChatsInput
 }
 
@@ -480,7 +594,8 @@ export type ChatUncheckedCreateWithoutMessagesInput = {
   type: string
   image?: string | null
   imageIv?: string | null
-  salt: Uint8Array
+  ownerId: string
+  salt: string
   participants?: Prisma.UserUncheckedCreateNestedManyWithoutChatsInput
 }
 
@@ -506,7 +621,8 @@ export type ChatUpdateWithoutMessagesInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedChatsNestedInput
   participants?: Prisma.UserUpdateManyWithoutChatsNestedInput
 }
 
@@ -516,8 +632,49 @@ export type ChatUncheckedUpdateWithoutMessagesInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
   participants?: Prisma.UserUncheckedUpdateManyWithoutChatsNestedInput
+}
+
+export type ChatCreateManyOwnerInput = {
+  id?: string
+  name?: string | null
+  type: string
+  image?: string | null
+  imageIv?: string | null
+  salt: string
+}
+
+export type ChatUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
+  participants?: Prisma.UserUpdateManyWithoutChatsNestedInput
+  messages?: Prisma.MessageUpdateManyWithoutChatNestedInput
+}
+
+export type ChatUncheckedUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
+  participants?: Prisma.UserUncheckedUpdateManyWithoutChatsNestedInput
+  messages?: Prisma.MessageUncheckedUpdateManyWithoutChatNestedInput
+}
+
+export type ChatUncheckedUpdateManyWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type ChatUpdateWithoutParticipantsInput = {
@@ -526,7 +683,8 @@ export type ChatUpdateWithoutParticipantsInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedChatsNestedInput
   messages?: Prisma.MessageUpdateManyWithoutChatNestedInput
 }
 
@@ -536,7 +694,8 @@ export type ChatUncheckedUpdateWithoutParticipantsInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
   messages?: Prisma.MessageUncheckedUpdateManyWithoutChatNestedInput
 }
 
@@ -546,7 +705,8 @@ export type ChatUncheckedUpdateManyWithoutParticipantsInput = {
   type?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salt?: Prisma.BytesFieldUpdateOperationsInput | Uint8Array
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  salt?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -595,7 +755,9 @@ export type ChatSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   type?: boolean
   image?: boolean
   imageIv?: boolean
+  ownerId?: boolean
   salt?: boolean
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   participants?: boolean | Prisma.Chat$participantsArgs<ExtArgs>
   messages?: boolean | Prisma.Chat$messagesArgs<ExtArgs>
   _count?: boolean | Prisma.ChatCountOutputTypeDefaultArgs<ExtArgs>
@@ -607,7 +769,9 @@ export type ChatSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   type?: boolean
   image?: boolean
   imageIv?: boolean
+  ownerId?: boolean
   salt?: boolean
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chat"]>
 
 export type ChatSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -616,7 +780,9 @@ export type ChatSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   type?: boolean
   image?: boolean
   imageIv?: boolean
+  ownerId?: boolean
   salt?: boolean
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chat"]>
 
 export type ChatSelectScalar = {
@@ -625,21 +791,28 @@ export type ChatSelectScalar = {
   type?: boolean
   image?: boolean
   imageIv?: boolean
+  ownerId?: boolean
   salt?: boolean
 }
 
-export type ChatOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "type" | "image" | "imageIv" | "salt", ExtArgs["result"]["chat"]>
+export type ChatOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "type" | "image" | "imageIv" | "ownerId" | "salt", ExtArgs["result"]["chat"]>
 export type ChatInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   participants?: boolean | Prisma.Chat$participantsArgs<ExtArgs>
   messages?: boolean | Prisma.Chat$messagesArgs<ExtArgs>
   _count?: boolean | Prisma.ChatCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type ChatIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type ChatIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type ChatIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
+export type ChatIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
 
 export type $ChatPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Chat"
   objects: {
+    owner: Prisma.$UserPayload<ExtArgs>
     participants: Prisma.$UserPayload<ExtArgs>[]
     messages: Prisma.$MessagePayload<ExtArgs>[]
   }
@@ -649,7 +822,8 @@ export type $ChatPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     type: string
     image: string | null
     imageIv: string | null
-    salt: Uint8Array
+    ownerId: string
+    salt: string
   }, ExtArgs["result"]["chat"]>
   composites: {}
 }
@@ -1044,6 +1218,7 @@ readonly fields: ChatFieldRefs;
  */
 export interface Prisma__ChatClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  owner<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   participants<T extends Prisma.Chat$participantsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Chat$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   messages<T extends Prisma.Chat$messagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Chat$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1080,7 +1255,8 @@ export interface ChatFieldRefs {
   readonly type: Prisma.FieldRef<"Chat", 'String'>
   readonly image: Prisma.FieldRef<"Chat", 'String'>
   readonly imageIv: Prisma.FieldRef<"Chat", 'String'>
-  readonly salt: Prisma.FieldRef<"Chat", 'Bytes'>
+  readonly ownerId: Prisma.FieldRef<"Chat", 'String'>
+  readonly salt: Prisma.FieldRef<"Chat", 'String'>
 }
     
 
@@ -1330,6 +1506,10 @@ export type ChatCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    */
   data: Prisma.ChatCreateManyInput | Prisma.ChatCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChatIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1400,6 +1580,10 @@ export type ChatUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many Chats to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChatIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
