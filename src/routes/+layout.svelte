@@ -9,6 +9,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <div class="relative min-h-dvh overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
