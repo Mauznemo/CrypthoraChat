@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
+	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { PageProps } from '../$types';
 	import { createGroup } from '../chatCreation.remote';
@@ -13,9 +14,15 @@
 
 	async function handleCreateGroup() {
 		try {
-			let success = await createGroup({ groupName, userIds: selectedUsers.map((u) => u.id) });
+			let result = await createGroup({ groupName, userIds: selectedUsers.map((u) => u.id) });
 
-			if (success) {
+			if (result.success) {
+				socketStore.notifyNewChat({
+					chatId: result.chatId,
+					userIds: selectedUsers.map((u) => u.id),
+					type: 'group'
+				});
+				localStorage.setItem('lastChatId', result.chatId);
 				goto('/chat');
 			}
 		} catch (err: any) {

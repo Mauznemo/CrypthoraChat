@@ -29,6 +29,8 @@
 	// Auto-scroll to bottom when new messages arrive
 	let shouldAutoScroll = $state(true);
 
+	let chatListComponent: ChatList;
+
 	function autoGrow(element: HTMLTextAreaElement) {
 		element.style.height = '5px';
 		element.style.height = element.scrollHeight + 'px';
@@ -113,6 +115,16 @@
 			console.error('Failed to get user for read status update:', err);
 			// Optionally handle the error - maybe add a placeholder or skip the update
 		}
+	};
+
+	const handleNewChat = async (data: {
+		chatId: string;
+		type: 'dm' | 'group';
+		forUsers?: string[];
+	}) => {
+		const chat = await getChatById(data.chatId);
+		if (!chat) return;
+		chatListComponent.addChat(chat);
 	};
 
 	const sendMessage = async () => {
@@ -408,6 +420,7 @@
 		socketStore.onMessageUpdated(handleMessageUpdated);
 		socketStore.onMessageDeleted(handleMessageDeleted);
 		socketStore.onMessagesRead(handleMessagesRead);
+		socketStore.onNewChat(handleNewChat);
 		socketStore.onMessageError((error) => {
 			console.error('Socket error:', error);
 		});
@@ -439,7 +452,9 @@
 		// Remove event listeners
 		socketStore.off('new-message', handleNewMessage);
 		socketStore.off('message-updated', handleMessageUpdated);
+		socketStore.off('message-deleted', handleMessageDeleted);
 		socketStore.off('messages-read', handleMessagesRead);
+		socketStore.off('new-chat', handleNewChat);
 		socketStore.off('message-error');
 	});
 </script>
@@ -470,6 +485,7 @@
 		</div>
 
 		<ChatList
+			bind:this={chatListComponent}
 			userId={data.user?.id || ''}
 			bind:selectedChat={activeChat}
 			onChatSelected={handleChatSelected}

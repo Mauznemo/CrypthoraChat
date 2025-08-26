@@ -17,6 +17,10 @@
 
 	let chats: ChatWithoutMessages[] = $state([]);
 
+	export function addChat(newChat: ChatWithoutMessages): void {
+		chats = [...chats, newChat];
+	}
+
 	onMount(async () => {
 		chats = await getUserChats();
 	});

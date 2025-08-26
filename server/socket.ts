@@ -14,6 +14,9 @@ interface AuthenticatedSocket extends Socket {
 export function initializeSocket(server: HTTPServer) {
 	const io = new Server(server);
 
+	// Add this map after io initialization
+	const userSocketMap = new Map<string, string>();
+
 	// Authentication middleware
 	io.use(async (socket: AuthenticatedSocket, next) => {
 		try {
@@ -55,6 +58,11 @@ export function initializeSocket(server: HTTPServer) {
 	});
 
 	io.on('connection', (socket: AuthenticatedSocket) => {
+		// Add this after connection
+		if (socket.user) {
+			userSocketMap.set(socket.user.id, socket.id);
+		}
+
 		console.log('User connected:', socket.id, 'User:', socket.user?.username);
 		// Join chat room
 		socket.on('join-chat', (chatId: string) => {
@@ -295,7 +303,39 @@ export function initializeSocket(server: HTTPServer) {
 			});
 		});
 
+		// Add these new event handlers
+		socket.on(
+			'chat-created',
+			(data: { userIds: string[]; chatId: string; type: 'dm' | 'group' }) => {
+				// Find socket IDs for all target users
+				const targetSockets = data.userIds
+					.map((userId) => userSocketMap.get(userId))
+					.filter((socketId): socketId is string => socketId !== undefined);
+
+				// Emit to specific users if we have their sockets
+				if (targetSockets.length > 0) {
+					targetSockets.forEach((socketId) => {
+						io.to(socketId).emit('new-chat-created', {
+							chatId: data.chatId,
+							type: data.type
+						});
+					});
+				} else {
+					// Fallback: broadcast to all with user filter info
+					io.emit('new-chat-created', {
+						chatId: data.chatId,
+						type: data.type,
+						forUsers: data.userIds
+					});
+				}
+			}
+		);
+
 		socket.on('disconnect', () => {
+			// Remove from user socket map
+			if (socket.user) {
+				userSocketMap.delete(socket.user.id);
+			}
 			console.log('User disconnected:', socket.id);
 		});
 	});

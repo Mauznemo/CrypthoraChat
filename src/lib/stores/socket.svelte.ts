@@ -129,6 +129,24 @@ class SocketStore {
 	off(event: string, callback?: Function) {
 		this.socket?.off(event, callback);
 	}
+
+	notifyNewChat(data: { userIds: string[]; type: 'dm' | 'group'; chatId: string }) {
+		console.log('Notifying about new chat:', data); // Debug log
+		this.socket?.emit('chat-created', data);
+	}
+
+	onNewChat(
+		callback: (data: { chatId: string; type: 'dm' | 'group'; forUsers?: string[] }) => void
+	) {
+		this.socket?.on('new-chat-created', (data: any) => {
+			console.log('new chat created', data);
+			// If forUsers is present, only call callback if current user is in the list
+			if (!data.forUsers /*|| data.forUsers.includes(this.socket.userId)*/) {
+				// TODO: Check if contains user id (cant access user id here at the moment)
+				callback(data);
+			}
+		});
+	}
 }
 
 export const socketStore = new SocketStore();

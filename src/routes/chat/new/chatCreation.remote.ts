@@ -34,7 +34,7 @@ export const createGroup = command(createGroupSchema, async ({ groupName, userId
 
 	const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
 
-	await db.chat.create({
+	const chat = await db.chat.create({
 		data: {
 			name: groupName,
 			type: 'group',
@@ -46,7 +46,7 @@ export const createGroup = command(createGroupSchema, async ({ groupName, userId
 		}
 	});
 
-	return true;
+	return { success: true, chatId: chat.id };
 });
 
 const createDmSchema = v.object({
@@ -73,7 +73,7 @@ export const createDm = command(createDmSchema, async ({ userId }) => {
 
 	const allParticipantIds = [...new Set([userId, locals.user!.id])];
 
-	await db.chat.create({
+	const chat = await db.chat.create({
 		data: {
 			name: userId,
 			type: 'dm',
@@ -85,5 +85,5 @@ export const createDm = command(createDmSchema, async ({ userId }) => {
 		}
 	});
 
-	return true;
+	return { success: true, chatId: chat.id };
 });
