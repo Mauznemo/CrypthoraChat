@@ -5,6 +5,7 @@
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import { createDm } from '../chatCreation.remote';
+	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
