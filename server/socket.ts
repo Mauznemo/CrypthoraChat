@@ -4,14 +4,21 @@ import type { Server as HTTPServer } from 'http';
 import { db } from '../src/lib/db';
 import { validateSession } from '$lib/auth';
 import webpush from 'web-push';
-import { PUBLIC_VAPID_KEY } from '$env/static/public';
-import { VAPID_EMAIL, VAPID_PRIVATE_KEY } from '$env/static/private';
+import 'dotenv/config';
+
+const VAPID_EMAIL = process.env.VAPID_EMAIL;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const PUBLIC_VAPID_KEY = process.env.PUBLIC_VAPID_KEY;
 
 interface AuthenticatedSocket extends Socket {
 	user?: {
 		id: string;
 		username: string;
 	};
+}
+
+if (!VAPID_EMAIL || !VAPID_PRIVATE_KEY || !PUBLIC_VAPID_KEY) {
+	throw new Error('VAPID keys are not set');
 }
 
 webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY);
