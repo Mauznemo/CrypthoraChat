@@ -123,8 +123,8 @@ self.addEventListener('push', (event) => {
 	console.log('Push notification received');
 	const options = {
 		body: 'You have a new message!',
-		icon: '/icon-192.png',
-		badge: '/icon-192.png',
+		icon: '/icon-192x192.png', //maybe change to group or dm pic
+		badge: '/icon-badge.png',
 		// vibrate: [100, 50, 100],
 		data: {
 			dateOfArrival: Date.now(),
@@ -133,13 +133,13 @@ self.addEventListener('push', (event) => {
 		actions: [
 			{
 				action: 'explore',
-				title: 'Open Chat',
-				icon: '/icon-192.png'
+				title: 'Open Chat'
+				// icon: '/icon-192x192.png'
 			},
 			{
 				action: 'close',
-				title: 'Close notification',
-				icon: '/icon-192.png'
+				title: 'Close notification'
+				// icon: '/icon-192x192.png'
 			}
 		]
 	};
