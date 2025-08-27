@@ -154,8 +154,8 @@ class SocketStore {
 		});
 	}
 
-	onReconnect(callback: () => void) {
-		this.socket?.on('reconnect', callback);
+	onConnect(callback: () => void) {
+		this.socket?.on('connect', callback);
 	}
 }
 
