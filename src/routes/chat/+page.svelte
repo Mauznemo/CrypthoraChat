@@ -386,6 +386,17 @@
 		sidebarOpen = !sidebarOpen;
 	}
 
+	async function resetServiceWorkers() {
+		if ('serviceWorker' in navigator) {
+			const registrations = await navigator.serviceWorker.getRegistrations();
+			for (const registration of registrations) {
+				await registration.unregister();
+				console.log('Service worker unregistered:', registration);
+			}
+			window.location.reload();
+		}
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -405,7 +416,7 @@
 		}
 
 		// Connect to socket server
-		socketStore.connect();
+		// socketStore.connect();
 
 		// Join the chat room
 		if (activeChat) {
@@ -496,6 +507,11 @@
 			onChatSelected={handleChatSelected}
 			onCreateChat={handleCreateChat}
 		/>
+		<button
+			onclick={resetServiceWorkers}
+			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
+			>Reset Service Workers</button
+		>
 	</div>
 
 	<!-- Backdrop for mobile -->

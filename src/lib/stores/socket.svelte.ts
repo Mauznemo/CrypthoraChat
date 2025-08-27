@@ -147,6 +147,12 @@ class SocketStore {
 			}
 		});
 	}
+
+	subscribeToPush(subscription: PushSubscription) {
+		this.socket?.emit('subscribe-push', {
+			subscription: subscription.toJSON()
+		});
+	}
 }
 
 export const socketStore = new SocketStore();

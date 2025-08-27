@@ -3,12 +3,28 @@ import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
 import { db } from '../src/lib/db';
 import { validateSession } from '$lib/auth';
+import webpush from 'web-push';
+import { PUBLIC_VAPID_KEY } from '$env/static/public';
+import { VAPID_EMAIL, VAPID_PRIVATE_KEY } from '$env/static/private';
 
 interface AuthenticatedSocket extends Socket {
 	user?: {
 		id: string;
 		username: string;
 	};
+}
+
+webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY);
+
+const pushSubscriptions = new Map<string, any>(); // TODO: use database later
+
+async function getChatUsers(chatId: string) {
+	// TODO: Add some caching to this
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		include: { participants: { select: { id: true, username: true } } }
+	});
+	return chat?.participants || [];
 }
 
 export function initializeSocket(server: HTTPServer) {
@@ -76,6 +92,12 @@ export function initializeSocket(server: HTTPServer) {
 			console.log(`User ${socket.id} left chat ${chatId}`);
 		});
 
+		socket.on('subscribe-push', (data) => {
+			const userId = socket.user!.id;
+			console.log(`User ${userId} subscribed to push notifications`);
+			pushSubscriptions.set(userId, data.subscription);
+		});
+
 		// Handle new message
 		socket.on(
 			'send-message',
@@ -88,7 +110,11 @@ export function initializeSocket(server: HTTPServer) {
 			}) => {
 				try {
 					console.log('Received message from: ' + socket.user!.id + ' in chat: ' + data.chatId);
-					//TODO: Check if user is in chat
+					const chatUsers = await getChatUsers(data.chatId);
+
+					if (!chatUsers.some((user) => user.id === socket.user!.id)) {
+						return;
+					}
 					// Save message to database
 					const newMessage = await db.message.create({
 						data: {
@@ -113,6 +139,34 @@ export function initializeSocket(server: HTTPServer) {
 
 					// Emit to all users in the chat room
 					io.to(data.chatId).emit('new-message', newMessage);
+
+					//TODO: Send websocket notification to users in chat, but nit currently joined, otherwise send notification
+					console.log('Sending push notifications to users: ' + chatUsers.length);
+					for (const user of chatUsers) {
+						if (user.id !== socket.user!.id) {
+							const subscription = pushSubscriptions.get(user.id);
+							if (subscription) {
+								try {
+									console.log('Sending push notification to user: ' + user.id);
+									await webpush.sendNotification(
+										subscription,
+										JSON.stringify({
+											title: 'New Message',
+											message: 'You have a new message!',
+											chatId: data.chatId,
+											chatType: newMessage.chat.type,
+											chatName: newMessage.chat.name,
+											senderName: newMessage.user.displayName
+										})
+									);
+								} catch (error) {
+									console.error('Error sending push notification:', error);
+									// Remove invalid subscription
+									pushSubscriptions.delete(user.id);
+								}
+							}
+						}
+					}
 				} catch (error) {
 					console.error('Error saving message:', error);
 					socket.emit('message-error', { error: 'Failed to send message' });
