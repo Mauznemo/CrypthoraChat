@@ -153,6 +153,10 @@ class SocketStore {
 			subscription: subscription.toJSON()
 		});
 	}
+
+	onReconnect(callback: () => void) {
+		this.socket?.on('reconnect', callback);
+	}
 }
 
 export const socketStore = new SocketStore();
