@@ -238,13 +238,12 @@
 				unreadMessages = []; // Clear the unread list
 			}
 
-			// Also mark all current messages as read
-			if (messages.length > 0) {
-				socketStore.markMessagesAsRead({
-					messageIds: messages.map((message) => message.id),
-					chatId: activeChat.id
-				});
-			}
+			// 	if (messages.length > 0) {
+			// 		socketStore.markMessagesAsRead({
+			// 			messageIds: messages.map((message) => message.id),
+			// 			chatId: activeChat.id
+			// 		});
+			// 	}
 		}
 	};
 
@@ -338,12 +337,12 @@
 			console.log('Joining chat:', activeChat?.id);
 			socketStore.joinChat(activeChat!.id);
 
-			if (messages.length > 0 && data.user?.id) {
-				socketStore.markMessagesAsRead({
-					messageIds: messages.map((message) => message.id),
-					chatId: activeChat!.id
-				});
-			}
+			// if (messages.length > 0 && data.user?.id) {
+			// 	socketStore.markMessagesAsRead({
+			// 		messageIds: messages.map((message) => message.id),
+			// 		chatId: activeChat!.id
+			// 	});
+			// }
 		} else {
 			modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
 			activeChat = null;
