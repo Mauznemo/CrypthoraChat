@@ -123,7 +123,7 @@ self.addEventListener('push', (event) => {
 	console.log('Push notification received');
 	const options = {
 		body: 'You have a new message!',
-		icon: '/icon-192x192.png', //maybe change to group or dm pic
+		// icon: '/icon-192x192.png', //maybe change to group or dm pic
 		badge: '/icon-badge-96x96.png',
 		// vibrate: [100, 50, 100],
 		data: {
