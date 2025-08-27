@@ -12,6 +12,8 @@
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { initializePushNotifications } from '$lib/push-notifications';
+	import { PUBLIC_VAPID_KEY } from '$env/static/public';
 
 	let { data }: PageProps = $props();
 
@@ -407,9 +409,7 @@
 		}
 	}
 
-	onMount(async () => {
-		document.addEventListener('visibilitychange', handleVisibilityChange);
-
+	async function handleConnect() {
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (lastChatId) {
 			const chat = await getChatById(lastChatId);
@@ -431,21 +431,20 @@
 			activeChat = null;
 		}
 
-		// Connect to socket server
-		// socketStore.connect();
-
-		// Join the chat room
 		if (activeChat) {
 			socketStore.joinChat(activeChat.id);
 		}
+	}
 
-		// Mark all messages as read for realtime updates
-		if (activeChat && messages.length > 0 && data.user?.id) {
-			socketStore.markMessagesAsRead({
-				messageIds: messages.map((message) => message.id),
-				chatId: activeChat.id
-			});
-		}
+	onMount(async () => {
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		// Connect to socket server
+		socketStore.connect();
+
+		initializePushNotifications(PUBLIC_VAPID_KEY);
+
+		handleConnect();
 
 		// Set up event listeners
 		socketStore.onNewMessage(handleNewMessage);
@@ -453,6 +452,7 @@
 		socketStore.onMessageDeleted(handleMessageDeleted);
 		socketStore.onMessagesRead(handleMessagesRead);
 		socketStore.onNewChat(handleNewChat);
+		socketStore.onReconnect(handleConnect);
 		socketStore.onMessageError((error) => {
 			console.error('Socket error:', error);
 		});

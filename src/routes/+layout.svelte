@@ -2,22 +2,8 @@
 	import '../app.css';
 	import Modal from '$lib/components/Modal.svelte';
 	import EmojiPicker from '$lib/components/chat/EmojiPicker.svelte';
-	import { onMount } from 'svelte';
-	import { initializePushNotifications } from '$lib/push-notifications';
-	import { PUBLIC_VAPID_KEY } from '$env/static/public';
-	import { socketStore } from '$lib/stores/socket.svelte';
 
 	let { children } = $props();
-
-	onMount(() => {
-		socketStore.connect();
-
-		initializePushNotifications(PUBLIC_VAPID_KEY);
-
-		return () => {
-			socketStore.disconnect();
-		};
-	});
 </script>
 
 <svelte:head>
