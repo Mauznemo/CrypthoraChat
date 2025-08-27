@@ -122,6 +122,7 @@ export function initializeSocket(server: HTTPServer) {
 					if (!chatUsers.some((user) => user.id === socket.user!.id)) {
 						return;
 					}
+
 					// Save message to database
 					const newMessage = await db.message.create({
 						data: {
@@ -147,30 +148,31 @@ export function initializeSocket(server: HTTPServer) {
 					// Emit to all users in the chat room
 					io.to(data.chatId).emit('new-message', newMessage);
 
-					//TODO: Send websocket notification to users in chat, but nit currently joined, otherwise send notification
+					//TODO: Send websocket notification (not full message, just which chat) to users in a chat, but not currently joined, otherwise send notification
 					console.log('Sending push notifications to users: ' + chatUsers.length);
 					for (const user of chatUsers) {
-						if (user.id !== socket.user!.id) {
-							const subscription = pushSubscriptions.get(user.id);
-							if (subscription) {
-								try {
-									console.log('Sending push notification to user: ' + user.id);
-									await webpush.sendNotification(
-										subscription,
-										JSON.stringify({
-											title: 'New Message',
-											message: 'You have a new message!',
-											chatId: data.chatId,
-											chatType: newMessage.chat.type,
-											chatName: newMessage.chat.name,
-											senderName: newMessage.user.displayName
-										})
-									);
-								} catch (error) {
-									console.error('Error sending push notification:', error);
-									// Remove invalid subscription
-									pushSubscriptions.delete(user.id);
-								}
+						if (user.id === socket.user!.id) continue; // Don't notify the sender
+						if (userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
+
+						const subscription = pushSubscriptions.get(user.id);
+						if (subscription) {
+							try {
+								console.log('Sending push notification to user: ' + user.id);
+								await webpush.sendNotification(
+									subscription,
+									JSON.stringify({
+										title: 'New Message',
+										message: 'You have a new message!',
+										chatId: data.chatId,
+										chatType: newMessage.chat.type,
+										chatName: newMessage.chat.name,
+										senderName: newMessage.user.displayName
+									})
+								);
+							} catch (error) {
+								console.error('Error sending push notification:', error);
+								// Remove invalid subscription
+								pushSubscriptions.delete(user.id);
 							}
 						}
 					}
