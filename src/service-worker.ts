@@ -1,4 +1,7 @@
+/// <reference lib="webworker" />
 import { build, files, version } from '$service-worker';
+
+declare const self: ServiceWorkerGlobalScope;
 
 const CACHE_NAME = `cache-${version}`;
 const ASSETS_TO_CACHE = [...build, ...files];
