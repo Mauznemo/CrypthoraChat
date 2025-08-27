@@ -11,6 +11,7 @@
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -20,6 +21,7 @@
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
 	let activeChat: ChatWithoutMessages | null = $state(null);
+	let loadingChat = $state(false);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
@@ -321,6 +323,7 @@
 	}
 
 	async function handleChatSelected(newChat: ChatWithoutMessages): Promise<void> {
+		loadingChat = true;
 		console.log('Chat selected (leaving previous):', newChat.id);
 		if (activeChat) socketStore.leaveChat(activeChat.id);
 		activeChat = newChat;
@@ -328,6 +331,7 @@
 
 		const success = await tryGetMessages(activeChat);
 
+		loadingChat = false;
 		if (success) {
 			console.log('Joining chat:', activeChat?.id);
 			socketStore.joinChat(activeChat!.id);
@@ -339,6 +343,7 @@
 				});
 			}
 		} else {
+			modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
 			activeChat = null;
 		}
 	}
@@ -510,14 +515,27 @@
 
 			<!-- Chat text //TODO: Replace with chat name and pic -->
 
-			<div class="px-3 py-2 text-4xl font-extrabold text-white">
-				<p>Chat</p>
+			<div>
+				{#if socketStore.connected}
+					<p class="px-3 py-2 text-4xl font-extrabold text-white">Chat</p>
+				{:else}
+					<p class="px-3 pt-3 text-4xl font-extrabold text-white">Chat - Offline</p>
+					<p class="font-semi px-3 pb-1 text-sm text-white/60">
+						You may not see all messages in this chat
+					</p>
+				{/if}
 			</div>
 		</div>
 
 		{#if !activeChat}
 			<div class="flex h-full items-center justify-center">
 				<p class="text-2xl font-bold">No chat selected</p>
+			</div>
+		{/if}
+
+		{#if loadingChat}
+			<div class="flex h-full items-center justify-center">
+				<LoadingSpinner />
 			</div>
 		{/if}
 
