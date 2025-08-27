@@ -21,9 +21,11 @@
 	} = $props();
 </script>
 
-<div class="m-2 flex items-start space-x-2">
+<div class="m-2 mr-6 flex items-start space-x-2">
 	<!-- Profile picture and username (only shown for first message in group) -->
-	<div class="flex flex-col items-center space-y-1">
+	<div
+		class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:left-0"
+	>
 		{#if showProfile}
 			<div
 				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
@@ -45,7 +47,7 @@
 	>
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
-			<div class="mb-0.5 px-1.5">
+			<div class="mb-0.5 pl-7 lg:pl-1.5">
 				<p class="text-sm font-medium text-gray-300">{message.user.username || 'Unknown'}</p>
 			</div>
 		{/if}

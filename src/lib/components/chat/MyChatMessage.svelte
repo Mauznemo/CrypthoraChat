@@ -33,9 +33,11 @@
 	});
 </script>
 
-<div class="m-2 flex flex-row-reverse items-start space-x-2 space-x-reverse">
+<div class="m-2 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
 	<!-- Profile picture and username (only shown for first message in group) -->
-	<div class="flex flex-col items-center space-y-1">
+	<div
+		class="absolute -top-5 -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
+	>
 		{#if showProfile}
 			<div
 				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
