@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { getUserChats } from '../../../routes/chat/chat.remote';
 	import type { ChatWithoutMessages, SafeUser } from '$lib/types';
+	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import { socketStore } from '$lib/stores/socket.svelte';
 
 	let {
 		userId,
@@ -16,18 +18,27 @@
 	} = $props();
 
 	let chats: ChatWithoutMessages[] = $state([]);
+	let loadingChats = $state(true);
 
 	export function addChat(newChat: ChatWithoutMessages): void {
 		chats = [...chats, newChat];
 	}
 
 	onMount(async () => {
+		loadingChats = true;
 		chats = await getUserChats();
+		loadingChats = false;
 	});
 </script>
 
 <div class="mt-5">
 	<p class="px-2 text-sm font-semibold text-gray-300">Chats</p>
+
+	{#if loadingChats}
+		<div class="flex h-full items-center justify-center p-10">
+			<LoadingSpinner />
+		</div>
+	{/if}
 	{#each chats as chat, index}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
@@ -104,7 +115,8 @@
 	<div class="mt-5 flex items-center justify-center">
 		<button
 			onclick={() => onCreateChat()}
-			class="frosted-glass cursor-pointer rounded-full bg-teal-800/60 px-4 py-2 text-sm font-semibold transition-colors hover:bg-teal-600/60"
+			disabled={!socketStore.connected}
+			class="frosted-glass cursor-pointer rounded-full bg-teal-800/60 px-4 py-2 text-sm font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 			>+ New chat</button
 		>
 	</div>
