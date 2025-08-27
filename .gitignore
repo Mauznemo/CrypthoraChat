@@ -25,3 +25,4 @@ vite.config.ts.timestamp-*
 /prisma/src/generated/prisma
 
 /prisma/src/generated/prisma
+*.afphoto~lock~
