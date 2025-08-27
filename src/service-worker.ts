@@ -158,6 +158,6 @@ self.addEventListener('notificationclick', (event) => {
 	event.notification.close();
 
 	if (event.action === 'explore') {
-		event.waitUntil(self.clients.openWindow('/'));
+		event.waitUntil(self.clients.openWindow('/chat'));
 	}
 });

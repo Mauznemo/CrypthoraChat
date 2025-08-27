@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/icon-192x192.png" />
+	<link rel="icon" href="/icon-badge-96x96.png" />
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
