@@ -397,21 +397,37 @@
 		}
 	}
 
+	async function clearCaches() {
+		if ('caches' in window) {
+			const cacheNames = await caches.keys();
+			for (const name of cacheNames) {
+				await caches.delete(name);
+				console.log('Cache deleted:', name);
+			}
+		}
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		//TODO: Load last used chatId
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (lastChatId) {
 			const chat = await getChatById(lastChatId);
 			if (chat) {
 				activeChat = chat;
+			} else {
+				modalStore.alert('Error', 'Failed to load you last selected chat');
 			}
 		}
 
 		const success = await tryGetMessages(activeChat);
 
 		if (!success) {
+			if (activeChat)
+				modalStore.alert(
+					'Error',
+					'Failed to get messages for chat: ' + activeChat.id + ', not connecting to websocket.'
+				);
 			activeChat = null;
 		}
 
@@ -511,6 +527,11 @@
 			onclick={resetServiceWorkers}
 			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
 			>Reset Service Workers</button
+		>
+		<button
+			onclick={clearCaches}
+			class="absolute bottom-10 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
+			>Clear Caches</button
 		>
 	</div>
 
