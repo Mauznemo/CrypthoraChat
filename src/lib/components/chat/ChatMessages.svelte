@@ -256,7 +256,7 @@
 <div
 	bind:this={messageContainer}
 	onscroll={handleScrollUpdate}
-	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2"
+	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
 >
 	{#each messages as message, index (message.id)}
 		{@const isFromMe = message.senderId === user?.id}

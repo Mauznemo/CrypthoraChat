@@ -33,7 +33,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
-	console.log('Fetch event for:', event.request.url);
+	// console.log('Fetch event for:', event.request.url);
 
 	async function respond() {
 		const url = new URL(event.request.url);
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
 			const response = await cache.match(url.pathname);
 
 			if (response) {
-				console.log(`Returning from Cache`, url.pathname);
+				// console.log(`Returning from Cache`, url.pathname);
 				return response;
 			}
 		}
@@ -53,12 +53,12 @@ self.addEventListener('fetch', (event) => {
 		// fall back to the cache if we're offline or it times out
 		try {
 			// Race fetch against a timeout promise
-			const response = await Promise.race([
-				fetch(event.request),
-				new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 2000))
-			]);
+			// const response = await Promise.race([
+			// 	fetch(event.request),
+			// 	new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), 2000))
+			// ]);
 
-			// const response = await fetch(event.request);
+			const response = await fetch(event.request);
 
 			// if we're offline, fetch can return a value that is not a Response
 			// instead of throwing - and we can't pass this non-Response to respondWith
@@ -67,7 +67,7 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			if (response.status === 200) {
-				console.log(`Adding to Cache`, event.request.url);
+				// console.log(`Adding to Cache`, event.request.url);
 				cache.put(event.request, response.clone());
 			}
 
@@ -76,7 +76,7 @@ self.addEventListener('fetch', (event) => {
 			const response = await cache.match(event.request);
 
 			if (response) {
-				console.log(`Returning from Cache`, event.request.url);
+				// console.log(`Returning from Cache`, event.request.url);
 				return response;
 			}
 

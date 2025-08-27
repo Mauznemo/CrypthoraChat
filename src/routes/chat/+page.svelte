@@ -23,7 +23,7 @@
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
 	let activeChat: ChatWithoutMessages | null = $state(null);
-	let loadingChat = $state(false);
+	let loadingChat = $state(true);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
@@ -332,10 +332,11 @@
 
 		const success = await tryGetMessages(activeChat);
 
-		loadingChat = false;
 		if (success) {
 			console.log('Joining chat:', activeChat?.id);
 			socketStore.joinChat(activeChat!.id);
+
+			scrollToBottom();
 
 			// if (messages.length > 0 && data.user?.id) {
 			// 	socketStore.markMessagesAsRead({
@@ -366,11 +367,14 @@
 	async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
 		if (!chat) {
 			//modalStore.alert('Error', 'Failed to get messages: No chat selected');
+			loadingChat = false;
 			return false;
 		}
 		try {
 			await getMessagesByChatId(chat.id).refresh();
 			messages = await getMessagesByChatId(chat.id);
+
+			loadingChat = false;
 			return true;
 		} catch (error: any) {
 			if (error.body) {
@@ -378,6 +382,7 @@
 			}
 		}
 
+		loadingChat = false;
 		return false;
 	}
 
@@ -409,6 +414,7 @@
 	}
 
 	async function handleConnect() {
+		loadingChat = true;
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (lastChatId) {
 			const chat = await getChatById(lastChatId);
@@ -432,6 +438,7 @@
 
 		if (activeChat) {
 			socketStore.joinChat(activeChat.id);
+			scrollToBottom();
 		}
 	}
 
@@ -443,7 +450,7 @@
 
 		initializePushNotifications(PUBLIC_VAPID_KEY);
 
-		handleConnect();
+		// handleConnect();
 
 		// Set up event listeners
 		socketStore.onNewMessage(handleNewMessage);
@@ -451,7 +458,7 @@
 		socketStore.onMessageDeleted(handleMessageDeleted);
 		socketStore.onMessagesRead(handleMessagesRead);
 		socketStore.onNewChat(handleNewChat);
-		socketStore.onReconnect(handleConnect);
+		socketStore.onConnect(handleConnect);
 		socketStore.onMessageError((error) => {
 			console.error('Socket error:', error);
 		});
@@ -486,7 +493,10 @@
 		socketStore.off('message-deleted', handleMessageDeleted);
 		socketStore.off('messages-read', handleMessagesRead);
 		socketStore.off('new-chat', handleNewChat);
+		socketStore.off('reconnect', handleConnect);
 		socketStore.off('message-error');
+
+		socketStore.disconnect();
 	});
 </script>
 
@@ -563,7 +573,7 @@
 			</div>
 		</div>
 
-		{#if !activeChat}
+		{#if !activeChat && !loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<p class="text-2xl font-bold">No chat selected</p>
 			</div>
@@ -573,20 +583,20 @@
 			<div class="flex h-full items-center justify-center">
 				<LoadingSpinner />
 			</div>
+		{:else}
+			<ChatMessages
+				{messages}
+				user={data.user}
+				bind:messageContainer
+				{handleScroll}
+				onEdit={handleEditMessage}
+				onReply={handleReplyMessage}
+				onDelete={handleDeleteMessage}
+				onInfo={handleInfoMessage}
+				onReaction={handleReaction}
+				onUpdateReaction={handleUpdateReaction}
+			></ChatMessages>
 		{/if}
-
-		<ChatMessages
-			{messages}
-			user={data.user}
-			bind:messageContainer
-			{handleScroll}
-			onEdit={handleEditMessage}
-			onReply={handleReplyMessage}
-			onDelete={handleDeleteMessage}
-			onInfo={handleInfoMessage}
-			onReaction={handleReaction}
-			onUpdateReaction={handleUpdateReaction}
-		></ChatMessages>
 
 		{#if socketStore.typing.length > 0}
 			<div class="p-2 text-sm font-bold text-gray-400">
