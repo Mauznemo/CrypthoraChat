@@ -117,3 +117,47 @@ self.addEventListener('fetch', (event) => {
 
 	event.respondWith(respond());
 });
+
+// Push notification handling
+self.addEventListener('push', (event) => {
+	console.log('Push notification received');
+	const options = {
+		body: 'You have a new message!',
+		icon: '/icon-192.png',
+		badge: '/icon-192.png',
+		// vibrate: [100, 50, 100],
+		data: {
+			dateOfArrival: Date.now(),
+			primaryKey: '1'
+		},
+		actions: [
+			{
+				action: 'explore',
+				title: 'Open Chat',
+				icon: '/icon-192.png'
+			},
+			{
+				action: 'close',
+				title: 'Close notification',
+				icon: '/icon-192.png'
+			}
+		]
+	};
+
+	if (event.data) {
+		const data = event.data.json();
+		console.log('Push notification data:', data);
+		options.body = data.message || options.body;
+		options.data = { ...options.data, ...data };
+	}
+
+	event.waitUntil(self.registration.showNotification('New Message', options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+
+	if (event.action === 'explore') {
+		event.waitUntil(self.clients.openWindow('/'));
+	}
+});
