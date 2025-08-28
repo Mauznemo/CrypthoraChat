@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { decryptMessage } from '$lib/messageCrypto';
+	import { decryptMessage } from '$lib/crypto/message';
 	import { processLinks } from '$lib/linkUtils';
 	import type { MessageWithRelations } from '$lib/types';
 	import Reply from './Reply.svelte';
 
 	const {
 		message,
+		chatKey,
 		showProfile,
 		userId,
 		onHover,
@@ -13,6 +14,7 @@
 		onUpdateReaction
 	}: {
 		message: MessageWithRelations;
+		chatKey: CryptoKey;
 		showProfile: boolean;
 		userId: string;
 		onHover: (event: MouseEvent) => void;
@@ -58,11 +60,11 @@
 				? 'pb-5'
 				: ''}"
 		>
-			<Reply replyToMessage={message} />
+			<Reply {chatKey} replyToMessage={message} />
 
 			<svelte:boundary>
 				<p class="pr-9 whitespace-pre-line text-white">
-					{@html processLinks(await decryptMessage(message.encryptedContent))}
+					{@html processLinks(await decryptMessage(message.encryptedContent, chatKey))}
 				</p>
 				{#snippet pending()}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>

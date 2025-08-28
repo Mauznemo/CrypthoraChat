@@ -120,3 +120,25 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 
 	return chat;
 });
+
+export const getEncryptedChatKey = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		const userChatKey = await db.userChatKey.findUnique({
+			where: {
+				userId_chatId: {
+					userId: locals.user!.id,
+					chatId
+				}
+			}
+		});
+		return userChatKey?.encryptedKey;
+	} catch (e) {
+		error(404, 'Not found');
+	}
+});
