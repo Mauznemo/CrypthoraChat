@@ -162,12 +162,13 @@ export function initializeSocket(server: HTTPServer) {
 									subscription,
 									JSON.stringify({
 										title: 'New Message',
-										message: 'You have a new message!',
+										message: 'You have a new message from ' + newMessage.user.displayName,
 										chatId: data.chatId,
 										chatType: newMessage.chat.type,
 										chatName: newMessage.chat.name,
 										senderName: newMessage.user.displayName
-									})
+									}),
+									{ TTL: 86400, urgency: 'high' }
 								);
 							} catch (error) {
 								console.error('Error sending push notification:', error);
