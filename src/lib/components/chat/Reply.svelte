@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { processLinks } from '$lib/linkUtils';
-	import { decryptMessage } from '$lib/messageCrypto';
+	import { decryptMessage } from '$lib/crypto/message';
 	import type { MessageWithRelations } from '$lib/types';
 
 	const {
+		chatKey,
 		replyToMessage
 	}: {
+		chatKey: CryptoKey;
 		replyToMessage: MessageWithRelations | null;
 	} = $props();
 </script>
@@ -14,7 +16,7 @@
 	<div class="mb-1 rounded-sm border-l-2 border-white/50 bg-gray-500/50 pr-1 pb-0.5 pl-2">
 		<svelte:boundary>
 			<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
-				{@html processLinks(await decryptMessage(replyToMessage.replyTo.encryptedContent))}
+				{@html processLinks(await decryptMessage(replyToMessage.replyTo.encryptedContent, chatKey))}
 			</p>
 			{#snippet pending()}
 				<p class="whitespace-pre-line text-white">loading...</p>

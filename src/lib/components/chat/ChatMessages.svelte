@@ -13,6 +13,7 @@
 	let {
 		messages,
 		user,
+		chatKey,
 		messageContainer = $bindable<HTMLDivElement | null>(),
 		handleScroll,
 		onEdit,
@@ -24,6 +25,7 @@
 	}: {
 		messages: MessageWithRelations[];
 		user: User | null;
+		chatKey: CryptoKey;
 		messageContainer: HTMLDivElement | null;
 		handleScroll: () => void;
 		onEdit: (message: MessageWithRelations) => void;
@@ -277,6 +279,7 @@
 				<MyChatMessage
 					{message}
 					userId={user?.id || ''}
+					{chatKey}
 					{showProfile}
 					{isLast}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
@@ -287,6 +290,7 @@
 				<ChatMessage
 					{message}
 					userId={user?.id || ''}
+					{chatKey}
 					{showProfile}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}

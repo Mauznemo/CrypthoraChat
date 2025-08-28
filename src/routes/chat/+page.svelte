@@ -1,8 +1,13 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import { decryptMessage, encryptMessage } from '$lib/messageCrypto';
-	import { getChatById, getMessagesByChatId, getUserById } from './chat.remote';
+	import { decryptMessage, encryptMessage } from '$lib/crypto/message';
+	import {
+		getChatById,
+		getEncryptedChatKey,
+		getMessagesByChatId,
+		getUserById
+	} from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
@@ -14,6 +19,8 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/push-notifications';
 	import { PUBLIC_VAPID_KEY } from '$env/static/public';
+	import { decryptChatKeyFromStorage } from '$lib/crypto/chat';
+	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -24,6 +31,7 @@
 	let isTyping = $state(false);
 	let activeChat: ChatWithoutMessages | null = $state(null);
 	let loadingChat = $state(true);
+	let chatKey: CryptoKey | null = $state(null);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
@@ -152,7 +160,7 @@
 		}
 
 		if (messageEditing) {
-			const encryptedContent = await encryptMessage(messageContent);
+			const encryptedContent = await encryptMessage(messageContent, chatKey!);
 			socketStore.editMessage({
 				messageId: messageEditing.id,
 				encryptedContent: encryptedContent
@@ -163,7 +171,7 @@
 		}
 
 		try {
-			const encryptedContent = await encryptMessage(messageContent);
+			const encryptedContent = await encryptMessage(messageContent, chatKey!);
 
 			socketStore.sendMessage({
 				chatId: activeChat.id,
@@ -250,7 +258,7 @@
 	async function handleEditMessage(message: MessageWithRelations): Promise<void> {
 		console.log('Edit message:', message.id);
 		messageEditing = message;
-		chatValue = await decryptMessage(message.encryptedContent);
+		chatValue = await decryptMessage(message.encryptedContent, chatKey!);
 	}
 
 	function handleReplyMessage(message: MessageWithRelations): void {
@@ -327,13 +335,23 @@
 		loadingChat = true;
 		console.log('Chat selected (leaving previous):', newChat.id);
 		if (activeChat) socketStore.leaveChat(activeChat.id);
-		activeChat = newChat;
 		localStorage.setItem('lastChatId', newChat.id);
+
+		const encryptedChatKey = await getEncryptedChatKey(newChat.id);
+
+		if (!encryptedChatKey) {
+			modalStore.alert('Error', 'Failed to get chat key!');
+			activeChat = null;
+			return;
+		}
+
+		chatKey = await decryptChatKeyFromStorage(encryptedChatKey);
 
 		const success = await tryGetMessages(activeChat);
 
 		if (success) {
 			console.log('Joining chat:', activeChat?.id);
+			activeChat = newChat;
 			socketStore.joinChat(activeChat!.id);
 
 			scrollToBottom();
@@ -416,30 +434,18 @@
 	async function handleConnect() {
 		loadingChat = true;
 		const lastChatId = localStorage.getItem('lastChatId');
-		if (lastChatId) {
-			const chat = await getChatById(lastChatId);
-			if (chat) {
-				activeChat = chat;
-			} else {
-				modalStore.alert('Error', 'Failed to load you last selected chat');
-			}
+		if (!lastChatId) {
+			return;
 		}
 
-		const success = await tryGetMessages(activeChat);
+		const chat = await getChatById(lastChatId);
 
-		if (!success) {
-			if (activeChat)
-				modalStore.alert(
-					'Error',
-					'Failed to get messages for chat: ' + activeChat.id + ', not connecting to websocket.'
-				);
-			activeChat = null;
+		if (!chat) {
+			modalStore.alert('Error', 'Failed to load you last selected chat');
+			return;
 		}
 
-		if (activeChat) {
-			socketStore.joinChat(activeChat.id);
-			scrollToBottom();
-		}
+		handleChatSelected(chat);
 	}
 
 	onMount(async () => {
@@ -542,6 +548,15 @@
 			class="absolute bottom-10 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
 			>Clear Caches</button
 		>
+		<button
+			onclick={() => {
+				emojiKeyConverterStore.openInput('Input a key', (key) => {
+					console.log('key', key);
+				});
+			}}
+			class="absolute bottom-20 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
+			>Open Key sharer</button
+		>
 	</div>
 
 	<!-- Backdrop for mobile -->
@@ -587,6 +602,7 @@
 			<ChatMessages
 				{messages}
 				user={data.user}
+				chatKey={chatKey!}
 				bind:messageContainer
 				{handleScroll}
 				onEdit={handleEditMessage}
@@ -623,7 +639,8 @@
 				<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 					<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
 					Replying to {messageReplying.user.username}: {await decryptMessage(
-						messageReplying.encryptedContent
+						messageReplying.encryptedContent,
+						chatKey!
 					)}
 				</div>
 				{#snippet pending()}
@@ -636,7 +653,12 @@
 			<svelte:boundary>
 				<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 					<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
-					<span>Editing message: {await decryptMessage(messageEditing.encryptedContent)}</span>
+					<span
+						>Editing message: {await decryptMessage(
+							messageEditing.encryptedContent,
+							chatKey!
+						)}</span
+					>
 				</div>
 				{#snippet pending()}
 					<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
