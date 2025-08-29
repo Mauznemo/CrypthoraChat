@@ -121,7 +121,7 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 	return chat;
 });
 
-export const getEncryptedChatKey = query(v.string(), async (chatId: string) => {
+export const getEncryptedChatKeySeed = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
 
 	if (!locals.sessionId) {

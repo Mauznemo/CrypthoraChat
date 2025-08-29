@@ -1,21 +1,29 @@
 class EmojiKeyConverterStore {
 	isOpen = $state(false);
 	title = $state('');
-	key?: CryptoKey | string = $state('');
+	base64Seed?: string = $state('');
 	useDateSalt? = $state(false);
-	onDone?: (key: CryptoKey) => void;
+	onDone?: (base64Seed: string) => void;
 
-	openInput(title: string, onDone: (key: CryptoKey) => void) {
+	private clearEmojiInput?: () => void;
+
+	openInput(title: string, onDone: (base64Seed: string) => void) {
 		this.isOpen = true;
 		this.title = title;
 		this.onDone = onDone;
 	}
 
-	openDisplay(title: string, useDateSalt: boolean, key: CryptoKey | string) {
+	openDisplay(title: string, useDateSalt: boolean, base64Seed: string) {
 		this.isOpen = true;
 		this.title = title;
-		this.key = key;
+		this.base64Seed = base64Seed;
 		this.useDateSalt = useDateSalt;
+	}
+
+	clearInput() {
+		if (this.clearEmojiInput) {
+			this.clearEmojiInput();
+		}
 	}
 
 	close() {

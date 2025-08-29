@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { fade, scale } from 'svelte/transition';
@@ -23,9 +23,10 @@
 		children
 	}: Props = $props();*/
 
-	let mode: 'display' | 'input' = 'input';
-	let chatKey: CryptoKey | string;
+	let mode: 'display' | 'input' = $state('input');
+	let base64Seed: string;
 	let isOpen = $state(false);
+	let emojiRawInput = $state('');
 
 	// Comprehensive emoji set for key representation
 	// prettier-ignore
@@ -84,56 +85,67 @@
 		return encoder.encode(dateString);
 	}
 
-	// Convert key to emoji sequence
-	async function keyToEmojiSequence(key: CryptoKey | string): Promise<string[]> {
-		const exported =
-			key instanceof CryptoKey
-				? await crypto.subtle.exportKey('raw', key)
-				: base64ToArrayBuffer(key);
-		const keyBytes = new Uint8Array(exported);
+	// Convert seed to emoji sequence for sharing (call this on the first device to display/share)
+	// Incorporates dateSalt to make it day-bound if dateSalt is non-empty
+	export async function seedToEmojiSequence(base64Seed: string): Promise<string[]> {
+		if (!base64Seed) {
+			throw new Error('Seed not found.');
+		}
+		const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
 		const dateSalt = getDateSalt();
+		const saltArray = new Uint8Array(dateSalt);
 
-		// Combine key bytes with optional date salt
-		const combined = new Uint8Array(keyBytes.length + dateSalt.length);
-		combined.set(keyBytes);
-		combined.set(dateSalt, keyBytes.length);
+		// Derive a 16-byte mask from dateSalt (SHA-256 then slice to 16 bytes)
+		const saltHashBuffer = await crypto.subtle.digest('SHA-256', saltArray);
+		const saltHash = new Uint8Array(saltHashBuffer).slice(0, 16);
 
-		// Hash the combined data to ensure consistent mapping
-		const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
-		const hashArray = new Uint8Array(hashBuffer);
+		// XOR seed with saltHash to create temporary bytes
+		const tempBytes = new Uint8Array(16);
+		for (let i = 0; i < 16; i++) {
+			tempBytes[i] = seedBytes[i] ^ saltHash[i];
+		}
 
-		// Use first 16 bytes of hash to create emoji sequence
+		// Map to emojis (assumes EMOJI_SET has at least 256 emojis)
 		const emojis: string[] = [];
 		for (let i = 0; i < 16; i++) {
-			emojis.push(EMOJI_SET[hashArray[i]]);
+			emojis.push(EMOJI_SET[tempBytes[i]]);
 		}
 
 		return emojis;
 	}
 
-	// Convert emoji sequence back to key
-	async function emojiSequenceToKey(emojis: string[]): Promise<CryptoKey> {
-		// Create a deterministic seed from the emoji sequence
-		const emojiIndices = emojis.map((emoji) => EMOJI_SET.indexOf(emoji));
-		const seedArray = new Uint8Array(emojiIndices);
+	// Import from emoji sequence and store seed (run on new device after user inputs emojis)
+	// Recovers the seed using dateSalt and stores it
+	export async function emojiSequenceToSeed(emojis: string[]): Promise<string> {
+		if (emojis.length !== 16) {
+			throw new Error('Invalid emoji sequence length.');
+		}
 
-		// Add date salt if enabled
+		const indices = emojis.map((emoji) => EMOJI_SET.indexOf(emoji));
+		if (indices.some((idx) => idx === -1 || idx > 255)) {
+			throw new Error('Invalid emoji in sequence.');
+		}
+
+		const tempBytes = new Uint8Array(16);
+		for (let i = 0; i < 16; i++) {
+			tempBytes[i] = indices[i];
+		}
+
 		const dateSalt = getDateSalt();
-		const combined = new Uint8Array(seedArray.length + dateSalt.length);
-		combined.set(seedArray);
-		combined.set(dateSalt, seedArray.length);
+		const saltArray = new Uint8Array(dateSalt);
 
-		// Generate key material from the seed
-		const keyMaterial = await crypto.subtle.digest('SHA-256', combined);
+		// Derive the same 16-byte mask from dateSalt
+		const saltHashBuffer = await crypto.subtle.digest('SHA-256', saltArray);
+		const saltHash = new Uint8Array(saltHashBuffer).slice(0, 16);
 
-		// Import as AES-GCM key
-		return crypto.subtle.importKey(
-			'raw',
-			keyMaterial.slice(0, 32), // Use first 32 bytes for AES-256
-			'AES-GCM',
-			true,
-			['encrypt', 'decrypt']
-		);
+		// Recover seed by XOR with saltHash
+		const seedBytes = new Uint8Array(16);
+		for (let i = 0; i < 16; i++) {
+			seedBytes[i] = tempBytes[i] ^ saltHash[i];
+		}
+
+		const base64Seed = arrayBufferToBase64(seedBytes.buffer);
+		return base64Seed;
 	}
 
 	// Handle emoji selection in input mode
@@ -152,8 +164,8 @@
 	// Generate key from completed emoji sequence
 	async function generateKeyFromSequence() {
 		try {
-			const key = await emojiSequenceToKey(emojiSequence);
-			emojiKeyConverterStore.onDone?.(key);
+			const seed = await emojiSequenceToSeed(emojiSequence);
+			emojiKeyConverterStore.onDone?.(seed);
 		} catch (error) {
 			console.error('Failed to generate key from emoji sequence:', error);
 		}
@@ -180,18 +192,23 @@
 		}
 	}
 
-	async function updateDisplay(key: CryptoKey | string) {
-		displayEmojis = await keyToEmojiSequence(key);
+	async function updateDisplay(seed: string) {
+		displayEmojis = await seedToEmojiSequence(seed);
 	}
+
+	onMount(() => {
+		emojiKeyConverterStore.clearInput = clearSequence;
+	});
 
 	// Update display when key changes
 	$effect(() => {
 		if (emojiKeyConverterStore.isOpen) {
 			console.log('Opened emoji key converter');
-			mode = emojiKeyConverterStore.key ? 'display' : 'input';
-			if (emojiKeyConverterStore.key) chatKey = emojiKeyConverterStore.key;
-			if (mode === 'display' && chatKey) {
-				updateDisplay(chatKey);
+			mode = emojiKeyConverterStore.base64Seed ? 'display' : 'input';
+			console.log('Mode:', mode);
+			if (emojiKeyConverterStore.base64Seed) base64Seed = emojiKeyConverterStore.base64Seed;
+			if (mode === 'display' && base64Seed) {
+				updateDisplay(base64Seed);
 			}
 		}
 	});
@@ -213,12 +230,32 @@
 			out:scale={{ duration: 200, easing: expoInOut }}
 			class="frosted-glass-shadow mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4"
 		>
+			<button
+				onclick={() => emojiKeyConverterStore.close()}
+				class="absolute right-5 p-1 text-gray-400 transition-colors hover:text-gray-200"
+				aria-label="Close modal"
+			>
+				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					></path>
+				</svg>
+			</button>
 			{#if mode === 'display'}
+				<!-- <p class="text-white">Emojies: {displayEmojis.toString()}</p> -->
+				<h3 class="mt-2 mb-5 text-lg font-semibold text-white">
+					{emojiKeyConverterStore.title}
+				</h3>
 				<div class="space-y-4">
-					<div class="emoji-consistent grid grid-cols-4 justify-items-center gap-3 px-0">
+					<div
+						class="emoji-consistent grid grid-cols-4 justify-items-center gap-3 px-0 select-none"
+					>
 						{#each displayEmojis as emoji, index}
 							<div
-								class="flex size-18 items-center justify-center rounded-lg border-2 border-gray-600 text-2xl transition-colors"
+								class="flex size-18 items-center justify-center rounded-lg border-2 border-gray-600 text-4xl transition-colors"
 							>
 								{emoji}
 							</div>
@@ -226,6 +263,14 @@
 					</div>
 				</div>
 			{:else}
+				<!-- <input type="text" bind:value={emojiRawInput} />
+				<button
+					onclick={() => {
+						emojiSequence = emojiRawInput.split(',');
+						inputIndex = emojiSequence.length;
+						generateKeyFromSequence();
+					}}>Fill</button
+				> -->
 				<div>
 					<div class="mb-6">
 						<h3 class="mt-2 mb-5 text-lg font-semibold text-white">

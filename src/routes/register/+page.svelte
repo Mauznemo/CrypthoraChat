@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { generateAndStoreMasterKey } from '$lib/crypto/master';
 	import { register } from './data.remote';
 
 	let { data } = $props();
@@ -22,6 +23,7 @@
 				try {
 					await submit();
 					form.reset();
+					await generateAndStoreMasterKey();
 				} catch (error: any) {
 					const errorObj: Error | undefined = JSON.parse(error);
 					if (errorObj !== undefined) errorText = errorObj.message;
