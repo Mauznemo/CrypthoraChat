@@ -2,6 +2,7 @@
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
+	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
 
 	let pickerElement: HTMLDivElement;
 
@@ -46,10 +47,19 @@
 
 	let activeCategory = $state('😀');
 	let searchTerm = $state('');
+	type EmojiDataType = typeof emojiData;
 
 	const filteredEmojis = $derived.by(() => {
 		if (customEmojiSet.length > 0) {
-			return customEmojiSet;
+			if (!searchTerm.trim()) {
+				return customEmojiSet;
+			}
+			return customEmojiSet.filter((emoji) => {
+				const data = (emojiData as EmojiDataType)[emoji as keyof EmojiDataType];
+				if (!data) return false;
+				const searchableText = data.name.toLowerCase();
+				return searchableText.includes(searchTerm.toLowerCase());
+			});
 		}
 
 		if (!searchTerm.trim()) {
@@ -58,9 +68,13 @@
 
 		return Object.values(emojiCategories)
 			.flat()
-			.filter(() => true); // For now, show all emojis when searching
+			.filter((emoji) => {
+				const data = (emojiData as EmojiDataType)[emoji as keyof EmojiDataType];
+				if (!data) return false;
+				const searchableText = data.name.toLowerCase();
+				return searchableText.includes(searchTerm.toLowerCase());
+			});
 	});
-
 	function handleEmojiSelect(emoji: string) {
 		emojiPickerStore.onSelected?.(emoji);
 		searchTerm = ''; // Reset search

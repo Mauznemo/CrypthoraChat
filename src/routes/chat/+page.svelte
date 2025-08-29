@@ -4,7 +4,7 @@
 	import { decryptMessage, encryptMessage } from '$lib/crypto/message';
 	import {
 		getChatById,
-		getEncryptedChatKey,
+		getEncryptedChatKeySeed,
 		getMessagesByChatId,
 		getUserById
 	} from './chat.remote';
@@ -19,8 +19,14 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/push-notifications';
 	import { PUBLIC_VAPID_KEY } from '$env/static/public';
-	import { decryptChatKeyFromStorage } from '$lib/crypto/chat';
+	import { decryptChatKeySeedFromStorage, getChatKeyFromSeed } from '$lib/crypto/chat';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+	import {
+		generateAndStoreMasterKey,
+		getMasterSeedForSharing,
+		hasMasterKey,
+		importAndSaveMasterSeed
+	} from '$lib/crypto/master';
 
 	let { data }: PageProps = $props();
 
@@ -337,15 +343,22 @@
 		if (activeChat) socketStore.leaveChat(activeChat.id);
 		localStorage.setItem('lastChatId', newChat.id);
 
-		const encryptedChatKey = await getEncryptedChatKey(newChat.id);
+		const encryptedChatKeySeed = await getEncryptedChatKeySeed(newChat.id);
 
-		if (!encryptedChatKey) {
-			modalStore.alert('Error', 'Failed to get chat key!');
+		if (!encryptedChatKeySeed) {
+			modalStore.alert('Error', 'Failed to get chat key!'); //TODO prompt user to entre key
 			activeChat = null;
 			return;
 		}
 
-		chatKey = await decryptChatKeyFromStorage(encryptedChatKey);
+		try {
+			const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
+			chatKey = await getChatKeyFromSeed(chatKeySeed);
+		} catch (error) {
+			modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
+			activeChat = null;
+			return;
+		}
 
 		const success = await tryGetMessages(activeChat);
 
@@ -454,6 +467,38 @@
 		// Connect to socket server
 		socketStore.connect();
 
+		if (!hasMasterKey() && !emojiKeyConverterStore.isOpen) {
+			modalStore.open({
+				title: 'Warning',
+				content: 'Could not find your maser key.',
+				buttons: [
+					{
+						text: 'Generate New',
+						variant: 'primary',
+						onClick: () => {
+							generateAndStoreMasterKey();
+						}
+					},
+					{
+						text: 'Import Existing',
+						variant: 'primary',
+						onClick: () => {
+							emojiKeyConverterStore.openInput('Import Master Key', async (base64Seed) => {
+								try {
+									await importAndSaveMasterSeed(base64Seed);
+								} catch (error) {
+									modalStore.alert('Error', 'Failed to import master key: ' + error, () => {
+										emojiKeyConverterStore.clearInput();
+									});
+									console.error(error);
+								}
+							});
+						}
+					}
+				]
+			});
+		}
+
 		initializePushNotifications(PUBLIC_VAPID_KEY);
 
 		// handleConnect();
@@ -550,12 +595,14 @@
 		>
 		<button
 			onclick={() => {
-				emojiKeyConverterStore.openInput('Input a key', (key) => {
-					console.log('key', key);
-				});
+				emojiKeyConverterStore.openDisplay(
+					"Master Key (Don't share with anyone)",
+					false,
+					getMasterSeedForSharing()
+				);
 			}}
 			class="absolute bottom-20 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
-			>Open Key sharer</button
+			>Show Master Key</button
 		>
 	</div>
 

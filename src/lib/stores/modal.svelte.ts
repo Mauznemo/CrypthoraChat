@@ -12,6 +12,7 @@ interface ModalConfig {
 }
 
 class ModalStore {
+	private modalQueue: ModalConfig[] = [];
 	isOpen = $state(false);
 	config = $state<ModalConfig>({
 		title: '',
@@ -19,8 +20,13 @@ class ModalStore {
 		buttons: [],
 		showCloseButton: true
 	});
+	
 
 	open(config: ModalConfig) {
+		if (this.isOpen) {
+			this.modalQueue.push(config);
+			return;
+		}
 		this.config = {
 			showCloseButton: true,
 			...config
@@ -30,6 +36,15 @@ class ModalStore {
 
 	close() {
 		this.isOpen = false;
+		
+		// Show next modal in queue if exists
+		if (this.modalQueue.length > 0) {
+			const nextModal = this.modalQueue.shift();
+			// Small delay to ensure smooth transition
+			setTimeout(() => {
+				if (nextModal) this.open(nextModal);
+			}, 100);
+		}
 	}
 
 	// Convenience methods for common modal types
