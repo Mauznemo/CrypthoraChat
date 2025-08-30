@@ -750,11 +750,11 @@
 
 		<ChatList
 			bind:this={chatListComponent}
+			bind:selectedChat={activeChat}
 			userId={data.user?.id || ''}
 			onChatSelected={handleChatSelected}
 			onCreateChat={handleCreateChat}
 		/>
-		<!-- bind:selectedChat={activeChat} -->
 		<button
 			onclick={resetServiceWorkers}
 			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"

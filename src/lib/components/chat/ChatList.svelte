@@ -15,19 +15,18 @@
 
 	let {
 		userId,
-		/*selectedChat = $bindable<ChatWithoutMessages | null>(),*/
+		selectedChat = $bindable<ChatWithoutMessages | null>(), //do not assign that here, only read!
 		onChatSelected,
 		onCreateChat
 	}: {
 		userId: string;
-		/*selectedChat?: ChatWithoutMessages | null;*/
+		selectedChat?: ChatWithoutMessages | null;
 		onChatSelected: (chat: ChatWithoutMessages) => void;
 		onCreateChat: () => void;
 	} = $props();
 
 	let chats: ChatWithoutMessages[] = $state([]);
 	let loadingChats = $state(true);
-	let selectedChat: ChatWithoutMessages | null = $state(null);
 
 	export function addChat(newChat: ChatWithoutMessages): void {
 		chats = [...chats, newChat];
@@ -147,7 +146,6 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			onclick={() => {
-				selectedChat = chat;
 				onChatSelected(chat);
 			}}
 			role="button"
