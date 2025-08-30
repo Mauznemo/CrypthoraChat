@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
+	import { encryptChatKeySeedForStorage, generateChatKeySeed } from '$lib/crypto/chat';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { PageProps } from '../$types';
+	import { saveEncryptedChatKeySeed } from '../../chat.remote';
 	import { createGroup } from '../chatCreation.remote';
 
 	let { data }: PageProps = $props();
@@ -15,6 +17,18 @@
 	async function handleCreateGroup() {
 		try {
 			let result = await createGroup({ groupName, userIds: selectedUsers.map((u) => u.id) });
+			const chatKeySeed = generateChatKeySeed();
+			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(chatKeySeed);
+
+			try {
+				await saveEncryptedChatKeySeed({
+					chatId: result.chatId,
+					encryptedKeySeed: chatKeySeedEncrypted
+				});
+			} catch (err) {
+				console.error(err);
+				modalStore.alert('Error', 'Failed to save chat key: ' + err);
+			}
 
 			if (result.success) {
 				socketStore.notifyNewChat({

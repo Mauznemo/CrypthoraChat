@@ -4,93 +4,81 @@
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { expoInOut } from 'svelte/easing';
-
-	/*interface Props {
-		mode: 'display' | 'input';
-		chatKey?: CryptoKey;
-		onKeyGenerated?: (key: CryptoKey) => void;
-		useDateSalt?: boolean;
-		class?: string;
-		children?: Snippet;
-	}
-
-	let {
-		mode,
-		chatKey,
-		onKeyGenerated,
-		useDateSalt = false,
-		class: className = '',
-		children
-	}: Props = $props();*/
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
 
 	let mode: 'display' | 'input' = $state('input');
 	let base64Seed: string;
-	let isOpen = $state(false);
 	let emojiRawInput = $state('');
 
-	// Comprehensive emoji set for key representation
 	// prettier-ignore
-	const EMOJI_SET = [
+	const EMOJI_SET = Object.freeze([
 		'🦋', '🐊', '🦎', '🍁', '🔋', '⛄', '🥜', '😂', '🙂', '🙃', '🚜', '😉', '🍔', '😇', '🥰', '😍',
 		'🤩', '😘', '🔋', '🍀', '☘️', '🥝', '🍓', '🛵', '🎁', '🤪', '🍕', '🤑', '🤗', '🍩', '🍪', '🫣',
-		'🌛', '🎣', '🫡', '🤐', '🍇', '🍆', '🥔', '🍌', '🫥', '⏰', '⛸️', '🎰', '🍷', '⛲', '🍉', '🍿',
-		'🕯️', '🚀', '😴', '🍫', '🤒', '🎄', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳',
-		'🥸', '😎', '🤓', '🌵', '🥁', '🔔', '🍺', '🎮', '🌍', '⌨️', '🎞️', '⚓', '🚆', '🚽', '☂️', '😨',
+		'🌛', '🎣', '🫡', '🏆', '🍇', '🍆', '🥔', '🍌', '🫥', '⏰', '⛸️', '🎰', '🍷', '⛲', '🍉', '🍿',
+		'🕯️', '🚀', '😴', '🍫', '📖', '🎄', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳',
+		'🥸', '😎', '🤓', '🌵', '🥁', '🔔', '🍺', '🎮', '🌍', '⌨️', '🎞️', '⚓', '🚆', '🚽', '☂️', '🎙️',
 		'💰', '😥', '📦', '😭', '😱', '🐳', '🐛', '🐞', '🐝', '🕸️', '🌷', '🥱', '🚠', '😡', '🛰️', '🚁',
 		'😈', '✈️', '💀', '💩', '🤡', '🚢', '👺', '👻', '👽', '👾', '🤖', '🎃', '😺', '🚓', '😹', '😻',
-		'😼', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🦀', '💋', '💌', '💘', '💝', '🦆', '💗', '💓', '💞',
-		'💕', '💟', '💔', '🐦', '🐧', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️', '🔥', '💫', '⭐',
-		'🌟', '✨', '⚡', '☄️', '💥', '💢', '💯', '💨', '💦', '💤', '🕳️', '👁️', '🗨️', '💭', '🗯️', '🚒',
+		'😼', '😽', '🙀', '💉', '🔨', '🙈', '🙉', '🦀', '💋', '💌', '💘', '💝', '🦆', '💗', '💓', '💞',
+		'💕', '💟', '💔', '🐦', '🐧', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '❤️', '🔥', '⚔️', '⭐',
+		'🔦', '✨', '⚡', '☄️', '💥', '💢', '💯', '💨', '💦', '💤', '🕳️', '👁️', '🗨️', '💭', '🗯️', '🚒',
 		'👋', '🤚', '🐭', '🦇', '🐼', '👌', '🤌', '🤏', '✌️', '🚧', '🐮', '🤟', '🐏', '🐖', '👈', '👉',
 		'👆', '🥐', '👇', '🔑', '🫵', '👍', '👎', '👊', '🚬', '🤛', '🤜', '👏', '🚥', '🫶', '👐', '🛒',
 		'🤝', '🙏', '✍️', '💅', '🤳', '💪', '🐪', '🦄', '🦵', '🦶', '👂', '⚙️', '👃', '🧠', '🫀', '🫁',
-		'🦷', '🦴', '👀', '👅', '👄', '🐯', '👶', '🧒', '👦', '💎', '💄', '🎩', '🎒', '👜', '👗', '👖',
-		'👴', '👵', '🙍', '🙎', '🙅', '🙆', '👕', '🙋', '👓', '🏇', '🏊', '🤷', '👮', '🕵️', '💂', '🥷',
-		'🐘', '🫅', '🤴', '👸', '👳', '👲', '🧕', '🏎️', '👰', '⛷️', '🫃', '👨‍🏫', '🏃‍♀️', '👼', '🎅', '🤶',
-		'🔧', '📎', '✂️', '🗑️', '☢️', '🗿', '💉', '🔨', '📌', '✏️', '💵', '🔦', '📷', '🖨️', '☎️', '🎧',
-		'🔭', '🎺', '🎙️', '🎵', '🎲', '❄️', '🏆', '📻', '🎹', '📖', '💳', '🗜️', '⛔', '⚔️', '🔫', '🔍',
-	];
+		'🦷', '🦴', '👀', '👅', '👄', '🐯', '💳', '📌', '✏️', '💎', '💄', '🎩', '🎒', '👜', '👗', '👖',
+		'🎺', '📎', '🎲', '✂️', '🙅', '🗿', '👕', '🙋', '👓', '🏇', '🏊', '🤷', '👮', '💵', '📷', '🥷',
+		'🐘', '📻', '🎵', '👸', '❄️', '🎹', '🖨️', '🏎️', '🔧', '⛷️', '🗑️', '👨‍🏫', '🏃‍♀️', '☎️', '🎅', '🎧',
+	]);
+
+	//const EMOJI_SET = EMOJI_SET_NON_NORMALIZED.map((emoji) => removeAdditionalDataFromEmoji(emoji));
 
 	let emojiSequence = $state<string[]>([]);
 	let displayEmojis = $state<string[]>([]);
 	let inputIndex = $state(0);
 
-	// Convert array buffer to base64
-	function arrayBufferToBase64(buffer: ArrayBuffer): string {
-		const bytes = new Uint8Array(buffer);
-		let binary = '';
-		for (let i = 0; i < bytes.byteLength; i++) {
-			binary += String.fromCharCode(bytes[i]);
-		}
-		return btoa(binary);
-	}
-
-	// Convert base64 to array buffer
-	function base64ToArrayBuffer(base64: string): ArrayBuffer {
-		const binaryString = atob(base64);
-		const bytes = new Uint8Array(binaryString.length);
-		for (let i = 0; i < binaryString.length; i++) {
-			bytes[i] = binaryString.charCodeAt(i);
-		}
-		return bytes.buffer;
-	}
-
-	// Get date salt if enabled
 	function getDateSalt(): Uint8Array {
 		if (!emojiKeyConverterStore.useDateSalt) return new Uint8Array(0);
 
-		const today = new Date();
-		const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+		const todayUTC = new Date();
+		const dateString =
+			todayUTC.getUTCFullYear().toString().padStart(4, '0') +
+			'-' +
+			(todayUTC.getUTCMonth() + 1).toString().padStart(2, '0') +
+			'-' +
+			todayUTC.getUTCDate().toString().padStart(2, '0');
+
 		const encoder = new TextEncoder();
 		return encoder.encode(dateString);
 	}
 
-	// Convert seed to emoji sequence for sharing (call this on the first device to display/share)
-	// Incorporates dateSalt to make it day-bound if dateSalt is non-empty
+	function getSaltTimeRemaining(): string {
+		const now = new Date();
+
+		const nextMidnight = new Date(
+			Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0)
+		);
+
+		const diffMs = nextMidnight.getTime() - now.getTime();
+
+		// Convert to hours and minutes
+		const diffMinutes = Math.floor(diffMs / (1000 * 60));
+		const hours = Math.floor(diffMinutes / 60);
+		const minutes = diffMinutes % 60;
+
+		return `${hours.toString().padStart(1, '0')} hours and ${minutes.toString().padStart(2, '0')} minutes`;
+	}
+
+	export function removeAdditionalDataFromEmoji(emoji: string): string {
+		// Remove variation selectors (U+FE0E and U+FE0F) to get the base emoji
+		return emoji.replace(/[\uFE0E\uFE0F]/g, '');
+	}
+
 	export async function seedToEmojiSequence(base64Seed: string): Promise<string[]> {
 		if (!base64Seed) {
 			throw new Error('Seed not found.');
 		}
+		console.log('In Seed:', base64Seed);
 		const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
 		const dateSalt = getDateSalt();
 		const saltArray = new Uint8Array(dateSalt);
@@ -98,6 +86,7 @@
 		// Derive a 16-byte mask from dateSalt (SHA-256 then slice to 16 bytes)
 		const saltHashBuffer = await crypto.subtle.digest('SHA-256', saltArray);
 		const saltHash = new Uint8Array(saltHashBuffer).slice(0, 16);
+		console.log('Date salt:', arrayBufferToBase64(saltArray.buffer));
 
 		// XOR seed with saltHash to create temporary bytes
 		const tempBytes = new Uint8Array(16);
@@ -105,26 +94,32 @@
 			tempBytes[i] = seedBytes[i] ^ saltHash[i];
 		}
 
-		// Map to emojis (assumes EMOJI_SET has at least 256 emojis)
+		// Map to emojis
 		const emojis: string[] = [];
 		for (let i = 0; i < 16; i++) {
 			emojis.push(EMOJI_SET[tempBytes[i]]);
 		}
 
+		const indices = emojis.map((emoji) => EMOJI_SET.indexOf(emoji));
+
+		console.log('Emoji sequence:', emojis);
+		//console.log('Normalized emojis:', normalizedEmojis);
+		console.log('Emoji indices:', indices);
+
 		return emojis;
 	}
 
-	// Import from emoji sequence and store seed (run on new device after user inputs emojis)
-	// Recovers the seed using dateSalt and stores it
 	export async function emojiSequenceToSeed(emojis: string[]): Promise<string> {
 		if (emojis.length !== 16) {
 			throw new Error('Invalid emoji sequence length.');
 		}
 
+		//const normalizedEmojis = emojis.map(removeAdditionalDataFromEmoji);
 		const indices = emojis.map((emoji) => EMOJI_SET.indexOf(emoji));
-		if (indices.some((idx) => idx === -1 || idx > 255)) {
-			throw new Error('Invalid emoji in sequence.');
-		}
+
+		console.log('Emoji sequence:', emojis);
+		//console.log('Normalized emojis:', normalizedEmojis);
+		console.log('Emoji indices:', indices);
 
 		const tempBytes = new Uint8Array(16);
 		for (let i = 0; i < 16; i++) {
@@ -133,6 +128,7 @@
 
 		const dateSalt = getDateSalt();
 		const saltArray = new Uint8Array(dateSalt);
+		console.log('Date salt:', arrayBufferToBase64(saltArray.buffer));
 
 		// Derive the same 16-byte mask from dateSalt
 		const saltHashBuffer = await crypto.subtle.digest('SHA-256', saltArray);
@@ -145,6 +141,7 @@
 		}
 
 		const base64Seed = arrayBufferToBase64(seedBytes.buffer);
+		console.log('Recovered seed:', base64Seed);
 		return base64Seed;
 	}
 
@@ -167,6 +164,7 @@
 			const seed = await emojiSequenceToSeed(emojiSequence);
 			emojiKeyConverterStore.onDone?.(seed);
 		} catch (error) {
+			modalStore.alert('Error', 'Failed to generate key from emoji sequence: ' + error);
 			console.error('Failed to generate key from emoji sequence:', error);
 		}
 	}
@@ -185,10 +183,9 @@
 		}
 	}
 
-	// Open emoji picker
 	function openEmojiPicker(event: MouseEvent) {
 		if (mode === 'input') {
-			emojiPickerStore.open(event.target as HTMLElement, handleEmojiSelect, EMOJI_SET.sort());
+			emojiPickerStore.open(event.target as HTMLElement, handleEmojiSelect, [...EMOJI_SET].sort());
 		}
 	}
 
@@ -203,6 +200,7 @@
 	// Update display when key changes
 	$effect(() => {
 		if (emojiKeyConverterStore.isOpen) {
+			emojiSequence = [];
 			console.log('Opened emoji key converter');
 			mode = emojiKeyConverterStore.base64Seed ? 'display' : 'input';
 			console.log('Mode:', mode);
@@ -215,7 +213,7 @@
 
 	// Reactive computed values
 	//const emojisToShow = $derived(mode === 'display' ? displayEmojis : emojiSequence);
-	const isComplete = $derived(mode === 'input' && inputIndex === 16);
+	// const isComplete = $derived(mode === 'input' && inputIndex === 16);
 	const progress = $derived(mode === 'input' ? (inputIndex / 16) * 100 : 100);
 </script>
 
@@ -262,6 +260,11 @@
 						{/each}
 					</div>
 				</div>
+				{#if emojiKeyConverterStore.useDateSalt}
+					<p class="mt-3 text-center text-sm text-gray-400">
+						This Key will expire in {getSaltTimeRemaining()}
+					</p>
+				{/if}
 			{:else}
 				<!-- <input type="text" bind:value={emojiRawInput} />
 				<button
@@ -325,13 +328,13 @@
 						</button>
 					</div>
 
-					{#if isComplete}
+					<!-- {#if isComplete}
 						<div class=" mt-4 rounded-3xl bg-green-900/60 p-3 text-center">
 							<span class="text-green-600 dark:text-green-400"
 								>✓ Sequence complete! Key generated.</span
 							>
 						</div>
-					{/if}
+					{/if} -->
 				</div>
 			{/if}
 		</div>

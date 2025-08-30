@@ -7,9 +7,11 @@ class EmojiKeyConverterStore {
 
 	private clearEmojiInput?: () => void;
 
-	openInput(title: string, onDone: (base64Seed: string) => void) {
+	openInput(title: string, useDateSalt: boolean, onDone: (base64Seed: string) => void) {
 		this.isOpen = true;
 		this.title = title;
+		this.useDateSalt = useDateSalt;
+		this.base64Seed = undefined;
 		this.onDone = onDone;
 	}
 

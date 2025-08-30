@@ -39,6 +39,7 @@ export async function encryptChatKeySeedForStorage(base64Seed: string): Promise<
 	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
 	combined.set(iv, 0);
 	combined.set(new Uint8Array(encrypted), iv.byteLength);
+	console.log('encryptChatKeySeedForStorage:', arrayBufferToBase64(combined.buffer));
 	return arrayBufferToBase64(combined.buffer);
 }
 

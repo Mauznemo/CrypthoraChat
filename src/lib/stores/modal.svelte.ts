@@ -6,6 +6,7 @@ interface ModalButton {
 
 interface ModalConfig {
 	title: string;
+	id?: string;
 	content: string;
 	buttons?: ModalButton[];
 	showCloseButton?: boolean;
@@ -20,7 +21,10 @@ class ModalStore {
 		buttons: [],
 		showCloseButton: true
 	});
-	
+
+	removeFromQueue(id: string) {
+		this.modalQueue = this.modalQueue.filter((modal) => modal.id !== id);
+	}
 
 	open(config: ModalConfig) {
 		if (this.isOpen) {
@@ -36,7 +40,7 @@ class ModalStore {
 
 	close() {
 		this.isOpen = false;
-		
+
 		// Show next modal in queue if exists
 		if (this.modalQueue.length > 0) {
 			const nextModal = this.modalQueue.shift();

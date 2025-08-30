@@ -2,6 +2,7 @@
 	import { decryptMessage } from '$lib/crypto/message';
 	import { processLinks } from '$lib/linkUtils';
 	import type { MessageWithRelations } from '$lib/types';
+	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
 
 	const {
@@ -11,7 +12,8 @@
 		userId,
 		onHover,
 		onTouchStart,
-		onUpdateReaction
+		onUpdateReaction,
+		onDecryptError
 	}: {
 		message: MessageWithRelations;
 		chatKey: CryptoKey;
@@ -20,7 +22,12 @@
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
 		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
+		onDecryptError: (error: any, message: MessageWithRelations) => void;
 	} = $props();
+
+	function handleDecryptError(error: any): void {
+		untrack(() => onDecryptError(error, message));
+	}
 </script>
 
 <div class="m-2 mr-6 flex items-start space-x-2">
@@ -63,12 +70,17 @@
 			<Reply {chatKey} replyToMessage={message} />
 
 			<svelte:boundary>
-				<p class="pr-9 whitespace-pre-line text-white">
-					{@html processLinks(await decryptMessage(message.encryptedContent, chatKey))}
-				</p>
-				{#snippet pending()}
+				{#await decryptMessage(message.encryptedContent, chatKey)}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
-				{/snippet}
+				{:then decryptedContent}
+					<p class="pr-9 whitespace-pre-line text-white">
+						{@html processLinks(decryptedContent)}
+					</p>
+				{:catch error}
+					{handleDecryptError(error)}
+					<p class="pr-9 whitespace-pre-line text-red-400">Failed to decrypt message</p>
+					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
+				{/await}
 			</svelte:boundary>
 			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">

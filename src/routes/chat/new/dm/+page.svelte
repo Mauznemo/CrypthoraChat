@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
+	import { encryptChatKeySeedForStorage, generateChatKeySeed } from '$lib/crypto/chat';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
+	import { saveEncryptedChatKeySeed } from '../../chat.remote';
 	import { createDm } from '../chatCreation.remote';
 	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
@@ -14,6 +16,17 @@
 	async function handleDmGroup() {
 		try {
 			let result = await createDm({ userId: selectedUser!.id });
+			const chatKeySeed = generateChatKeySeed();
+			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(chatKeySeed);
+			try {
+				await saveEncryptedChatKeySeed({
+					chatId: result.chatId,
+					encryptedKeySeed: chatKeySeedEncrypted
+				});
+			} catch (err) {
+				console.error(err);
+				modalStore.alert('Error', 'Failed to save chat key: ' + err);
+			}
 
 			if (result.success) {
 				socketStore.notifyNewChat({
@@ -26,7 +39,7 @@
 			}
 		} catch (err: any) {
 			if (err?.body.message) {
-				modalStore.alert('Error', 'Failed to chat: ' + err.body.message);
+				modalStore.alert('Error', 'Failed to create chat: ' + err.body.message);
 			}
 		}
 	}
