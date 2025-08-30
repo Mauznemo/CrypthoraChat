@@ -9,7 +9,7 @@
 		getUserById,
 		saveEncryptedChatKeySeed
 	} from './chat.remote';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
 	import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
@@ -42,13 +42,13 @@
 	let isTyping = $state(false);
 	let activeChat: ChatWithoutMessages | null = $state(null);
 	let loadingChat = $state(true);
-	let chatDecryptionFailed = $state(false);
 	let chatKey: CryptoKey | null = $state(null);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
 
 	let messages: MessageWithRelations[] = $state([]);
+	let decryptionFailed: Record<string, boolean> = {};
 
 	// Auto-scroll to bottom when new messages arrive
 	let shouldAutoScroll = $state(true);
@@ -90,12 +90,18 @@
 			return;
 		}
 
-		if (message.senderId !== data.user?.id && data.user?.id && !chatDecryptionFailed) {
+		if (message.senderId !== data.user?.id && data.user?.id) {
 			if (!document.hidden) {
-				socketStore.markMessagesAsRead({
-					messageIds: [message.id],
-					chatId: activeChat.id
-				});
+				// Wait a bit for message to be decrypted or fail at that
+				setTimeout(() => {
+					if (!activeChat) return;
+					if (decryptionFailed[message.id] === true) return;
+
+					socketStore.markMessagesAsRead({
+						messageIds: [message.id],
+						chatId: activeChat.id
+					});
+				}, 500);
 			} else {
 				// Store unread message ID for later
 				unreadMessages = [...unreadMessages, message.id];
@@ -104,7 +110,6 @@
 	};
 
 	const handleMessageUpdated = (updatedMessage: MessageWithRelations) => {
-		if (chatDecryptionFailed) return;
 		const index = messages.findIndex((m) => m.id === updatedMessage.id);
 		if (index !== -1) {
 			messages[index] = updatedMessage;
@@ -250,11 +255,19 @@
 			//messages = await getMessagesByChatId(chatId);
 
 			// Mark all unread messages as read
-			if (unreadMessages.length > 0 && !chatDecryptionFailed) {
-				socketStore.markMessagesAsRead({
-					messageIds: unreadMessages,
-					chatId: activeChat.id
-				});
+			if (unreadMessages.length > 0) {
+				// Filter out messages that failed decryption
+				const readableMessages = unreadMessages.filter(
+					(messageId) => decryptionFailed[messageId] !== true
+				);
+
+				if (readableMessages.length > 0) {
+					socketStore.markMessagesAsRead({
+						messageIds: readableMessages,
+						chatId: activeChat.id
+					});
+				}
+
 				unreadMessages = []; // Clear the unread list
 			}
 
@@ -334,19 +347,20 @@
 		});
 	}
 
-	let lastFaill: { date: Date; myKeyWrong: boolean } | null = null;
 	function handleDecryptError(error: any, message: MessageWithRelations): void {
 		console.log('Decrypt error:', error);
+
+		decryptionFailed[message.id] = true;
 
 		// Check if the user's own key is wrong (chat owner always has correct key)
 		const myKeyWrong = message.chat.ownerId === message.user.id;
 
 		if (!myKeyWrong) {
-			const lastFail = localStorage.getItem('lastDecryptError');
+			const lastFail = localStorage.getItem('lastDecryptErrorDate');
 
 			if (lastFail) {
-				const lastFailData = JSON.parse(lastFail);
-				const lastFailTime = new Date(lastFailData.date).getTime();
+				const lastFailDate = JSON.parse(lastFail);
+				const lastFailTime = new Date(lastFailDate).getTime();
 				const currentMessageTime = new Date(message.timestamp).getTime();
 
 				// If current message is older than the last failed message, ignore it
@@ -357,11 +371,8 @@
 		}
 
 		localStorage.setItem(
-			'lastDecryptError',
-			JSON.stringify({
-				date: new Date(message.timestamp).getTime(),
-				myKeyWrong
-			})
+			'lastDecryptErrorDate',
+			JSON.stringify(new Date(message.timestamp).getTime())
 		);
 
 		const userOwnsChat = message.chat.ownerId === data.user?.id;
@@ -407,9 +418,12 @@
 
 	async function handleChatSelected(newChat: ChatWithoutMessages): Promise<void> {
 		loadingChat = true;
-		console.log('Chat selected (leaving previous):', newChat.id);
+		console.log('Chat selected (leaving previous):', activeChat?.id);
 		if (activeChat) socketStore.leaveChat(activeChat.id);
+		if (!activeChat) console.log('Failed to leave previous chat (no active chat)');
 		localStorage.setItem('lastChatId', newChat.id);
+
+		decryptionFailed = {};
 
 		const encryptedChatKeySeed = await getEncryptedChatKeySeed(newChat.id);
 
@@ -499,8 +513,11 @@
 		const success = await tryGetMessages(newChat);
 
 		if (success) {
-			console.log('Joining chat:', activeChat?.id);
 			activeChat = newChat;
+			console.log('Joining chat:', activeChat?.id);
+			if (!activeChat) {
+				alert('Failed to select chat, active chat is: ' + activeChat);
+			}
 			socketStore.joinChat(activeChat!.id);
 
 			scrollToBottom();
@@ -733,10 +750,10 @@
 		<ChatList
 			bind:this={chatListComponent}
 			userId={data.user?.id || ''}
-			bind:selectedChat={activeChat}
 			onChatSelected={handleChatSelected}
 			onCreateChat={handleCreateChat}
 		/>
+		<!-- bind:selectedChat={activeChat} -->
 		<button
 			onclick={resetServiceWorkers}
 			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"

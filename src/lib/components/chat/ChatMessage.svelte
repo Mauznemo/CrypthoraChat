@@ -26,7 +26,9 @@
 	} = $props();
 
 	function handleDecryptError(error: any): void {
-		untrack(() => onDecryptError(error, message));
+		untrack(() => {
+			onDecryptError(error, message);
+		});
 	}
 </script>
 
