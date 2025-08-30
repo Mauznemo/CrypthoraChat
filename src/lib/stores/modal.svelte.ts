@@ -77,16 +77,17 @@ class ModalStore {
 		});
 	}
 
-	alert(title: string, content: string, onOk?: () => void) {
+	alert(title: string, content: string, options?: { onOk?: () => void; id?: string }) {
 		this.open({
 			title,
 			content,
+			id: options?.id,
 			buttons: [
 				{
 					text: 'OK',
 					variant: 'primary',
 					onClick: () => {
-						onOk?.();
+						options?.onOk?.();
 						this.close();
 					}
 				}

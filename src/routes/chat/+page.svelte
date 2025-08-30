@@ -334,34 +334,38 @@
 		});
 	}
 
-	let lastFail: { date: Date; myKeyWrong: boolean } | null = null;
+	let lastFaill: { date: Date; myKeyWrong: boolean } | null = null;
 	function handleDecryptError(error: any, message: MessageWithRelations): void {
+		console.log('Decrypt error:', error);
+
+		// Check if the user's own key is wrong (chat owner always has correct key)
 		const myKeyWrong = message.chat.ownerId === message.user.id;
 
-		// if (lastFail) {
-		// 	console.log(
-		// 		'Last fail',
-		// 		new Date(lastFail.date).toLocaleTimeString([], {
-		// 			hour: '2-digit',
-		// 			minute: '2-digit'
-		// 		}),
-		// 		' is older than This fail',
-		// 		new Date(message.timestamp).toLocaleTimeString([], {
-		// 			hour: '2-digit',
-		// 			minute: '2-digit'
-		// 		}),
-		// 		'Returning:',
-		// 		new Date(lastFail.date).getTime() >= new Date(message.timestamp).getTime()
-		// 	);
-		// 	if (new Date(lastFail.date).getTime() >= new Date(message.timestamp).getTime()) {
-		// 		return; // If an older failed message and I'm not the problem ignore
-		// 	}
-		// }
+		if (!myKeyWrong) {
+			const lastFail = localStorage.getItem('lastDecryptError');
 
-		if (chatDecryptionFailed) return;
-		chatDecryptionFailed = true;
+			if (lastFail) {
+				const lastFailData = JSON.parse(lastFail);
+				const lastFailTime = new Date(lastFailData.date).getTime();
+				const currentMessageTime = new Date(message.timestamp).getTime();
+
+				// If current message is older than the last failed message, ignore it
+				if (currentMessageTime <= lastFailTime) {
+					return;
+				}
+			}
+		}
+
+		localStorage.setItem(
+			'lastDecryptError',
+			JSON.stringify({
+				date: new Date(message.timestamp).getTime(),
+				myKeyWrong
+			})
+		);
 
 		const userOwnsChat = message.chat.ownerId === data.user?.id;
+
 		if (userOwnsChat) {
 			modalStore.alert(
 				'Error',
@@ -377,10 +381,15 @@
 				'Error',
 				'Failed to decrypt message by chat owner @' +
 					message.user.username +
-					'. This means your chat key is wrong. Please re-input the correct key.'
+					'. This means your chat key is wrong. Please re-input the correct key.',
+				{
+					onOk: () => modalStore.removeFromQueue('decryption-chat-key-error'),
+					id: 'decryption-chat-key-error'
+				}
 			);
 			return;
 		}
+
 		modalStore.alert(
 			'Error',
 			'Failed to decrypt you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key.'
@@ -598,8 +607,10 @@
 			try {
 				await importAndSaveMasterSeed(base64Seed);
 			} catch (error) {
-				modalStore.alert('Error', 'Failed to import master key: ' + error, () => {
-					emojiKeyConverterStore.clearInput();
+				modalStore.alert('Error', 'Failed to import master key: ' + error, {
+					onOk: () => {
+						emojiKeyConverterStore.clearInput();
+					}
 				});
 				console.error(error);
 			}
@@ -829,14 +840,23 @@
 			<svelte:boundary>
 				<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 					<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
-					Replying to {messageReplying.user.username}: {await decryptMessage(
-						messageReplying.encryptedContent,
-						chatKey!
-					)}
+					{#await decryptMessage(messageReplying.encryptedContent, chatKey!)}
+						<p
+							class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100"
+						>
+							loading...
+						</p>
+					{:then decryptedContent}
+						<p
+							class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100"
+						>
+							<span class="font-semibold text-gray-400">Replying to:</span>
+							{decryptedContent}
+						</p>
+					{:catch error}
+						<p class="pr-9 whitespace-pre-line text-red-300">Failed to load message</p>
+					{/await}
 				</div>
-				{#snippet pending()}
-					<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
-				{/snippet}
 			</svelte:boundary>
 		{/if}
 

@@ -5,16 +5,11 @@
 		getUserChats,
 		saveEncryptedChatKeySeed
 	} from '../../../routes/chat/chat.remote';
-	import type { ChatWithoutMessages, SafeUser } from '$lib/types';
+	import type { ChatWithoutMessages } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import ContentModal from '../ContentModal.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
-	import {
-		decryptChatKeySeedFromStorage,
-		encryptChatKeySeedForStorage,
-		getChatKeyFromSeed
-	} from '$lib/crypto/chat';
+	import { decryptChatKeySeedFromStorage, encryptChatKeySeedForStorage } from '$lib/crypto/chat';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 
@@ -79,8 +74,7 @@
 			items.push({
 				id: 're-input-key',
 				label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
-				iconSvg:
-					'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
+				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 				action: async () => {
 					emojiKeyConverterStore.openInput(
 						// TODO: Duplicated code, already exists in chat page, move to lib later

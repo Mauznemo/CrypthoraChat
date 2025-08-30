@@ -78,7 +78,11 @@
 					</p>
 				{:catch error}
 					{handleDecryptError(error)}
-					<p class="pr-9 whitespace-pre-line text-red-400">Failed to decrypt message</p>
+					<p class="pr-9 whitespace-pre-line text-red-400">
+						Failed to decrypt message {message.chat.ownerId === message.user.id
+							? ' (Your Key is incorrect)'
+							: ''}{message.chat.ownerId === userId ? ' (They have an incorrect key)' : ''}
+					</p>
 					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
 				{/await}
 			</svelte:boundary>
