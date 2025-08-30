@@ -15,19 +15,19 @@
 
 	let {
 		userId,
-		selectedChat = $bindable<ChatWithoutMessages | null>(),
+		/*selectedChat = $bindable<ChatWithoutMessages | null>(),*/
 		onChatSelected,
 		onCreateChat
 	}: {
 		userId: string;
-		selectedChat?: ChatWithoutMessages | null;
+		/*selectedChat?: ChatWithoutMessages | null;*/
 		onChatSelected: (chat: ChatWithoutMessages) => void;
 		onCreateChat: () => void;
 	} = $props();
 
 	let chats: ChatWithoutMessages[] = $state([]);
 	let loadingChats = $state(true);
-	let customModalOpen = $state(false);
+	let selectedChat: ChatWithoutMessages | null = $state(null);
 
 	export function addChat(newChat: ChatWithoutMessages): void {
 		chats = [...chats, newChat];
