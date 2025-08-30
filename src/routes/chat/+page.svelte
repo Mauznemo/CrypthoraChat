@@ -78,6 +78,18 @@
 	// Track unread messages when page is not visible
 	let unreadMessages: string[] = [];
 
+	function markReadAfterDelay(messages: MessageWithRelations[]): void {
+		setTimeout(() => {
+			if (!activeChat) return;
+			const readableMessages = messages.filter((message) => decryptionFailed[message.id] !== true);
+
+			socketStore.markMessagesAsRead({
+				messageIds: readableMessages.map((message) => message.id),
+				chatId: activeChat.id
+			});
+		}, 500);
+	}
+
 	const handleNewMessage = (message: MessageWithRelations) => {
 		console.log(
 			'New message on websocket. ChatId: ' + message.chatId + ', User: ' + message.user.username
@@ -93,15 +105,7 @@
 		if (message.senderId !== data.user?.id && data.user?.id) {
 			if (!document.hidden) {
 				// Wait a bit for message to be decrypted or fail at that
-				setTimeout(() => {
-					if (!activeChat) return;
-					if (decryptionFailed[message.id] === true) return;
-
-					socketStore.markMessagesAsRead({
-						messageIds: [message.id],
-						chatId: activeChat.id
-					});
-				}, 500);
+				markReadAfterDelay([message]);
 			} else {
 				// Store unread message ID for later
 				unreadMessages = [...unreadMessages, message.id];
@@ -522,12 +526,9 @@
 
 			scrollToBottom();
 
-			// if (messages.length > 0 && data.user?.id) {
-			// 	socketStore.markMessagesAsRead({
-			// 		messageIds: messages.map((message) => message.id),
-			// 		chatId: activeChat!.id
-			// 	});
-			// }
+			if (messages.length > 0 && data.user?.id) {
+				markReadAfterDelay(messages);
+			}
 		} else {
 			modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
 			loadingChat = false;
