@@ -4,7 +4,6 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
 		<link rel="manifest" href="/manifest.json">
-		<link rel="preconnect" href="https://cdn.jsdelivr.net">
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="bg-black">
@@ -13,7 +12,14 @@
 </html>
 
 <style>
-.emoji-consistent {
-    font-family: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji";
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+  font-display: swap;
+}
+
+.emoji-consistent, 
+body {
+  font-family: system-ui, -apple-system, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
 }
 </style>

@@ -6,7 +6,8 @@
 		getChatById,
 		getEncryptedChatKeySeed,
 		getMessagesByChatId,
-		getUserById
+		getUserById,
+		saveEncryptedChatKeySeed
 	} from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
@@ -19,7 +20,11 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/push-notifications';
 	import { PUBLIC_VAPID_KEY } from '$env/static/public';
-	import { decryptChatKeySeedFromStorage, getChatKeyFromSeed } from '$lib/crypto/chat';
+	import {
+		decryptChatKeySeedFromStorage,
+		encryptChatKeySeedForStorage,
+		getChatKeyFromSeed
+	} from '$lib/crypto/chat';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import {
 		generateAndStoreMasterKey,
@@ -37,6 +42,7 @@
 	let isTyping = $state(false);
 	let activeChat: ChatWithoutMessages | null = $state(null);
 	let loadingChat = $state(true);
+	let chatDecryptionFailed = $state(false);
 	let chatKey: CryptoKey | null = $state(null);
 
 	let messageReplying: MessageWithRelations | null = $state(null);
@@ -84,8 +90,7 @@
 			return;
 		}
 
-		// Mark message as read if it's not from current user and page is visible
-		if (message.senderId !== data.user?.id && data.user?.id) {
+		if (message.senderId !== data.user?.id && data.user?.id && !chatDecryptionFailed) {
 			if (!document.hidden) {
 				socketStore.markMessagesAsRead({
 					messageIds: [message.id],
@@ -99,6 +104,7 @@
 	};
 
 	const handleMessageUpdated = (updatedMessage: MessageWithRelations) => {
+		if (chatDecryptionFailed) return;
 		const index = messages.findIndex((m) => m.id === updatedMessage.id);
 		if (index !== -1) {
 			messages[index] = updatedMessage;
@@ -244,7 +250,7 @@
 			//messages = await getMessagesByChatId(chatId);
 
 			// Mark all unread messages as read
-			if (unreadMessages.length > 0) {
+			if (unreadMessages.length > 0 && !chatDecryptionFailed) {
 				socketStore.markMessagesAsRead({
 					messageIds: unreadMessages,
 					chatId: activeChat.id
@@ -328,6 +334,59 @@
 		});
 	}
 
+	let lastFail: { date: Date; myKeyWrong: boolean } | null = null;
+	function handleDecryptError(error: any, message: MessageWithRelations): void {
+		const myKeyWrong = message.chat.ownerId === message.user.id;
+
+		// if (lastFail) {
+		// 	console.log(
+		// 		'Last fail',
+		// 		new Date(lastFail.date).toLocaleTimeString([], {
+		// 			hour: '2-digit',
+		// 			minute: '2-digit'
+		// 		}),
+		// 		' is older than This fail',
+		// 		new Date(message.timestamp).toLocaleTimeString([], {
+		// 			hour: '2-digit',
+		// 			minute: '2-digit'
+		// 		}),
+		// 		'Returning:',
+		// 		new Date(lastFail.date).getTime() >= new Date(message.timestamp).getTime()
+		// 	);
+		// 	if (new Date(lastFail.date).getTime() >= new Date(message.timestamp).getTime()) {
+		// 		return; // If an older failed message and I'm not the problem ignore
+		// 	}
+		// }
+
+		if (chatDecryptionFailed) return;
+		chatDecryptionFailed = true;
+
+		const userOwnsChat = message.chat.ownerId === data.user?.id;
+		if (userOwnsChat) {
+			modalStore.alert(
+				'Error',
+				'Failed to decrypt message by user @' +
+					message.user.username +
+					'. Please re-share the chat key with them. Since they have a wrong one.'
+			);
+			return;
+		}
+
+		if (myKeyWrong) {
+			modalStore.alert(
+				'Error',
+				'Failed to decrypt message by chat owner @' +
+					message.user.username +
+					'. This means your chat key is wrong. Please re-input the correct key.'
+			);
+			return;
+		}
+		modalStore.alert(
+			'Error',
+			'Failed to decrypt you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key.'
+		);
+	}
+
 	function handleCloseEdit(): void {
 		messageEditing = null;
 		chatValue = '';
@@ -346,21 +405,89 @@
 		const encryptedChatKeySeed = await getEncryptedChatKeySeed(newChat.id);
 
 		if (!encryptedChatKeySeed) {
-			modalStore.alert('Error', 'Failed to get chat key!'); //TODO prompt user to entre key
+			modalStore.open({
+				title: 'New Chat',
+				content:
+					'You dont have the key for ' +
+					(newChat.type === 'dm'
+						? 'the dm with ' + newChat.participants.find((p) => p.id !== data.user?.id)?.displayName
+						: newChat.name) +
+					' yet. Please get it from ' +
+					(newChat.type === 'dm' ? 'them' : 'someone else in the chat who has it') +
+					' in a secure way.',
+				buttons: [
+					{
+						text: 'Enter Emoji Sequence',
+						variant: 'primary',
+						onClick: () => {
+							emojiKeyConverterStore.openInput(
+								'Enter Emoji Sequence for ' + newChat.name,
+								true,
+								async (base64Seed) => {
+									const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
+									try {
+										await saveEncryptedChatKeySeed({
+											chatId: newChat.id,
+											encryptedKeySeed: chatKeySeedEncrypted
+										});
+									} catch (err: any) {
+										console.error(err);
+										modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
+									}
+									emojiKeyConverterStore.close();
+									handleChatSelected(newChat);
+								}
+							);
+						}
+					},
+					{
+						text: 'Scan QR Code',
+						variant: 'primary',
+						onClick: () => {}
+					}
+				]
+			});
+			loadingChat = false;
 			activeChat = null;
 			return;
 		}
 
 		try {
+			console.log('encrypted chat key seed:', encryptedChatKeySeed);
 			const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
+			console.log('chat key seed:', chatKeySeed);
 			chatKey = await getChatKeyFromSeed(chatKeySeed);
+			console.log('chat key:', chatKey);
 		} catch (error) {
-			modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
+			loadingChat = false;
 			activeChat = null;
+
+			modalStore.open({
+				title: 'Error',
+				id: 'decryption-chat-key-error',
+				content:
+					'Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: ' +
+					error +
+					')',
+
+				buttons: [
+					{
+						text: 'Re-enter',
+						variant: 'primary',
+						onClick: () => {
+							showMasterKeyImport();
+						}
+					},
+					{
+						text: 'OK',
+						variant: 'primary'
+					}
+				]
+			});
 			return;
 		}
 
-		const success = await tryGetMessages(activeChat);
+		const success = await tryGetMessages(newChat);
 
 		if (success) {
 			console.log('Joining chat:', activeChat?.id);
@@ -377,6 +504,7 @@
 			// }
 		} else {
 			modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
+			loadingChat = false;
 			activeChat = null;
 		}
 	}
@@ -398,6 +526,7 @@
 	async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
 		if (!chat) {
 			//modalStore.alert('Error', 'Failed to get messages: No chat selected');
+			console.log('No chat selected');
 			loadingChat = false;
 			return false;
 		}
@@ -448,6 +577,7 @@
 		loadingChat = true;
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (!lastChatId) {
+			loadingChat = false;
 			return;
 		}
 
@@ -455,14 +585,33 @@
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
+			loadingChat = false;
 			return;
 		}
 
 		handleChatSelected(chat);
 	}
 
+	function showMasterKeyImport(): void {
+		modalStore.removeFromQueue('decryption-chat-key-error');
+		emojiKeyConverterStore.openInput('Import Master Key', false, async (base64Seed) => {
+			try {
+				await importAndSaveMasterSeed(base64Seed);
+			} catch (error) {
+				modalStore.alert('Error', 'Failed to import master key: ' + error, () => {
+					emojiKeyConverterStore.clearInput();
+				});
+				console.error(error);
+			}
+
+			emojiKeyConverterStore.close();
+		});
+	}
+
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		const wasConnected = socketStore.connected;
 
 		// Connect to socket server
 		socketStore.connect();
@@ -476,6 +625,7 @@
 						text: 'Generate New',
 						variant: 'primary',
 						onClick: () => {
+							modalStore.removeFromQueue('decryption-chat-key-error'); //Content of error would be outdated at this point
 							generateAndStoreMasterKey();
 						}
 					},
@@ -483,16 +633,7 @@
 						text: 'Import Existing',
 						variant: 'primary',
 						onClick: () => {
-							emojiKeyConverterStore.openInput('Import Master Key', async (base64Seed) => {
-								try {
-									await importAndSaveMasterSeed(base64Seed);
-								} catch (error) {
-									modalStore.alert('Error', 'Failed to import master key: ' + error, () => {
-										emojiKeyConverterStore.clearInput();
-									});
-									console.error(error);
-								}
-							});
+							showMasterKeyImport();
 						}
 					}
 				]
@@ -501,7 +642,9 @@
 
 		initializePushNotifications(PUBLIC_VAPID_KEY);
 
-		// handleConnect();
+		if (wasConnected) {
+			handleConnect();
+		}
 
 		// Set up event listeners
 		socketStore.onNewMessage(handleNewMessage);
@@ -547,7 +690,7 @@
 		socketStore.off('reconnect', handleConnect);
 		socketStore.off('message-error');
 
-		socketStore.disconnect();
+		//socketStore.disconnect();
 	});
 </script>
 
@@ -658,6 +801,7 @@
 				onInfo={handleInfoMessage}
 				onReaction={handleReaction}
 				onUpdateReaction={handleUpdateReaction}
+				onDecryptError={handleDecryptError}
 			></ChatMessages>
 		{/if}
 

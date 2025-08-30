@@ -66,19 +66,19 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		}
 	}
 
-	// Mark all messages as read
-	if (locals.user?.id) {
-		const messageIds = messages.map((message) => message.id);
+	// Mark all messages as read // Can't mark the as read in case decryption fails and they weren't actually read
+	// if (locals.user?.id) {
+	// 	const messageIds = messages.map((message) => message.id);
 
-		await db.user.update({
-			where: { id: locals.user.id },
-			data: {
-				readMessages: {
-					connect: messageIds.map((id) => ({ id }))
-				}
-			}
-		});
-	}
+	// 	await db.user.update({
+	// 		where: { id: locals.user.id },
+	// 		data: {
+	// 			readMessages: {
+	// 				connect: messageIds.map((id) => ({ id }))
+	// 			}
+	// 		}
+	// 	});
+	// }
 
 	console.log('Queried messages: ', messages.length);
 
@@ -142,3 +142,36 @@ export const getEncryptedChatKeySeed = query(v.string(), async (chatId: string) 
 		error(404, 'Not found');
 	}
 });
+
+export const saveEncryptedChatKeySeed = command(
+	v.object({ chatId: v.string(), encryptedKeySeed: v.string() }),
+	async ({ chatId, encryptedKeySeed }) => {
+		const { locals } = getRequestEvent();
+
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
+		}
+
+		try {
+			const userChatKey = await db.userChatKey.upsert({
+				where: {
+					userId_chatId: {
+						userId: locals.user!.id,
+						chatId: chatId
+					}
+				},
+				update: {
+					encryptedKey: encryptedKeySeed
+				},
+				create: {
+					userId: locals.user!.id,
+					chatId,
+					encryptedKey: encryptedKeySeed
+				}
+			});
+			return userChatKey?.encryptedKey;
+		} catch (e) {
+			error(500, 'Something went wrong');
+		}
+	}
+);

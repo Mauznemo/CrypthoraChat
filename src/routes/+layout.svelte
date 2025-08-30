@@ -3,6 +3,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import EmojiPicker from '$lib/components/chat/EmojiPicker.svelte';
 	import EmojiKeyConverter from '$lib/components/EmojiKeyConverter.svelte';
+	import ContextMenu from '$lib/components/ContextMenu.svelte';
 
 	let { children } = $props();
 </script>
@@ -43,3 +44,4 @@
 <Modal />
 <EmojiPicker />
 <EmojiKeyConverter />
+<ContextMenu />

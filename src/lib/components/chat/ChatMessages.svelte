@@ -21,7 +21,8 @@
 		onDelete,
 		onInfo,
 		onReaction,
-		onUpdateReaction
+		onUpdateReaction,
+		onDecryptError
 	}: {
 		messages: MessageWithRelations[];
 		user: User | null;
@@ -38,6 +39,7 @@
 			emoji: string,
 			operation: 'add' | 'remove'
 		) => void;
+		onDecryptError: (error: any, message: MessageWithRelations) => void;
 	} = $props();
 
 	// State using Svelte 5 runes
@@ -295,6 +297,7 @@
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
 					onUpdateReaction={(emoji, operation) => onUpdateReaction(message, emoji, operation)}
+					{onDecryptError}
 				/>
 			{/if}
 		</div>

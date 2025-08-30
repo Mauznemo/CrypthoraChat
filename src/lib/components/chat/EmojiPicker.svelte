@@ -10,6 +10,7 @@
 	let position = $state({ x: 0, y: 0 });
 
 	let customEmojiSet: string[] = $state([]);
+	let searchInput: HTMLInputElement | null = $state(null);
 
 	// prettier-ignore
 	const emojiCategories = {
@@ -130,6 +131,7 @@
 	$effect(() => {
 		if (emojiPickerStore.isOpen) {
 			isOpen = true;
+			searchInput?.focus();
 
 			position = emojiPickerStore.position;
 
@@ -165,6 +167,7 @@
 			<!-- Header with search -->
 			<div class="border-b border-gray-700 p-3">
 				<input
+					bind:this={searchInput}
 					type="text"
 					placeholder="Search emojis..."
 					bind:value={searchTerm}
