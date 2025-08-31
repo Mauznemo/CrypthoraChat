@@ -1,15 +1,32 @@
 import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
-import type { ChatWithoutMessages, MessageWithRelations, SafeUser } from '$lib/types';
+import type { ChatWithoutMessages, ClientMessage, SafeUser } from '$lib/types';
 import { getUserById } from '../../routes/chat/chat.remote';
 
-let decryptionFailed: Record<string, boolean> = {};
-let unreadMessages: string[] = [];
+type MessageHandler = (messages: ClientMessage[]) => void;
+
+let handlers: MessageHandler[] = [];
+
+export function onMessagesUpdated(callback: MessageHandler) {
+	handlers.push(callback);
+
+	return () => {
+		handlers = handlers.filter((h) => h !== callback);
+	};
+}
+
+function updateMessages() {
+	handlers.forEach((handler) => handler(messages));
+}
+
+let messages: ClientMessage[] = [];
+// let decryptionFailed: Record<string, boolean> = {};
+let unreadMessages: ClientMessage[] = [];
 
 /** Deletes the message for everyone in the chat */
 export function handleDeleteMessage(
-	message: MessageWithRelations,
+	message: ClientMessage,
 	activeChat: ChatWithoutMessages | null
 ): void {
 	console.log('Delete message:', message.id);
@@ -28,7 +45,7 @@ export function handleDeleteMessage(
 }
 
 /** Shows an info modal for the message */
-export function handleInfoMessage(message: MessageWithRelations): void {
+export function handleInfoMessage(message: ClientMessage): void {
 	console.log('Show message info:', message.id);
 	const readerNames =
 		message.readBy.length > 0 ? message.readBy.map((user) => user.username).join(', ') : 'No one';
@@ -39,7 +56,7 @@ export function handleInfoMessage(message: MessageWithRelations): void {
 }
 
 /** Opens an emoji picker for reacting on the message */
-export function handleReaction(message: MessageWithRelations): void {
+export function handleReaction(message: ClientMessage): void {
 	console.log('Reaction message:', message.id);
 	const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
 	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
@@ -57,7 +74,7 @@ export function handleReaction(message: MessageWithRelations): void {
 
 /** Adds or removes a reaction from the message */
 export function handleUpdateReaction(
-	message: MessageWithRelations,
+	message: ClientMessage,
 	emoji: string,
 	operation: 'add' | 'remove'
 ): void {
@@ -69,34 +86,34 @@ export function handleUpdateReaction(
 	});
 }
 
-/** Updates a message from messages array @returns updated messages array */
+/** Updates a message from messages array */
 export function handleMessageUpdated(
-	updatedMessage: MessageWithRelations,
-	messages: MessageWithRelations[]
-): MessageWithRelations[] {
+	updatedMessage: ClientMessage,
+	options?: { triggerRerender?: boolean; invalidateDecryptionCache?: boolean }
+): void {
 	const index = messages.findIndex((m) => m.id === updatedMessage.id);
+	if (options?.invalidateDecryptionCache === true) {
+		updatedMessage.decryptedContent = undefined;
+	}
+
 	if (index !== -1) {
 		messages[index] = updatedMessage;
 	}
-	return messages;
+
+	if (!options || options.triggerRerender === true || options.triggerRerender === undefined) {
+		updateMessages();
+	}
 }
 
-/** Removes a message from messages array @returns updated messages array */
-export function handleMessageDeleted(
-	messageId: string,
-	messages: MessageWithRelations[]
-): MessageWithRelations[] {
+/** Removes a message from messages array */
+export function handleMessageDeleted(messageId: string): void {
 	console.log('Message deleted:', messageId);
 	messages = messages.filter((m) => m.id !== messageId);
-	return messages;
+	updateMessages();
 }
 
-/** Updates a messages array to display new read status on messages @returns updated messages array */
-export async function handleMessagesRead(
-	messageIds: string[],
-	userId: string,
-	messages: MessageWithRelations[]
-): Promise<MessageWithRelations[]> {
+/** Updates a messages array to display new read status on messages */
+export async function handleMessagesRead(messageIds: string[], userId: string): Promise<void> {
 	console.log('Messages read by user:', userId, messageIds);
 
 	try {
@@ -116,22 +133,23 @@ export async function handleMessagesRead(
 			}
 			return message;
 		});
+		updateMessages();
 	} catch (err) {
 		console.error('Failed to get user for read status update:', err);
 	}
-
-	return messages;
 }
 
 /** Shows appropriate error message */
 export function handleDecryptError(
 	error: any,
-	message: MessageWithRelations,
+	message: ClientMessage,
 	user: SafeUser | null
 ): void {
 	console.log('Decrypt error:', error);
 
-	decryptionFailed[message.id] = true;
+	messages = messages.map((m) => (m.id === message.id ? { ...m, decryptionFailed: true } : m));
+
+	// decryptionFailed[message.id] = true;
 
 	// Check if the user's own key is wrong (chat owner always has correct key)
 	const myKeyWrong = message.chat.ownerId === message.user.id;
@@ -188,19 +206,41 @@ export function handleDecryptError(
 	);
 }
 
+/** Sets the messages array */
+export function setMessages(newMessages: ClientMessage[]): void {
+	messages = newMessages;
+	updateMessages();
+}
+
 /** Resets the decryptionFailed Record */
 export function resetDecryptionFailed(): void {
-	decryptionFailed = {};
+	messages = messages.map((m) => ({ ...m, decryptionFailed: undefined }));
+}
+
+/** Marks a message as read if the page is visible */
+export function markReadIfVisible(
+	message: ClientMessage,
+	userId: string | undefined,
+	activeChat: ChatWithoutMessages | null
+): void {
+	if (message.senderId !== userId && userId) {
+		if (!document.hidden) {
+			// Wait a bit for message to be decrypted or fail at that
+			markReadAfterDelay([message], activeChat);
+		} else {
+			unreadMessages.push(message);
+		}
+	}
 }
 
 /** Marks another user's messages as read after a delay (to make sure message was decrypted successfully) */
 export function markReadAfterDelay(
-	messages: MessageWithRelations[],
+	messages: ClientMessage[],
 	activeChat: ChatWithoutMessages | null
 ): void {
 	setTimeout(() => {
 		if (!activeChat) return;
-		const readableMessages = messages.filter((message) => decryptionFailed[message.id] !== true);
+		const readableMessages = messages.filter((message) => message.decryptionFailed !== true);
 
 		socketStore.markMessagesAsRead({
 			messageIds: readableMessages.map((message) => message.id),
@@ -209,48 +249,42 @@ export function markReadAfterDelay(
 	}, 500);
 }
 
-/** Adds a new message to messages array @returns updated messages array */
+/** Adds a new message to messages array */
 export function handleNewMessage(
-	message: MessageWithRelations,
+	message: ClientMessage,
 	userId: string | undefined,
-	activeChat: ChatWithoutMessages | null,
-	messages: MessageWithRelations[]
-): MessageWithRelations[] {
+	activeChat: ChatWithoutMessages | null
+): void {
 	messages = [...messages, message];
+	updateMessages();
 	//scrollToBottom();
 
 	if (!activeChat) {
 		console.error('No chatId found, failed to mark new message as read');
-		return messages;
+		return;
 	}
 
-	if (message.senderId !== userId && userId) {
-		if (!document.hidden) {
-			// Wait a bit for message to be decrypted or fail at that
-			markReadAfterDelay([message], activeChat);
-		} else {
-			unreadMessages = [...unreadMessages, message.id];
-		}
-	}
-
-	return messages;
+	markReadIfVisible(message, userId, activeChat);
 }
 
 /** Marks all unread messages as read when the page becomes visible */
 export function handleVisible(activeChat: ChatWithoutMessages): void {
 	if (unreadMessages.length > 0) {
 		// Filter out messages that failed decryption
-		const readableMessages = unreadMessages.filter(
-			(messageId) => decryptionFailed[messageId] !== true
-		);
+		const readableMessages = unreadMessages.filter((message) => message.decryptionFailed !== true);
 
 		if (readableMessages.length > 0) {
 			socketStore.markMessagesAsRead({
-				messageIds: readableMessages,
+				messageIds: readableMessages.map((message) => message.id),
 				chatId: activeChat.id
 			});
 		}
 
-		unreadMessages = []; // Clear the unread list
+		unreadMessages = [];
 	}
+}
+
+/** Finds a message from the messages array by id */
+export function findMessageById(id: string): ClientMessage | undefined {
+	return messages.find((message) => message.id === id);
 }

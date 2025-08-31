@@ -262,7 +262,8 @@
 	onscroll={handleScrollUpdate}
 	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
 >
-	{#each messages as message, index (message.id)}
+	{#each messages as message, index (message.id + message.encryptedContent)}
+		<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
 		{@const isFromMe = message.senderId === user?.id}
 		{@const isFirstInGroup = index === 0 || messages[index - 1].senderId !== message.senderId}
 		{@const showProfile = isFirstInGroup}

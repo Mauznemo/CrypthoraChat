@@ -21,7 +21,7 @@
 
 	export async function editMessage(message: MessageWithRelations): Promise<void> {
 		messageEditing = message;
-		chatValue = await decryptMessage(message.encryptedContent, chatKey!);
+		chatValue = await decryptMessage({ message, chatKey: chatKey! });
 		setTimeout(() => autoGrow(chatInput), 100);
 	}
 
@@ -181,7 +181,7 @@
 	<svelte:boundary>
 		<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
-			{#await decryptMessage(messageReplying.encryptedContent, chatKey!)}
+			{#await decryptMessage({ message: messageReplying, chatKey: chatKey! })}
 				<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
 					loading...
 				</p>
@@ -201,7 +201,7 @@
 	<svelte:boundary>
 		<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
-			<span>Editing message: {await decryptMessage(messageEditing.encryptedContent, chatKey)}</span>
+			<span>Editing message: {await decryptMessage({ message: messageEditing, chatKey })}</span>
 		</div>
 		{#snippet pending()}
 			<p class="p-2 text-sm font-bold text-gray-400">loading...</p>

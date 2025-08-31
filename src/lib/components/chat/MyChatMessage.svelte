@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { decryptMessage } from '$lib/crypto/message';
 	import { processLinks } from '$lib/linkUtils';
-	import type { MessageWithRelations, SafeUser } from '$lib/types';
+	import type { ClientMessage, SafeUser } from '$lib/types';
+	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
+	import { handleMessageUpdated } from '$lib/chat/messageHandlers';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));
@@ -18,7 +20,7 @@
 		onTouchStart,
 		onUpdateReaction
 	}: {
-		message: MessageWithRelations;
+		message: ClientMessage;
 		chatKey: CryptoKey;
 		userId: string;
 		showProfile: boolean;
@@ -33,6 +35,13 @@
 	$effect(() => {
 		readers = message.readBy.filter((reader: SafeUser) => reader.id !== userId);
 	});
+
+	function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
+		untrack(() => {
+			message.decryptedContent = decryptedContent;
+			handleMessageUpdated(message, { triggerRerender: false });
+		});
+	}
 </script>
 
 <div class="m-2 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
@@ -62,18 +71,23 @@
 		<!-- Chat message bubble -->
 		<div
 			class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3 {message.isEdited
-				? 'pb-5'
+				? 'min-w-24 pb-5'
 				: ''}"
 		>
 			<Reply {chatKey} replyToMessage={message} />
 
 			<svelte:boundary>
-				<p class="pr-9 whitespace-pre-line text-white">
-					{@html processLinks(await decryptMessage(message.encryptedContent, chatKey))}
-				</p>
-				{#snippet pending()}
+				{#await decryptMessage({ message, chatKey })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
-				{/snippet}
+				{:then decryptedContent}
+					{handleDecryptedMessage(message, decryptedContent)}
+					<p class="pr-9 whitespace-pre-line text-white">
+						{@html processLinks(decryptedContent)}
+					</p>
+				{:catch error}
+					<p class="pr-9 whitespace-pre-line text-red-400">Failed to decrypt message</p>
+					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
+				{/await}
 			</svelte:boundary>
 
 			<!-- Timestamp -->
