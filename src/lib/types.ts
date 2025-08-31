@@ -17,6 +17,11 @@ export type MessageWithRelations = Prisma.MessageGetPayload<{
 	};
 }>;
 
+export type ClientMessage = MessageWithRelations & {
+	decryptedContent?: string;
+	decryptionFailed?: boolean;
+};
+
 export type SafeUser = Prisma.UserGetPayload<{
 	select: typeof safeUserFields;
 }>;

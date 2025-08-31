@@ -10,7 +10,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 
-	import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
+	import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
@@ -45,7 +45,7 @@
 	let sideBar: SideBar;
 	let chatListComponent: ChatList;
 
-	let messages: MessageWithRelations[] = $state([]);
+	let messages: ClientMessage[] = $state([]);
 
 	// Auto-scroll to bottom when new messages arrive
 	let shouldAutoScroll = $state(true);
@@ -91,6 +91,7 @@
 		if (activeChat) socketStore.leaveChat(activeChat.id);
 		if (!activeChat) console.log('Failed to leave previous chat (no active chat)');
 		localStorage.setItem('lastChatId', newChat.id);
+		shouldAutoScroll = true;
 
 		messageHandlers.resetDecryptionFailed();
 
@@ -224,7 +225,9 @@
 		}
 		try {
 			await getMessagesByChatId(chat.id).refresh();
-			messages = await getMessagesByChatId(chat.id);
+			messageHandlers.setMessages(await getMessagesByChatId(chat.id));
+
+			scrollToBottom();
 
 			loadingChat = false;
 			return true;
@@ -299,6 +302,11 @@
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
+		messageHandlers.onMessagesUpdated((m) => {
+			messages = m;
+			console.log('Messages updated:', messages.length);
+		});
+
 		const wasConnected = socketStore.connected;
 
 		socketStore.connect();
@@ -334,18 +342,17 @@
 		}
 
 		socketStore.onNewMessage((m) => {
-			messages = messageHandlers.handleNewMessage(m, data.user?.id, activeChat, messages);
+			messageHandlers.handleNewMessage(m, data.user?.id, activeChat);
 			scrollToBottom();
 		});
 		socketStore.onMessageUpdated((m) => {
-			messages = messageHandlers.handleMessageUpdated(m, messages);
+			messageHandlers.handleMessageUpdated(m, { invalidateDecryptionCache: true });
+			messageHandlers.markReadIfVisible(m, data.user?.id, activeChat);
 		});
-		socketStore.onMessageDeleted((m) => {
-			messages = messageHandlers.handleMessageDeleted(m, messages);
-		});
-		socketStore.onMessagesRead(async (d) => {
-			messages = await messageHandlers.handleMessagesRead(d.messageIds, d.userId, messages);
-		});
+		socketStore.onMessageDeleted((m) => messageHandlers.handleMessageDeleted(m));
+		socketStore.onMessagesRead(async (d) =>
+			messageHandlers.handleMessagesRead(d.messageIds, d.userId)
+		);
 		socketStore.onNewChat(handleNewChat);
 		socketStore.onConnect(handleConnect);
 		socketStore.onMessageError((error) => {

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { decryptMessage } from '$lib/crypto/message';
 	import { processLinks } from '$lib/linkUtils';
-	import type { MessageWithRelations } from '$lib/types';
+	import type { ClientMessage } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
+	import { handleMessageUpdated } from '$lib/chat/messageHandlers';
 
 	const {
 		message,
@@ -15,15 +16,22 @@
 		onUpdateReaction,
 		onDecryptError
 	}: {
-		message: MessageWithRelations;
+		message: ClientMessage;
 		chatKey: CryptoKey;
 		showProfile: boolean;
 		userId: string;
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
 		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
-		onDecryptError: (error: any, message: MessageWithRelations) => void;
+		onDecryptError: (error: any, message: ClientMessage) => void;
 	} = $props();
+
+	function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
+		untrack(() => {
+			message.decryptedContent = decryptedContent;
+			handleMessageUpdated(message, { triggerRerender: false });
+		});
+	}
 
 	function handleDecryptError(error: any): void {
 		untrack(() => {
@@ -66,15 +74,16 @@
 		<!-- Chat message bubble -->
 		<div
 			class="frosted-glass-shadow relative rounded-2xl bg-gray-700/60 p-3 {message.isEdited
-				? 'pb-5'
+				? 'min-w-24 pb-5'
 				: ''}"
 		>
 			<Reply {chatKey} replyToMessage={message} />
 
 			<svelte:boundary>
-				{#await decryptMessage(message.encryptedContent, chatKey)}
+				{#await decryptMessage({ message, chatKey })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{:then decryptedContent}
+					{handleDecryptedMessage(message, decryptedContent)}
 					<p class="pr-9 whitespace-pre-line text-white">
 						{@html processLinks(decryptedContent)}
 					</p>
