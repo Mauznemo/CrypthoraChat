@@ -1,15 +1,9 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import {
-		getChatById,
-		getEncryptedChatKeySeed,
-		getMessagesByChatId,
-		saveEncryptedChatKeySeed
-	} from './chat.remote';
+	import { getChatById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
-
 	import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
@@ -17,323 +11,41 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/push-notifications';
 	import { PUBLIC_VAPID_KEY } from '$env/static/public';
-	import {
-		decryptChatKeySeedFromStorage,
-		encryptChatKeySeedForStorage,
-		getChatKeyFromSeed
-	} from '$lib/crypto/chat';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
-	import {
-		generateAndStoreMasterKey,
-		getMasterSeedForSharing,
-		hasMasterKey,
-		importAndSaveMasterSeed
-	} from '$lib/crypto/master';
+	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import ChatInput from '$lib/components/chat/ChatInput.svelte';
-	import * as messageHandlers from '$lib/chat/messageHandlers';
+	import * as messages from '$lib/chat/messages';
 	import SideBar from '$lib/components/chat/SideBar.svelte';
+	import { checkForMasterKey } from '$lib/chat/masterKey';
+	import { trySelectChat } from '$lib/chat/chats';
 
 	let { data }: PageProps = $props();
 
-	let messageContainer: HTMLDivElement;
-
 	let activeChat: ChatWithoutMessages | null = $state(null);
-	let loadingChat = $state(true);
 	let chatKey: CryptoKey | null = $state(null);
 
+	let messageContainer: HTMLDivElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
 	let chatListComponent: ChatList;
 
-	let messages: ClientMessage[] = $state([]);
+	let currentMessages: ClientMessage[] = $state([]);
 
-	// Auto-scroll to bottom when new messages arrive
+	let loadingChat = $state(true);
 	let shouldAutoScroll = $state(true);
-
-	const scrollToBottom = () => {
-		if (shouldAutoScroll && messageContainer) {
-			setTimeout(() => {
-				messageContainer.scrollTop = messageContainer.scrollHeight;
-			}, 0);
-		}
-	};
-
-	const handleScroll = () => {
-		if (messageContainer) {
-			const { scrollTop, scrollHeight, clientHeight } = messageContainer;
-			shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
-		}
-	};
-
-	const handleNewChat = async (data: {
-		chatId: string;
-		type: 'dm' | 'group';
-		forUsers?: string[];
-	}) => {
-		const chat = await getChatById(data.chatId);
-		if (!chat) return;
-		chatListComponent.addChat(chat);
-	};
-
-	const handleVisibilityChange = () => {
-		if (!document.hidden && data.user?.id) {
-			if (!activeChat) return;
-			//Maybe re-query messages here instead if problems occur late
-			//messages = await getMessagesByChatId(chatId);
-
-			messageHandlers.handleVisible(activeChat);
-		}
-	};
-
-	async function handleChatSelected(newChat: ChatWithoutMessages): Promise<void> {
-		loadingChat = true;
-		console.log('Chat selected (leaving previous):', activeChat?.id);
-		if (activeChat) socketStore.leaveChat(activeChat.id);
-		if (!activeChat) console.log('Failed to leave previous chat (no active chat)');
-		localStorage.setItem('lastChatId', newChat.id);
-		shouldAutoScroll = true;
-
-		messageHandlers.resetDecryptionFailed();
-
-		const encryptedChatKeySeed = await getEncryptedChatKeySeed(newChat.id);
-
-		if (!encryptedChatKeySeed) {
-			modalStore.open({
-				title: 'New Chat',
-				content:
-					'You dont have the key for ' +
-					(newChat.type === 'dm'
-						? 'the dm with ' + newChat.participants.find((p) => p.id !== data.user?.id)?.displayName
-						: newChat.name) +
-					' yet. Please get it from ' +
-					(newChat.type === 'dm' ? 'them' : 'someone else in the chat who has it') +
-					' in a secure way.',
-				buttons: [
-					{
-						text: 'Enter Emoji Sequence',
-						variant: 'primary',
-						onClick: () => {
-							emojiKeyConverterStore.openInput(
-								'Enter Emoji Sequence for ' + newChat.name,
-								true,
-								async (base64Seed) => {
-									const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
-									try {
-										await saveEncryptedChatKeySeed({
-											chatId: newChat.id,
-											encryptedKeySeed: chatKeySeedEncrypted
-										});
-									} catch (err: any) {
-										console.error(err);
-										modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
-									}
-									emojiKeyConverterStore.close();
-									handleChatSelected(newChat);
-								}
-							);
-						}
-					},
-					{
-						text: 'Scan QR Code',
-						variant: 'primary',
-						onClick: () => {}
-					}
-				]
-			});
-			loadingChat = false;
-			activeChat = null;
-			return;
-		}
-
-		try {
-			console.log('encrypted chat key seed:', encryptedChatKeySeed);
-			const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
-			console.log('chat key seed:', chatKeySeed);
-			chatKey = await getChatKeyFromSeed(chatKeySeed);
-			console.log('chat key:', chatKey);
-		} catch (error) {
-			loadingChat = false;
-			activeChat = null;
-
-			modalStore.open({
-				title: 'Error',
-				id: 'decryption-chat-key-error',
-				content:
-					'Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: ' +
-					error +
-					')',
-
-				buttons: [
-					{
-						text: 'Re-enter',
-						variant: 'primary',
-						onClick: () => {
-							showMasterKeyImport();
-						}
-					},
-					{
-						text: 'OK',
-						variant: 'primary'
-					}
-				]
-			});
-			return;
-		}
-
-		const success = await tryGetMessages(newChat);
-
-		if (success) {
-			activeChat = newChat;
-			console.log('Joining chat:', activeChat?.id);
-			if (!activeChat) {
-				alert('Failed to select chat, active chat is: ' + activeChat);
-			}
-			socketStore.joinChat(activeChat!.id);
-
-			scrollToBottom();
-
-			if (messages.length > 0 && data.user?.id) {
-				messageHandlers.markReadAfterDelay(messages, activeChat);
-			}
-		} else {
-			modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
-			loadingChat = false;
-			activeChat = null;
-		}
-	}
-
-	function handleCreateChat(): void {
-		console.log('Create new chat');
-		if (activeChat) socketStore.leaveChat(activeChat.id);
-
-		modalStore.open({
-			title: 'New Chat',
-			content: 'What type of chat would you like to create?',
-			buttons: [
-				{ text: 'New Direct Message', variant: 'primary', onClick: () => goto('/chat/new/dm') },
-				{ text: 'New Group', variant: 'primary', onClick: () => goto('/chat/new/group') }
-			]
-		});
-	}
-
-	async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
-		if (!chat) {
-			//modalStore.alert('Error', 'Failed to get messages: No chat selected');
-			console.log('No chat selected');
-			loadingChat = false;
-			return false;
-		}
-		try {
-			await getMessagesByChatId(chat.id).refresh();
-			messageHandlers.setMessages(await getMessagesByChatId(chat.id));
-
-			scrollToBottom();
-
-			loadingChat = false;
-			return true;
-		} catch (error: any) {
-			if (error.body) {
-				modalStore.alert('Error', 'Failed to get messages: ' + error.body.message);
-			}
-		}
-
-		loadingChat = false;
-		return false;
-	}
-
-	async function resetServiceWorkers() {
-		if ('serviceWorker' in navigator) {
-			const registrations = await navigator.serviceWorker.getRegistrations();
-			for (const registration of registrations) {
-				await registration.unregister();
-				console.log('Service worker unregistered:', registration);
-			}
-			window.location.reload();
-		}
-	}
-
-	async function clearCaches() {
-		if ('caches' in window) {
-			const cacheNames = await caches.keys();
-			for (const name of cacheNames) {
-				await caches.delete(name);
-				console.log('Cache deleted:', name);
-			}
-		}
-	}
-
-	async function handleConnect() {
-		loadingChat = true;
-		const lastChatId = localStorage.getItem('lastChatId');
-		if (!lastChatId) {
-			loadingChat = false;
-			return;
-		}
-
-		const chat = await getChatById(lastChatId);
-
-		if (!chat) {
-			modalStore.alert('Error', 'Failed to load you last selected chat');
-			loadingChat = false;
-			return;
-		}
-
-		handleChatSelected(chat);
-	}
-
-	function showMasterKeyImport(): void {
-		modalStore.removeFromQueue('decryption-chat-key-error');
-		emojiKeyConverterStore.openInput('Import Master Key', false, async (base64Seed) => {
-			try {
-				await importAndSaveMasterSeed(base64Seed);
-			} catch (error) {
-				modalStore.alert('Error', 'Failed to import master key: ' + error, {
-					onOk: () => {
-						emojiKeyConverterStore.clearInput();
-					}
-				});
-				console.error(error);
-			}
-
-			emojiKeyConverterStore.close();
-		});
-	}
 
 	onMount(async () => {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		messageHandlers.onMessagesUpdated((m) => {
-			messages = m;
-			console.log('Messages updated:', messages.length);
+		messages.onMessagesUpdated((m) => {
+			currentMessages = m;
 		});
 
 		const wasConnected = socketStore.connected;
 
-		socketStore.connect();
+		await checkForMasterKey();
 
-		if (!hasMasterKey() && !emojiKeyConverterStore.isOpen) {
-			modalStore.open({
-				title: 'Warning',
-				content: 'Could not find your maser key.',
-				buttons: [
-					{
-						text: 'Generate New',
-						variant: 'primary',
-						onClick: () => {
-							modalStore.removeFromQueue('decryption-chat-key-error'); //Content of error would be outdated at this point
-							generateAndStoreMasterKey();
-						}
-					},
-					{
-						text: 'Import Existing',
-						variant: 'primary',
-						onClick: () => {
-							showMasterKeyImport();
-						}
-					}
-				]
-			});
-		}
+		socketStore.connect();
 
 		initializePushNotifications(PUBLIC_VAPID_KEY);
 
@@ -342,18 +54,16 @@
 		}
 
 		socketStore.onNewMessage((m) => {
-			messageHandlers.handleNewMessage(m, data.user?.id, activeChat);
+			messages.handleNewMessage(m, data.user?.id, activeChat);
 			scrollToBottom();
 		});
 		socketStore.onMessageUpdated((m) => {
-			messageHandlers.handleMessageUpdated(m, { invalidateDecryptionCache: true });
-			messageHandlers.markReadIfVisible(m, data.user?.id, activeChat);
+			messages.handleMessageUpdated(m, { invalidateDecryptionCache: true });
+			messages.markReadIfVisible(m, data.user?.id, activeChat);
 		});
-		socketStore.onMessageDeleted((m) => messageHandlers.handleMessageDeleted(m));
-		socketStore.onMessagesRead(async (d) =>
-			messageHandlers.handleMessagesRead(d.messageIds, d.userId)
-		);
-		socketStore.onNewChat(handleNewChat);
+		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
+		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
+		socketStore.onNewChat(handleCreateNewChat);
 		socketStore.onConnect(handleConnect);
 		socketStore.onMessageError((error) => {
 			console.error('Socket error:', error);
@@ -372,12 +82,117 @@
 		socketStore.off('message-updated');
 		socketStore.off('message-deleted');
 		socketStore.off('messages-read');
-		socketStore.off('new-chat', handleNewChat);
+		socketStore.off('new-chat', handleCreateNewChat);
 		socketStore.off('reconnect', handleConnect);
 		socketStore.off('message-error');
 
 		//socketStore.disconnect();
 	});
+
+	function handleVisibilityChange(): void {
+		if (!document.hidden && data.user?.id) {
+			if (!activeChat) return;
+			//Maybe re-query messages here instead if problems occur late
+			//messages = await getMessagesByChatId(chatId);
+
+			messages.handleVisible(activeChat);
+		}
+	}
+
+	async function handleConnect(): Promise<void> {
+		loadingChat = true;
+		const lastChatId = localStorage.getItem('lastChatId');
+		if (!lastChatId) {
+			loadingChat = false;
+			return;
+		}
+
+		const chat = await getChatById(lastChatId);
+
+		if (!chat) {
+			modalStore.alert('Error', 'Failed to load you last selected chat');
+			loadingChat = false;
+			return;
+		}
+
+		selectChat(chat);
+	}
+
+	function handleCreateChat(): void {
+		socketStore.tryLeaveChat(activeChat);
+
+		modalStore.open({
+			title: 'New Chat',
+			content: 'What type of chat would you like to create?',
+			buttons: [
+				{ text: 'New Direct Message', variant: 'primary', onClick: () => goto('/chat/new/dm') },
+				{ text: 'New Group', variant: 'primary', onClick: () => goto('/chat/new/group') }
+			]
+		});
+	}
+
+	async function handleCreateNewChat(data: {
+		chatId: string;
+		type: 'dm' | 'group';
+		forUsers?: string[];
+	}): Promise<void> {
+		const chat = await getChatById(data.chatId);
+		if (!chat) return;
+		chatListComponent.addChat(chat);
+	}
+
+	function handleScroll(): void {
+		if (messageContainer) {
+			const { scrollTop, scrollHeight, clientHeight } = messageContainer;
+			shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
+		}
+	}
+
+	function scrollToBottom(): void {
+		setTimeout(() => {
+			if (shouldAutoScroll && messageContainer) {
+				messageContainer.scrollTop = messageContainer.scrollHeight;
+			}
+		}, 0);
+	}
+
+	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
+		loadingChat = true;
+		shouldAutoScroll = true;
+
+		const result = await trySelectChat(activeChat, data.user?.id || '', newChat);
+
+		if (result.success) {
+			chatKey = result.chatKey;
+			activeChat = newChat;
+			scrollToBottom();
+		} else {
+			activeChat = null;
+		}
+
+		loadingChat = false;
+	}
+
+	async function resetServiceWorkers(): Promise<void> {
+		if ('serviceWorker' in navigator) {
+			const registrations = await navigator.serviceWorker.getRegistrations();
+			for (const registration of registrations) {
+				await registration.unregister();
+				console.log('Service worker unregistered:', registration);
+			}
+			window.location.reload();
+		}
+	}
+
+	async function clearCaches(): Promise<void> {
+		if ('caches' in window) {
+			const cacheNames = await caches.keys();
+			for (const name of cacheNames) {
+				await caches.delete(name);
+				console.log('Cache deleted:', name);
+			}
+		}
+	}
 </script>
 
 <div class="flex h-dvh min-h-0">
@@ -386,7 +201,7 @@
 			bind:this={chatListComponent}
 			bind:selectedChat={activeChat}
 			userId={data.user?.id || ''}
-			onChatSelected={handleChatSelected}
+			onChatSelected={selectChat}
 			onCreateChat={handleCreateChat}
 		/>
 		<button
@@ -448,19 +263,18 @@
 			</div>
 		{:else}
 			<ChatMessages
-				{messages}
+				messages={currentMessages}
 				user={data.user}
 				chatKey={chatKey!}
 				bind:messageContainer
 				{handleScroll}
 				onEdit={chatInput.editMessage}
 				onReply={chatInput.replyToMessage}
-				onDelete={(message) => messageHandlers.handleDeleteMessage(message, activeChat)}
-				onInfo={messageHandlers.handleInfoMessage}
-				onReaction={messageHandlers.handleReaction}
-				onUpdateReaction={messageHandlers.handleUpdateReaction}
-				onDecryptError={(error, message) =>
-					messageHandlers.handleDecryptError(error, message, data.user)}
+				onDelete={(message) => messages.handleDeleteMessage(message, activeChat)}
+				onInfo={messages.handleInfoMessage}
+				onReaction={messages.handleReaction}
+				onUpdateReaction={messages.handleUpdateReaction}
+				onDecryptError={(error, message) => messages.handleDecryptError(error, message, data.user)}
 			></ChatMessages>
 		{/if}
 

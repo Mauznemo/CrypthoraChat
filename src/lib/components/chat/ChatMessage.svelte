@@ -4,7 +4,7 @@
 	import type { ClientMessage } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
-	import { handleMessageUpdated } from '$lib/chat/messageHandlers';
+	import { handleMessageUpdated } from '$lib/chat/messages';
 
 	const {
 		message,

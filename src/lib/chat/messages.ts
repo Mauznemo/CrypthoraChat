@@ -20,8 +20,8 @@ function updateMessages() {
 	handlers.forEach((handler) => handler(messages));
 }
 
-let messages: ClientMessage[] = [];
-// let decryptionFailed: Record<string, boolean> = {};
+export let messages: ClientMessage[] = [];
+
 let unreadMessages: ClientMessage[] = [];
 
 /** Deletes the message for everyone in the chat */
@@ -239,14 +239,24 @@ export function markReadAfterDelay(
 	activeChat: ChatWithoutMessages | null
 ): void {
 	setTimeout(() => {
+		console.log('Messages:', messages.length);
+
 		if (!activeChat) return;
 		const readableMessages = messages.filter((message) => message.decryptionFailed !== true);
 
-		socketStore.markMessagesAsRead({
-			messageIds: readableMessages.map((message) => message.id),
-			chatId: activeChat.id
-		});
+		console.log('Readable messages:', readableMessages.length);
+
+		markRead(readableMessages, activeChat);
 	}, 500);
+}
+
+/** Marks messages as read */
+export function markRead(messages: ClientMessage[], activeChat: ChatWithoutMessages | null): void {
+	if (!activeChat) return;
+	socketStore.markMessagesAsRead({
+		messageIds: messages.map((message) => message.id),
+		chatId: activeChat.id
+	});
 }
 
 /** Adds a new message to messages array */
@@ -274,10 +284,7 @@ export function handleVisible(activeChat: ChatWithoutMessages): void {
 		const readableMessages = unreadMessages.filter((message) => message.decryptionFailed !== true);
 
 		if (readableMessages.length > 0) {
-			socketStore.markMessagesAsRead({
-				messageIds: readableMessages.map((message) => message.id),
-				chatId: activeChat.id
-			});
+			markRead(readableMessages, activeChat);
 		}
 
 		unreadMessages = [];
