@@ -4,7 +4,7 @@
 	import type { ClientMessage, SafeUser } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
-	import { handleMessageUpdated } from '$lib/chat/messageHandlers';
+	import { handleMessageUpdated } from '$lib/chat/messages';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));

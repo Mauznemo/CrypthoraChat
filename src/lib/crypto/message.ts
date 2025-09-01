@@ -1,4 +1,4 @@
-import { findMessageById } from '$lib/chat/messageHandlers';
+import { findMessageById } from '$lib/chat/messages';
 import type { ClientMessage, MessageWithRelations } from '$lib/types';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 

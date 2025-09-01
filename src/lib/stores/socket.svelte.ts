@@ -1,5 +1,5 @@
 // lib/stores/socket.svelte.ts
-import type { MessageWithRelations } from '$lib/types';
+import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
 import type { Prisma } from '$prisma';
 import { Socket } from 'socket.io-client';
 import ioClient from 'socket.io-client';
@@ -66,6 +66,10 @@ class SocketStore {
 
 	leaveChat(chatId: string) {
 		this.socket?.emit('leave-chat', chatId);
+	}
+
+	tryLeaveChat(chat: ChatWithoutMessages | null) {
+		if (chat) this.leaveChat(chat.id);
 	}
 
 	sendMessage(data: {
