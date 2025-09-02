@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { processLinks } from '$lib/linkUtils';
+	import { processLinksSafe } from '$lib/linkUtils';
 	import { decryptMessage } from '$lib/crypto/message';
 	import type { ClientMessage } from '$lib/types';
 
@@ -21,7 +21,7 @@
 				</p>
 			{:then decryptedContent}
 				<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
-					{@html processLinks(decryptedContent)}
+					{@html processLinksSafe(decryptedContent)}
 				</p>
 			{:catch error}
 				<p class="pr-9 whitespace-pre-line text-red-300">Failed to load message</p>

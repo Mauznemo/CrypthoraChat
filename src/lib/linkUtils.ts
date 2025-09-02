@@ -2,11 +2,24 @@
  * Converts URLs in text to clickable links
  * Supports http, https, ftp protocols and www. prefixed URLs
  */
-export function processLinks(text: string): string {
+export function processLinksSafe(text: string): string {
+	// Escape HTML entities first
+	const escapeHtml = (unsafe: string): string => {
+		return unsafe
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	};
+
+	// Escape the input text first
+	const escapedText = escapeHtml(text);
+
 	// Regular expression to match URLs
 	const urlRegex = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+|www\.[^\s]+)/gi;
 
-	return text.replace(urlRegex, (url) => {
+	return escapedText.replace(urlRegex, (url) => {
 		// Add protocol if missing (for www. links)
 		const href = url.startsWith('www.') ? `https://${url}` : url;
 
