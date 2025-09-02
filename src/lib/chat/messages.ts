@@ -2,46 +2,32 @@ import { encryptReaction } from '$lib/crypto/message';
 import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
-import type { ChatWithoutMessages, ClientMessage, SafeUser } from '$lib/types';
+import type { ClientMessage, SafeUser } from '$lib/types';
 import { untrack } from 'svelte';
 import { getUserById } from '../../routes/chat/chat.remote';
-
-type MessageHandler = (messages: ClientMessage[]) => void;
-
-let handlers: MessageHandler[] = [];
-
-export function onMessagesUpdated(callback: MessageHandler) {
-	handlers.push(callback);
-
-	return () => {
-		handlers = handlers.filter((h) => h !== callback);
-	};
-}
+import { chatStore } from '$lib/stores/chat.svelte';
 
 function updateMessages() {
-	handlers.forEach((handler) => handler(messages));
+	chatStore.messages = messages;
 }
 
-export let messages: ClientMessage[] = [];
+let messages: ClientMessage[] = [];
 
 let unreadMessages: ClientMessage[] = [];
 
 /** Deletes the message for everyone in the chat */
-export function handleDeleteMessage(
-	message: ClientMessage,
-	activeChat: ChatWithoutMessages | null
-): void {
+export function handleDeleteMessage(message: ClientMessage): void {
 	console.log('Delete message:', message.id);
 	modalStore.confirm(
 		'Delete Message',
 		'Are you sure you want to delete this message?',
 		async () => {
-			if (!activeChat) {
+			if (!chatStore.activeChat) {
 				modalStore.alert('Error', 'Failed to delete message: No chat selected');
 				return;
 			}
 			console.log('Message deleted:', message.id);
-			socketStore.deleteMessage({ messageId: message.id, chatId: activeChat.id });
+			socketStore.deleteMessage({ messageId: message.id, chatId: chatStore.activeChat.id });
 		}
 	);
 }
@@ -58,13 +44,13 @@ export function handleInfoMessage(message: ClientMessage): void {
 }
 
 /** Opens an emoji picker for reacting on the message */
-export function handleReaction(message: ClientMessage, userId: string, chatKey: CryptoKey): void {
+export function handleReaction(message: ClientMessage, userId: string): void {
 	console.log('Reaction message:', message.id);
 	const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
 	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
 	if (messageBubble) {
 		emojiPickerStore.open(messageBubble, async (reaction: string) => {
-			const encryptedReaction = await encryptReaction(reaction, userId, chatKey);
+			const encryptedReaction = await encryptReaction(reaction, userId);
 			socketStore.reactToMessage({
 				messageId: message.id,
 				encryptedReaction: encryptedReaction
@@ -226,15 +212,11 @@ export function resetDecryptionFailed(): void {
 }
 
 /** Marks a message as read if the page is visible */
-export function markReadIfVisible(
-	message: ClientMessage,
-	userId: string | undefined,
-	activeChat: ChatWithoutMessages | null
-): void {
-	if (message.senderId !== userId && userId) {
+export function markReadIfVisible(message: ClientMessage): void {
+	if (message.senderId !== chatStore.user?.id && chatStore.user) {
 		if (!document.hidden) {
 			// Wait a bit for message to be decrypted or fail at that
-			markReadAfterDelay([message], activeChat);
+			markReadAfterDelay([message]);
 		} else {
 			unreadMessages.push(message);
 		}
@@ -242,57 +224,50 @@ export function markReadIfVisible(
 }
 
 /** Marks another user's messages as read after a delay (to make sure message was decrypted successfully) */
-export function markReadAfterDelay(
-	messages: ClientMessage[],
-	activeChat: ChatWithoutMessages | null
-): void {
+export function markReadAfterDelay(messages: ClientMessage[]): void {
 	setTimeout(() => {
 		console.log('Messages:', messages.length);
 
-		if (!activeChat) return;
+		if (!chatStore.activeChat) return;
 		const readableMessages = messages.filter((message) => message.decryptionFailed !== true);
 
 		console.log('Readable messages:', readableMessages.length);
 
-		markRead(readableMessages, activeChat);
+		markRead(readableMessages);
 	}, 500);
 }
 
 /** Marks messages as read */
-export function markRead(messages: ClientMessage[], activeChat: ChatWithoutMessages | null): void {
-	if (!activeChat) return;
+export function markRead(messages: ClientMessage[]): void {
+	if (!chatStore.activeChat) return;
 	socketStore.markMessagesAsRead({
 		messageIds: messages.map((message) => message.id),
-		chatId: activeChat.id
+		chatId: chatStore.activeChat.id
 	});
 }
 
 /** Adds a new message to messages array */
-export function handleNewMessage(
-	message: ClientMessage,
-	userId: string | undefined,
-	activeChat: ChatWithoutMessages | null
-): void {
+export function handleNewMessage(message: ClientMessage): void {
 	messages = [...messages, message];
 	updateMessages();
 	//scrollToBottom();
 
-	if (!activeChat) {
+	if (!chatStore.activeChat) {
 		console.error('No chatId found, failed to mark new message as read');
 		return;
 	}
 
-	markReadIfVisible(message, userId, activeChat);
+	markReadIfVisible(message);
 }
 
 /** Marks all unread messages as read when the page becomes visible */
-export function handleVisible(activeChat: ChatWithoutMessages): void {
+export function handleVisible(): void {
 	if (unreadMessages.length > 0) {
 		// Filter out messages that failed decryption
 		const readableMessages = unreadMessages.filter((message) => message.decryptionFailed !== true);
 
 		if (readableMessages.length > 0) {
-			markRead(readableMessages, activeChat);
+			markRead(readableMessages);
 		}
 
 		unreadMessages = [];

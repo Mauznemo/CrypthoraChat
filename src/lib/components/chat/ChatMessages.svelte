@@ -1,9 +1,10 @@
 <script lang="ts">
-	import type { Prisma, User } from '$prisma';
+	import type { User } from '$prisma';
 	import { onMount } from 'svelte';
 	import MyChatMessage from './MyChatMessage.svelte';
 	import ChatMessage from './ChatMessage.svelte';
 	import type { MessageWithRelations } from '$lib/types';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	interface ToolbarPosition {
 		x: number;
@@ -11,9 +12,6 @@
 	}
 
 	let {
-		messages,
-		user,
-		chatKey,
 		messageContainer = $bindable<HTMLDivElement | null>(),
 		handleScroll,
 		onEdit,
@@ -24,9 +22,6 @@
 		onUpdateReaction,
 		onDecryptError
 	}: {
-		messages: MessageWithRelations[];
-		user: User | null;
-		chatKey: CryptoKey;
 		messageContainer: HTMLDivElement | null;
 		handleScroll: () => void;
 		onEdit: (message: MessageWithRelations) => void;
@@ -240,7 +235,7 @@
 
 	// Reactive effect for toolbar event listeners
 	$effect(() => {
-		console.log('Effect Messages, UserId:', user?.id);
+		console.log('Effect Messages, UserId:', chatStore.user?.id);
 		if (toolbarElement) {
 			const handleMouseEnter = () => handleToolbarMouseEnter();
 			const handleMouseLeave = () => handleToolbarMouseLeave();
@@ -262,10 +257,11 @@
 	onscroll={handleScrollUpdate}
 	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
 >
-	{#each messages as message, index (message.id + message.encryptedContent)}
+	{#each chatStore.messages as message, index (message.id + message.encryptedContent)}
 		<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
-		{@const isFromMe = message.senderId === user?.id}
-		{@const isFirstInGroup = index === 0 || messages[index - 1].senderId !== message.senderId}
+		{@const isFromMe = message.senderId === chatStore.user?.id}
+		{@const isFirstInGroup =
+			index === 0 || chatStore.messages[index - 1].senderId !== message.senderId}
 		{@const showProfile = isFirstInGroup}
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -278,11 +274,10 @@
 		>
 			{#if isFromMe}
 				{@const isLast =
-					index === messages.length - 1 || !(messages[index + 1].senderId === user?.id)}
+					index === chatStore.messages.length - 1 ||
+					!(chatStore.messages[index + 1].senderId === chatStore.user?.id)}
 				<MyChatMessage
 					{message}
-					userId={user?.id || ''}
-					{chatKey}
 					{showProfile}
 					{isLast}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
@@ -293,8 +288,6 @@
 			{:else}
 				<ChatMessage
 					{message}
-					userId={user?.id || ''}
-					{chatKey}
 					{showProfile}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}

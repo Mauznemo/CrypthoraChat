@@ -4,7 +4,7 @@
 	import { getChatById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
-	import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
+	import type { ChatWithoutMessages } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
@@ -18,11 +18,9 @@
 	import SideBar from '$lib/components/chat/SideBar.svelte';
 	import { checkForMasterKey } from '$lib/chat/masterKey';
 	import { trySelectChat } from '$lib/chat/chats';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	let { data }: PageProps = $props();
-
-	let activeChat: ChatWithoutMessages | null = $state(null);
-	let chatKey: CryptoKey | null = $state(null);
 
 	let inputField: HTMLTextAreaElement;
 	let messageContainer: HTMLDivElement;
@@ -30,17 +28,12 @@
 	let sideBar: SideBar;
 	let chatListComponent: ChatList;
 
-	let currentMessages: ClientMessage[] = $state([]);
-
 	let loadingChat = $state(true);
 	let shouldAutoScroll = $state(true);
 
 	onMount(async () => {
+		chatStore.user = data.user;
 		document.addEventListener('visibilitychange', handleVisibilityChange);
-
-		messages.onMessagesUpdated((m) => {
-			currentMessages = m;
-		});
 
 		const wasConnected = socketStore.connected;
 
@@ -55,12 +48,12 @@
 		}
 
 		socketStore.onNewMessage((m) => {
-			messages.handleNewMessage(m, data.user?.id, activeChat);
+			messages.handleNewMessage(m);
 			scrollToBottom();
 		});
 		socketStore.onMessageUpdated((m) => {
 			messages.handleMessageUpdated(m, { invalidateDecryptionCache: true });
-			messages.markReadIfVisible(m, data.user?.id, activeChat);
+			messages.markReadIfVisible(m);
 		});
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
@@ -76,8 +69,8 @@
 	onDestroy(() => {
 		//document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-		if (activeChat) {
-			socketStore.leaveChat(activeChat.id);
+		if (chatStore.activeChat) {
+			socketStore.leaveChat(chatStore.activeChat.id);
 		}
 		socketStore.off('new-message');
 		socketStore.off('message-updated');
@@ -92,11 +85,11 @@
 
 	function handleVisibilityChange(): void {
 		if (!document.hidden && data.user?.id) {
-			if (!activeChat) return;
+			if (!chatStore.activeChat) return;
 			//Maybe re-query messages here instead if problems occur late
 			//messages = await getMessagesByChatId(chatId);
 
-			messages.handleVisible(activeChat);
+			messages.handleVisible();
 		}
 	}
 
@@ -120,7 +113,7 @@
 	}
 
 	function handleCreateChat(): void {
-		socketStore.tryLeaveChat(activeChat);
+		socketStore.tryLeaveChat(chatStore.activeChat);
 
 		modalStore.open({
 			title: 'New Chat',
@@ -154,21 +147,21 @@
 			if (shouldAutoScroll && messageContainer) {
 				messageContainer.scrollTop = messageContainer.scrollHeight;
 			}
-		}, 0);
+		}, 10);
 	}
 
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
 		loadingChat = true;
 		shouldAutoScroll = true;
 
-		const result = await trySelectChat(activeChat, data.user?.id || '', newChat);
+		const result = await trySelectChat(newChat);
 
 		if (result.success) {
-			chatKey = result.chatKey;
-			activeChat = newChat;
+			chatStore.chatKey = result.chatKey;
+			chatStore.activeChat = newChat;
 			scrollToBottom();
 		} else {
-			activeChat = null;
+			chatStore.activeChat = null;
 		}
 
 		loadingChat = false;
@@ -197,11 +190,9 @@
 </script>
 
 <div class="flex h-dvh min-h-0">
-	<SideBar user={data.user} bind:this={sideBar}>
+	<SideBar bind:this={sideBar}>
 		<ChatList
 			bind:this={chatListComponent}
-			bind:selectedChat={activeChat}
-			userId={data.user?.id || ''}
 			onChatSelected={selectChat}
 			onCreateChat={handleCreateChat}
 		/>
@@ -252,7 +243,7 @@
 			</div>
 		</div>
 
-		{#if !activeChat && !loadingChat}
+		{#if !chatStore.activeChat && !loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<p class="text-2xl font-bold">No chat selected</p>
 			</div>
@@ -264,9 +255,6 @@
 			</div>
 		{:else}
 			<ChatMessages
-				messages={currentMessages}
-				user={data.user}
-				chatKey={chatKey!}
 				bind:messageContainer
 				{handleScroll}
 				onEdit={(message) => {
@@ -277,21 +265,15 @@
 					chatInput.replyToMessage(message);
 					inputField.focus();
 				}}
-				onDelete={(message) => messages.handleDeleteMessage(message, activeChat)}
+				onDelete={(message) => messages.handleDeleteMessage(message)}
 				onInfo={messages.handleInfoMessage}
-				onReaction={(message) => messages.handleReaction(message, data.user?.id || '', chatKey!)}
+				onReaction={(message) => messages.handleReaction(message, data.user?.id || '')}
 				onUpdateReaction={(message, encryptedReaction, operation) =>
 					messages.handleUpdateReaction(message, encryptedReaction, operation)}
 				onDecryptError={(error, message) => messages.handleDecryptError(error, message, data.user)}
 			></ChatMessages>
 		{/if}
 
-		<ChatInput
-			bind:this={chatInput}
-			bind:inputField
-			user={data.user}
-			{activeChat}
-			chatKey={chatKey!}
-		></ChatInput>
+		<ChatInput bind:this={chatInput} bind:inputField></ChatInput>
 	</div>
 </div>

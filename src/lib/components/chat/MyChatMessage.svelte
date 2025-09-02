@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
-	import { processLinksSafe } from '$lib/linkUtils';
 	import type { ClientMessage, SafeUser } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
 	import { handleMessageUpdated } from '$lib/chat/messages';
+	import { processMessageText } from '$lib/chat/textTools';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));
@@ -12,8 +13,6 @@
 
 	const {
 		message,
-		chatKey,
-		userId,
 		showProfile,
 		isLast,
 		onHover,
@@ -21,8 +20,6 @@
 		onUpdateReaction
 	}: {
 		message: ClientMessage;
-		chatKey: CryptoKey;
-		userId: string;
 		showProfile: boolean;
 		isLast: boolean;
 		onHover: (event: MouseEvent) => void;
@@ -43,7 +40,7 @@
 	let lastProcessed: any = $state(null);
 
 	$effect(() => {
-		readers = message.readBy.filter((reader: SafeUser) => reader.id !== userId);
+		readers = message.readBy.filter((reader: SafeUser) => reader.id !== chatStore.user?.id);
 
 		const currentKey = message.encryptedReactions;
 
@@ -58,7 +55,7 @@
 				const [reactorId, encryptedReaction] = reactionKey.split(':');
 				let decryptedReaction: string;
 				try {
-					decryptedReaction = await decryptReaction(encryptedReaction, chatKey);
+					decryptedReaction = await decryptReaction(encryptedReaction);
 				} catch (error) {
 					return null;
 				}
@@ -117,15 +114,15 @@
 				? 'min-w-24 pb-5'
 				: ''}"
 		>
-			<Reply {chatKey} replyToMessage={message} />
+			<Reply replyToMessage={message} />
 
 			<svelte:boundary>
-				{#await decryptMessage({ message, chatKey })}
+				{#await decryptMessage({ message })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{:then decryptedContent}
 					{handleDecryptedMessage(message, decryptedContent)}
 					<p class="pr-9 whitespace-pre-line text-white">
-						{@html processLinksSafe(decryptedContent)}
+						{@html processMessageText(decryptedContent)}
 					</p>
 				{:catch error}
 					<p class="pr-9 whitespace-pre-line text-red-400">Failed to decrypt message</p>
@@ -155,7 +152,7 @@
 						userIds: string[];
 						encryptedReaction: string;
 					}}
-					{@const userReacted = typedData.userIds.includes(userId)}
+					{@const userReacted = typedData.userIds.includes(chatStore.user?.id || '')}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
 						onclick={() => {
