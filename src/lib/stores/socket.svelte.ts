@@ -90,11 +90,15 @@ class SocketStore {
 		this.socket?.emit('delete-message', data);
 	}
 
-	reactToMessage(data: { messageId: string; reaction: string }) {
+	reactToMessage(data: { messageId: string; encryptedReaction: string }) {
 		this.socket?.emit('react-to-message', data);
 	}
 
-	updateReaction(data: { messageId: string; reaction: string; operation: 'add' | 'remove' }) {
+	updateReaction(data: {
+		messageId: string;
+		encryptedReaction: string;
+		operation: 'add' | 'remove';
+	}) {
 		this.socket?.emit('update-reaction', data);
 	}
 

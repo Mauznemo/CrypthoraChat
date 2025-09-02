@@ -130,7 +130,7 @@ export function initializeSocket(server: HTTPServer) {
 							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
 							attachments: data.attachments || [],
-							reactions: [],
+							encryptedReactions: [],
 							replyToId: data.replyToId
 						},
 						include: {
@@ -240,59 +240,66 @@ export function initializeSocket(server: HTTPServer) {
 		});
 
 		// Handle message reactions
-		socket.on('react-to-message', async (data: { messageId: string; reaction: string }) => {
-			try {
-				const message = await db.message.findUnique({
-					where: { id: data.messageId },
-					select: { reactions: true }
-				});
-
-				if (!message) return;
-
-				const reactionKey = `${socket.user!.id}:${data.reaction}`;
-
-				if (message.reactions.includes(reactionKey)) {
-					return;
-				}
-
-				// Add reaction
-				const updatedMessage = await db.message.update({
-					where: { id: data.messageId },
-					data: {
-						reactions: {
-							push: reactionKey
-						}
-					},
-					include: {
-						user: true,
-						chat: true,
-						readBy: true
-					}
-				});
-
-				// Emit updated message
-				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
-			} catch (error) {
-				console.error('Error updating reaction:', error);
-			}
-		});
-
 		socket.on(
-			'update-reaction',
-			async (data: { messageId: string; reaction: string; operation: 'add' | 'remove' }) => {
+			'react-to-message',
+			async (data: { messageId: string; encryptedReaction: string }) => {
 				try {
 					const message = await db.message.findUnique({
 						where: { id: data.messageId },
-						select: { reactions: true }
+						select: { encryptedReactions: true }
 					});
 
 					if (!message) return;
 
-					const userReaction = `${socket.user!.id}:${data.reaction}`;
-					let updatedReactions = message.reactions ?? [];
+					const reactionKey = `${socket.user!.id}:${data.encryptedReaction}`;
+
+					if (message.encryptedReactions.includes(reactionKey)) {
+						return;
+					}
+
+					console.log('Adding reaction:', reactionKey);
+					// Add reaction
+					const updatedMessage = await db.message.update({
+						where: { id: data.messageId },
+						data: {
+							encryptedReactions: {
+								push: reactionKey
+							}
+						},
+						include: {
+							user: true,
+							chat: true,
+							readBy: true
+						}
+					});
+
+					// Emit updated message
+					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+				} catch (error) {
+					console.error('Error updating reaction:', error);
+				}
+			}
+		);
+
+		socket.on(
+			'update-reaction',
+			async (data: {
+				messageId: string;
+				encryptedReaction: string;
+				operation: 'add' | 'remove';
+			}) => {
+				try {
+					const message = await db.message.findUnique({
+						where: { id: data.messageId },
+						select: { encryptedReactions: true }
+					});
+
+					if (!message) return;
+
+					const userReaction = `${socket.user!.id}:${data.encryptedReaction}`;
+					let updatedReactions = message.encryptedReactions ?? [];
 
 					if (data.operation === 'add') {
-						// Prevent duplicates
 						if (!updatedReactions.includes(userReaction)) {
 							updatedReactions = [...updatedReactions, userReaction];
 						}
@@ -303,7 +310,7 @@ export function initializeSocket(server: HTTPServer) {
 					const updatedMessage = await db.message.update({
 						where: { id: data.messageId },
 						data: {
-							reactions: {
+							encryptedReactions: {
 								set: updatedReactions
 							}
 						},
@@ -313,6 +320,8 @@ export function initializeSocket(server: HTTPServer) {
 							readBy: true
 						}
 					});
+
+					console.log('Updated reactions, current:', updatedMessage.encryptedReactions.length);
 
 					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
 				} catch (error) {

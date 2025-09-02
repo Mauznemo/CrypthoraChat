@@ -53,3 +53,45 @@ export async function decryptMessage(data: {
 		throw error;
 	}
 }
+
+export async function encryptReaction(
+	reaction: string,
+	userId: string,
+	chatKey: CryptoKey
+): Promise<string> {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(reaction);
+
+	// Deterministic IV from reaction + userId
+	const seedData = encoder.encode(`${userId}:${reaction}`);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', seedData);
+	const iv = new Uint8Array(hashBuffer.slice(0, 12));
+
+	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, chatKey, data);
+	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
+	combined.set(iv, 0);
+	combined.set(new Uint8Array(encrypted), iv.byteLength);
+	return arrayBufferToBase64(combined.buffer);
+}
+
+export async function decryptReaction(
+	encryptedReaction: string,
+	chatKey: CryptoKey
+): Promise<string> {
+	const encryptedBase64 = encryptedReaction;
+	try {
+		const combined = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
+		const iv = combined.slice(0, 12);
+		const encryptedData = combined.slice(12);
+		const decrypted = await crypto.subtle.decrypt(
+			{ name: 'AES-GCM', iv },
+			chatKey,
+			encryptedData.buffer
+		);
+		const decoder = new TextDecoder();
+		return decoder.decode(decrypted);
+	} catch (error) {
+		console.error('Error decrypting reaction, base64:', encryptedBase64, 'error:', error);
+		throw error;
+	}
+}

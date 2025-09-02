@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { decryptMessage } from '$lib/crypto/message';
+	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
 	import { processLinks } from '$lib/linkUtils';
 	import type { ClientMessage, SafeUser } from '$lib/types';
 	import { untrack } from 'svelte';
@@ -32,16 +32,59 @@
 
 	let readers = $state<SafeUser[]>([]);
 
-	$effect(() => {
-		readers = message.readBy.filter((reader: SafeUser) => reader.id !== userId);
-	});
-
 	function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
 		untrack(() => {
 			message.decryptedContent = decryptedContent;
 			handleMessageUpdated(message, { triggerRerender: false });
 		});
 	}
+
+	let reactionData = $state({});
+	let lastProcessed: any = $state(null);
+
+	$effect(() => {
+		readers = message.readBy.filter((reader: SafeUser) => reader.id !== userId);
+
+		const currentKey = message.encryptedReactions;
+
+		if (lastProcessed === currentKey) {
+			return;
+		}
+
+		lastProcessed = currentKey;
+
+		Promise.all(
+			message.encryptedReactions.map(async (reactionKey) => {
+				const [reactorId, encryptedReaction] = reactionKey.split(':');
+				let decryptedReaction: string;
+				try {
+					decryptedReaction = await decryptReaction(encryptedReaction, chatKey);
+				} catch (error) {
+					return null;
+				}
+				return { reactorId, decryptedReaction, encryptedReaction };
+			})
+		).then((results) => {
+			const validResults = results.filter((result) => result !== null);
+
+			reactionData = validResults.reduce(
+				(acc, { reactorId, decryptedReaction, encryptedReaction }) => {
+					if (!acc[decryptedReaction]) {
+						acc[decryptedReaction] = {
+							count: 0,
+							userIds: [],
+							encryptedReaction: ''
+						};
+					}
+					acc[decryptedReaction].count++;
+					acc[decryptedReaction].userIds.push(reactorId);
+					acc[decryptedReaction].encryptedReaction = encryptedReaction;
+					return acc;
+				},
+				{} as Record<string, { count: number; userIds: string[]; encryptedReaction: string }>
+			);
+		});
+	});
 </script>
 
 <div class="m-2 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
@@ -99,44 +142,37 @@
 			</div>
 		</div>
 
-		{#if message.reactions.length > 0}
+		{#if message.encryptedReactions.length > 0}
 			{@const offset = isLast ? clamp(readers.length - 1, 0, 4) : 0}
-			{@const emojiData = message.reactions.reduce(
-				(acc, reaction) => {
-					const [reactorId, emoji] = reaction.split(':');
-					if (!acc[emoji]) {
-						acc[emoji] = { count: 0, userIds: [] };
-					}
-					acc[emoji].count++;
-					acc[emoji].userIds.push(reactorId);
-					return acc;
-				},
-				{} as Record<string, { count: number; userIds: string[] }>
-			)}
 
 			<div
-				class="absolute -bottom-4 flex gap-1"
+				class="absolute -bottom-4 flex gap-1 select-none"
 				style="right: {offset * 12 + (isLast ? 36 : 8)}px;"
 			>
-				{#each Object.entries(emojiData) as [emoji, data]}
-					{@const userReacted = data.userIds.includes(userId)}
+				{#each Object.entries(reactionData) as [reaction, data]}
+					{@const typedData = data as {
+						count: number;
+						userIds: string[];
+						encryptedReaction: string;
+					}}
+					{@const userReacted = typedData.userIds.includes(userId)}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
 						onclick={() => {
 							if (userReacted) {
-								onUpdateReaction(emoji, 'remove');
+								onUpdateReaction(typedData.encryptedReaction, 'remove');
 							} else {
-								onUpdateReaction(emoji, 'add');
+								onUpdateReaction(typedData.encryptedReaction, 'add');
 							}
 						}}
-						title="React with {emoji}"
+						title="React with {reaction}"
 						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
 							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"
 					>
-						<span>{emoji}</span>
-						{#if data.count > 1}
-							<span class="ml-1 text-xs text-gray-300">{data.count}</span>
+						<span>{reaction}</span>
+						{#if typedData.count > 1}
+							<span class="ml-1 text-xs text-gray-300">{typedData.count}</span>
 						{/if}
 					</div>
 				{/each}
@@ -182,6 +218,6 @@
 		{/if}
 	</div>
 </div>
-{#if message.reactions.length > 0}
+{#if message.encryptedReactions.length > 0}
 	<div class="h-2"></div>
 {/if}

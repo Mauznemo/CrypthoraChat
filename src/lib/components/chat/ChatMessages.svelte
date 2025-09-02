@@ -36,7 +36,7 @@
 		onReaction: (message: MessageWithRelations) => void;
 		onUpdateReaction: (
 			message: MessageWithRelations,
-			emoji: string,
+			encryptedReaction: string,
 			operation: 'add' | 'remove'
 		) => void;
 		onDecryptError: (error: any, message: MessageWithRelations) => void;
@@ -287,7 +287,8 @@
 					{isLast}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
-					onUpdateReaction={(emoji, operation) => onUpdateReaction(message, emoji, operation)}
+					onUpdateReaction={(encryptedReaction, operation) =>
+						onUpdateReaction(message, encryptedReaction, operation)}
 				/>
 			{:else}
 				<ChatMessage
@@ -297,7 +298,8 @@
 					{showProfile}
 					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
 					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
-					onUpdateReaction={(emoji, operation) => onUpdateReaction(message, emoji, operation)}
+					onUpdateReaction={(encryptedReaction, operation) =>
+						onUpdateReaction(message, encryptedReaction, operation)}
 					{onDecryptError}
 				/>
 			{/if}
