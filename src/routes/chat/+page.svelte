@@ -24,6 +24,7 @@
 	let activeChat: ChatWithoutMessages | null = $state(null);
 	let chatKey: CryptoKey | null = $state(null);
 
+	let inputField: HTMLTextAreaElement;
 	let messageContainer: HTMLDivElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
@@ -268,8 +269,14 @@
 				chatKey={chatKey!}
 				bind:messageContainer
 				{handleScroll}
-				onEdit={chatInput.editMessage}
-				onReply={chatInput.replyToMessage}
+				onEdit={(message) => {
+					chatInput.editMessage(message);
+					inputField.focus();
+				}}
+				onReply={(message) => {
+					chatInput.replyToMessage(message);
+					inputField.focus();
+				}}
 				onDelete={(message) => messages.handleDeleteMessage(message, activeChat)}
 				onInfo={messages.handleInfoMessage}
 				onReaction={(message) => messages.handleReaction(message, data.user?.id || '', chatKey!)}
@@ -279,6 +286,12 @@
 			></ChatMessages>
 		{/if}
 
-		<ChatInput bind:this={chatInput} user={data.user} {activeChat} chatKey={chatKey!}></ChatInput>
+		<ChatInput
+			bind:this={chatInput}
+			bind:inputField
+			user={data.user}
+			{activeChat}
+			chatKey={chatKey!}
+		></ChatInput>
 	</div>
 </div>
