@@ -71,6 +71,44 @@ export const createDm = command(createDmSchema, async ({ userId }) => {
 		error(400, 'The selected user does not exist.');
 	}
 
+	// Check if DM already exists between these two users
+	const existingDm = await db.chat.findFirst({
+		where: {
+			type: 'dm',
+			participants: {
+				every: {
+					id: {
+						in: [userId, locals.user!.id]
+					}
+				}
+			},
+			// Ensure it's exactly 2 participants (just these two users)
+			AND: [
+				{
+					participants: {
+						some: {
+							id: userId
+						}
+					}
+				},
+				{
+					participants: {
+						some: {
+							id: locals.user!.id
+						}
+					}
+				}
+			]
+		},
+		select: {
+			id: true
+		}
+	});
+
+	if (existingDm) {
+		error(400, 'A DM with this user already exists.');
+	}
+
 	const allParticipantIds = [...new Set([userId, locals.user!.id])];
 
 	const chat = await db.chat.create({
