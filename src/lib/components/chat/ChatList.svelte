@@ -12,15 +12,12 @@
 	import { decryptChatKeySeedFromStorage, encryptChatKeySeedForStorage } from '$lib/crypto/chat';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	let {
-		userId,
-		selectedChat = $bindable<ChatWithoutMessages | null>(), //do not assign that here, only read!
 		onChatSelected,
 		onCreateChat
 	}: {
-		userId: string;
-		selectedChat?: ChatWithoutMessages | null;
 		onChatSelected: (chat: ChatWithoutMessages) => void;
 		onCreateChat: () => void;
 	} = $props();
@@ -40,7 +37,7 @@
 		const encryptedChatKeySeed = await getEncryptedChatKeySeed(chat.id);
 
 		const items: ContextMenuItem[] = [];
-		const isChatOwner = chat.ownerId === userId;
+		const isChatOwner = chat.ownerId === chatStore.user?.id;
 
 		if (encryptedChatKeySeed && (chat.type === 'group' || isChatOwner)) {
 			items.push({
@@ -59,7 +56,8 @@
 						const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
 						const title =
 							chat.type === 'dm'
-								? 'Key for DM with ' + chat.participants.find((p) => p.id !== userId)?.displayName
+								? 'Key for DM with ' +
+									chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
 								: 'Key for group ' + chat.name;
 						emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
 					} catch (error) {
@@ -150,13 +148,13 @@
 			}}
 			role="button"
 			tabindex="0"
-			class="flex h-15 w-full cursor-pointer items-center justify-start space-x-2 px-3 transition-colors {selectedChat?.id ===
-			chat.id
+			class="flex h-15 w-full cursor-pointer items-center justify-start space-x-2 px-3 transition-colors {chatStore
+				.activeChat?.id === chat.id
 				? 'bg-teal-700/30'
 				: 'hover:bg-gray-700/40 '}"
 		>
 			{#if chat.type === 'dm'}
-				{@const otherUser = chat.participants.find((p) => p.id !== userId)}
+				{@const otherUser = chat.participants.find((p) => p.id !== chatStore.user?.id)}
 				<!-- Profile picture -->
 				<div
 					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"

@@ -2,19 +2,15 @@
 	import { decryptMessage, encryptMessage } from '$lib/crypto/message';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import type { ChatWithoutMessages, MessageWithRelations, SafeUser } from '$lib/types';
+	import type { MessageWithRelations } from '$lib/types';
 	import { onDestroy } from 'svelte';
+	import CustomTextarea from './CustomTextarea.svelte';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	let {
-		user,
-		activeChat,
-		chatKey,
-		inputField = $bindable<HTMLTextAreaElement>()
+		inputField = $bindable<CustomTextarea>()
 	}: {
-		user: SafeUser | null;
-		activeChat: ChatWithoutMessages | null;
-		chatKey: CryptoKey;
-		inputField: HTMLTextAreaElement;
+		inputField: CustomTextarea;
 	} = $props();
 
 	export function replyToMessage(message: MessageWithRelations): void {
@@ -23,8 +19,8 @@
 
 	export async function editMessage(message: MessageWithRelations): Promise<void> {
 		messageEditing = message;
-		chatValue = await decryptMessage({ message, chatKey: chatKey! });
-		setTimeout(() => autoGrow(inputField), 100);
+		chatValue = await decryptMessage({ message });
+		//setTimeout(() => autoGrow(inputField), 100);
 	}
 
 	let messageReplying: MessageWithRelations | null = $state(null);
@@ -35,6 +31,13 @@
 	let isTyping = $state(false);
 	let chatValue: string = $state('');
 
+	// Function to get the current partial mention being typed
+	function getCurrentMention(text: string, cursorPosition: number): string | null {
+		const beforeCursor = text.slice(0, cursorPosition);
+		const mentionMatch = beforeCursor.match(/@(\w*)$/);
+		return mentionMatch ? mentionMatch[1] : null;
+	}
+
 	onDestroy(() => {
 		// Clean up typing timeout
 		if (typingTimeout) {
@@ -42,35 +45,35 @@
 		}
 
 		// Stop typing indicator if active
-		if (activeChat && isTyping && user?.id) {
+		if (chatStore.activeChat && isTyping && chatStore.user?.id) {
 			socketStore.stopTyping({
-				chatId: activeChat.id
+				chatId: chatStore.activeChat.id
 			});
 		}
 	});
 
 	async function sendMessage(): Promise<void> {
-		if (!activeChat) {
+		if (!chatStore.activeChat) {
 			modalStore.alert('Error', 'Failed to send message: No chat selected');
 			return;
 		}
 
-		if (!chatValue.trim() || !user?.id) return;
+		if (!chatValue.trim() || !chatStore.user?.id) return;
 
 		const messageContent = chatValue.trim();
 		chatValue = '';
-		inputField.style.height = '5px';
+		//inputField.style.height = '5px';
 
 		// Stop typing indicator
 		if (isTyping) {
 			socketStore.stopTyping({
-				chatId: activeChat.id
+				chatId: chatStore.activeChat.id
 			});
 			isTyping = false;
 		}
 
 		if (messageEditing) {
-			const encryptedContent = await encryptMessage(messageContent, chatKey!);
+			const encryptedContent = await encryptMessage(messageContent);
 			socketStore.editMessage({
 				messageId: messageEditing.id,
 				encryptedContent: encryptedContent
@@ -81,11 +84,11 @@
 		}
 
 		try {
-			const encryptedContent = await encryptMessage(messageContent, chatKey!);
+			const encryptedContent = await encryptMessage(messageContent);
 
 			socketStore.sendMessage({
-				chatId: activeChat.id,
-				senderId: user.id,
+				chatId: chatStore.activeChat.id,
+				senderId: chatStore.user.id,
 				encryptedContent: encryptedContent,
 				replyToId: messageReplying ? messageReplying.id : null,
 				attachments: []
@@ -98,17 +101,17 @@
 	}
 
 	function handleInput(): void {
-		autoGrow(inputField);
-		if (!user?.id) return;
-		if (!activeChat) return;
+		//autoGrow(inputField);
+		if (!chatStore.user?.id) return;
+		if (!chatStore.activeChat) return;
 
 		// Handle typing indicators
 		if (!isTyping && chatValue.trim()) {
 			isTyping = true;
 			console.log('start typing');
 			socketStore.startTyping({
-				chatId: activeChat.id,
-				username: user?.username || 'User'
+				chatId: chatStore.activeChat.id,
+				username: chatStore.user?.username || 'User'
 			});
 		}
 
@@ -119,11 +122,11 @@
 
 		// Set new timeout to stop typing indicator
 		typingTimeout = setTimeout(() => {
-			if (isTyping && activeChat) {
+			if (isTyping && chatStore.activeChat) {
 				isTyping = false;
 				console.log('stop typing');
 				socketStore.stopTyping({
-					chatId: activeChat.id
+					chatId: chatStore.activeChat.id
 				});
 			}
 		}, 1000);
@@ -131,7 +134,7 @@
 		if (!chatValue.trim() && isTyping) {
 			isTyping = false;
 			socketStore.stopTyping({
-				chatId: activeChat.id
+				chatId: chatStore.activeChat.id
 			});
 		}
 	}
@@ -151,7 +154,7 @@
 	function handleCloseEdit(): void {
 		messageEditing = null;
 		chatValue = '';
-		setTimeout(() => autoGrow(inputField), 100);
+		//setTimeout(() => autoGrow(inputField), 100);
 	}
 
 	function handleCloseReply(): void {
@@ -183,7 +186,7 @@
 	<svelte:boundary>
 		<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
-			{#await decryptMessage({ message: messageReplying, chatKey: chatKey! })}
+			{#await decryptMessage({ message: messageReplying })}
 				<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
 					loading...
 				</p>
@@ -203,12 +206,39 @@
 	<svelte:boundary>
 		<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
-			<span>Editing message: {await decryptMessage({ message: messageEditing, chatKey })}</span>
+			<span>Editing message: {await decryptMessage({ message: messageEditing })}</span>
 		</div>
 		{#snippet pending()}
 			<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
 		{/snippet}
 	</svelte:boundary>
+{/if}
+
+{#if chatValue.includes('@')}
+	{@const currentMention = getCurrentMention(chatValue, chatValue.length)}
+	{@const filteredUsers =
+		currentMention !== null
+			? chatStore.activeChat?.participants?.filter((participant) =>
+					participant.username.toLowerCase().startsWith(currentMention.toLowerCase())
+				) || []
+			: []}
+
+	{#if filteredUsers.length > 0}
+		<div class="flex flex-col items-start justify-start gap-1 p-2 pl-20">
+			{#each filteredUsers as participant}
+				<button
+					onclick={() => {
+						chatValue =
+							chatValue.slice(0, chatValue.length - (currentMention?.length || 0)) +
+							participant.username;
+					}}
+				>
+					<strong>@{participant.username.slice(0, currentMention?.length)}</strong
+					>{participant.username.slice(currentMention?.length)}
+				</button>
+			{/each}
+		</div>
+	{/if}
 {/if}
 
 <!-- Input Field -->
@@ -236,19 +266,14 @@
 		</svg>
 	</button>
 
-	<textarea
+	<CustomTextarea
 		bind:value={chatValue}
 		bind:this={inputField}
 		oninput={handleInput}
 		onkeydown={handleKeydown}
 		placeholder="Type your message here..."
-		spellcheck="true"
-		autocapitalize="sentences"
-		autocomplete="off"
-		inputmode="text"
-		rows="1"
-		class="frosted-glass no-scrollbar max-h-60 min-h-12 flex-1 resize-none rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white placeholder:text-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
-	></textarea>
+		disabled={false}
+	/>
 
 	<button
 		disabled={!chatValue.trim() || !socketStore.connected}

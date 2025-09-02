@@ -1,12 +1,11 @@
 <script lang="ts">
+	import { chatStore } from '$lib/stores/chat.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { Snippet } from 'svelte';
 
 	let {
-		user,
 		children
 	}: {
-		user: SafeUser | null;
 		children: Snippet<[]>;
 	} = $props();
 
@@ -35,9 +34,9 @@
 		<div
 			class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
 		>
-			<p>{user?.username?.[0].toUpperCase()}</p>
+			<p>{chatStore.user?.username?.[0].toUpperCase()}</p>
 		</div>
-		<p class="ml-2 text-2xl font-bold">{user?.username}</p>
+		<p class="ml-2 text-2xl font-bold">{chatStore.user?.username}</p>
 	</div>
 	{@render children()}
 </div>

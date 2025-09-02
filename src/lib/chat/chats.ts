@@ -3,7 +3,7 @@ import {
 	encryptChatKeySeedForStorage,
 	getChatKeyFromSeed
 } from '$lib/crypto/chat';
-import { importAndSaveMasterSeed } from '$lib/crypto/master';
+import { chatStore } from '$lib/stores/chat.svelte';
 import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
@@ -14,21 +14,19 @@ import {
 	saveEncryptedChatKeySeed
 } from '../../routes/chat/chat.remote';
 import { showMasterKeyImport } from './masterKey';
-import { markReadAfterDelay, messages, resetDecryptionFailed, setMessages } from './messages';
+import { markReadAfterDelay, resetDecryptionFailed, setMessages } from './messages';
 
 /** Tries to select a chat and get its messages, shows an error modal if it fails */
 export async function trySelectChat(
-	activeChat: ChatWithoutMessages | null,
-	userId: string,
 	newChat: ChatWithoutMessages
 ): Promise<{ success: boolean; chatKey: CryptoKey | null }> {
-	console.log('Chat selected (leaving previous):', activeChat?.id);
-	socketStore.tryLeaveChat(activeChat);
+	console.log('Chat selected (leaving previous):', chatStore.activeChat?.id);
+	socketStore.tryLeaveChat(chatStore.activeChat);
 	localStorage.setItem('lastChatId', newChat.id);
 
 	resetDecryptionFailed();
 
-	const chatKeySeedResult = await tryGetEncryptedChatKeySeed(newChat, userId);
+	const chatKeySeedResult = await tryGetEncryptedChatKeySeed(newChat, chatStore.user?.id || '');
 
 	if (!chatKeySeedResult.success) {
 		return { success: false, chatKey: null };
@@ -43,11 +41,11 @@ export async function trySelectChat(
 	const success = await tryGetMessages(newChat);
 
 	if (success) {
-		activeChat = newChat;
-		console.log('Joining chat:', activeChat?.id);
-		socketStore.joinChat(activeChat.id);
+		chatStore.activeChat = newChat;
+		console.log('Joining chat:', chatStore.activeChat?.id);
+		socketStore.joinChat(chatStore.activeChat.id);
 
-		markReadAfterDelay(messages, activeChat);
+		markReadAfterDelay(chatStore.messages);
 
 		return { success: true, chatKey: decryptResult.chatKey };
 	} else {

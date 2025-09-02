@@ -1,25 +1,22 @@
 <script lang="ts">
 	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
-	import { processLinksSafe } from '$lib/linkUtils';
 	import type { ClientMessage } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
 	import { handleDecryptedMessage } from '$lib/chat/messages';
+	import { processMessageText } from '$lib/chat/textTools';
+	import { chatStore } from '$lib/stores/chat.svelte';
 
 	const {
 		message,
-		chatKey,
 		showProfile,
-		userId,
 		onHover,
 		onTouchStart,
 		onUpdateReaction,
 		onDecryptError
 	}: {
 		message: ClientMessage;
-		chatKey: CryptoKey;
 		showProfile: boolean;
-		userId: string;
 		onHover: (event: MouseEvent) => void;
 		onTouchStart: (event: TouchEvent) => void;
 		onUpdateReaction: (encryptedReaction: string, operation: 'add' | 'remove') => void;
@@ -50,7 +47,7 @@
 				const [reactorId, encryptedReaction] = reactionKey.split(':');
 				let decryptedReaction: string;
 				try {
-					decryptedReaction = await decryptReaction(encryptedReaction, chatKey);
+					decryptedReaction = await decryptReaction(encryptedReaction);
 				} catch (error) {
 					return null;
 				}
@@ -116,22 +113,24 @@
 				? 'min-w-24 pb-5'
 				: ''}"
 		>
-			<Reply {chatKey} replyToMessage={message} />
+			<Reply replyToMessage={message} />
 
 			<svelte:boundary>
-				{#await decryptMessage({ message, chatKey })}
+				{#await decryptMessage({ message })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{:then decryptedContent}
 					{handleDecryptedMessage(message, decryptedContent)}
 					<p class="pr-9 whitespace-pre-line text-white">
-						{@html processLinksSafe(decryptedContent)}
+						{@html processMessageText(decryptedContent)}
 					</p>
 				{:catch error}
 					{handleDecryptError(error)}
 					<p class="pr-9 whitespace-pre-line text-red-400">
 						Failed to decrypt message {message.chat.ownerId === message.user.id
 							? ' (Your Key is incorrect)'
-							: ''}{message.chat.ownerId === userId ? ' (They have an incorrect key)' : ''}
+							: ''}{message.chat.ownerId === chatStore.user?.id
+							? ' (They have an incorrect key)'
+							: ''}
 					</p>
 					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
 				{/await}
@@ -152,7 +151,7 @@
 						userIds: string[];
 						encryptedReaction: string;
 					}}
-					{@const userReacted = typedData.userIds.includes(userId)}
+					{@const userReacted = typedData.userIds.includes(chatStore.user?.id || '')}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
 						onclick={() => {
