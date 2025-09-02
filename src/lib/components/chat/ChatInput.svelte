@@ -8,11 +8,13 @@
 	let {
 		user,
 		activeChat,
-		chatKey
+		chatKey,
+		inputField = $bindable<HTMLTextAreaElement>()
 	}: {
 		user: SafeUser | null;
 		activeChat: ChatWithoutMessages | null;
 		chatKey: CryptoKey;
+		inputField: HTMLTextAreaElement;
 	} = $props();
 
 	export function replyToMessage(message: MessageWithRelations): void {
@@ -22,13 +24,13 @@
 	export async function editMessage(message: MessageWithRelations): Promise<void> {
 		messageEditing = message;
 		chatValue = await decryptMessage({ message, chatKey: chatKey! });
-		setTimeout(() => autoGrow(chatInput), 100);
+		setTimeout(() => autoGrow(inputField), 100);
 	}
 
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
 
-	let chatInput: HTMLTextAreaElement;
+	// let chatInput: HTMLTextAreaElement;
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let isTyping = $state(false);
 	let chatValue: string = $state('');
@@ -57,7 +59,7 @@
 
 		const messageContent = chatValue.trim();
 		chatValue = '';
-		chatInput.style.height = '5px';
+		inputField.style.height = '5px';
 
 		// Stop typing indicator
 		if (isTyping) {
@@ -96,7 +98,7 @@
 	}
 
 	function handleInput(): void {
-		autoGrow(chatInput);
+		autoGrow(inputField);
 		if (!user?.id) return;
 		if (!activeChat) return;
 
@@ -149,7 +151,7 @@
 	function handleCloseEdit(): void {
 		messageEditing = null;
 		chatValue = '';
-		setTimeout(() => autoGrow(chatInput), 100);
+		setTimeout(() => autoGrow(inputField), 100);
 	}
 
 	function handleCloseReply(): void {
@@ -236,7 +238,7 @@
 
 	<textarea
 		bind:value={chatValue}
-		bind:this={chatInput}
+		bind:this={inputField}
 		oninput={handleInput}
 		onkeydown={handleKeydown}
 		placeholder="Type your message here..."
