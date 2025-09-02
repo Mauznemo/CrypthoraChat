@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
-	import { processLinks } from '$lib/linkUtils';
+	import { processLinksSafe } from '$lib/linkUtils';
 	import type { ClientMessage } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
@@ -124,7 +124,7 @@
 				{:then decryptedContent}
 					{handleDecryptedMessage(message, decryptedContent)}
 					<p class="pr-9 whitespace-pre-line text-white">
-						{@html processLinks(decryptedContent)}
+						{@html processLinksSafe(decryptedContent)}
 					</p>
 				{:catch error}
 					{handleDecryptError(error)}
