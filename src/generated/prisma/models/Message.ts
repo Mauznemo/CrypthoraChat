@@ -48,7 +48,7 @@ export type MessageCountAggregateOutputType = {
   chatId: number
   senderId: number
   attachments: number
-  reactions: number
+  encryptedReactions: number
   encryptedContent: number
   isEdited: number
   timestamp: number
@@ -82,7 +82,7 @@ export type MessageCountAggregateInputType = {
   chatId?: true
   senderId?: true
   attachments?: true
-  reactions?: true
+  encryptedReactions?: true
   encryptedContent?: true
   isEdited?: true
   timestamp?: true
@@ -167,7 +167,7 @@ export type MessageGroupByOutputType = {
   chatId: string
   senderId: string
   attachments: string[]
-  reactions: string[]
+  encryptedReactions: string[]
   encryptedContent: string
   isEdited: boolean
   timestamp: Date
@@ -200,7 +200,7 @@ export type MessageWhereInput = {
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
-  reactions?: Prisma.StringNullableListFilter<"Message">
+  encryptedReactions?: Prisma.StringNullableListFilter<"Message">
   encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
@@ -217,7 +217,7 @@ export type MessageOrderByWithRelationInput = {
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
-  reactions?: Prisma.SortOrder
+  encryptedReactions?: Prisma.SortOrder
   encryptedContent?: Prisma.SortOrder
   isEdited?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
@@ -237,7 +237,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
-  reactions?: Prisma.StringNullableListFilter<"Message">
+  encryptedReactions?: Prisma.StringNullableListFilter<"Message">
   encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
@@ -254,7 +254,7 @@ export type MessageOrderByWithAggregationInput = {
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
-  reactions?: Prisma.SortOrder
+  encryptedReactions?: Prisma.SortOrder
   encryptedContent?: Prisma.SortOrder
   isEdited?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
@@ -272,7 +272,7 @@ export type MessageScalarWhereWithAggregatesInput = {
   chatId?: Prisma.StringWithAggregatesFilter<"Message"> | string
   senderId?: Prisma.StringWithAggregatesFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
-  reactions?: Prisma.StringNullableListFilter<"Message">
+  encryptedReactions?: Prisma.StringNullableListFilter<"Message">
   encryptedContent?: Prisma.StringWithAggregatesFilter<"Message"> | string
   isEdited?: Prisma.BoolWithAggregatesFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeWithAggregatesFilter<"Message"> | Date | string
@@ -282,7 +282,7 @@ export type MessageScalarWhereWithAggregatesInput = {
 export type MessageCreateInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -298,7 +298,7 @@ export type MessageUncheckedCreateInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -310,7 +310,7 @@ export type MessageUncheckedCreateInput = {
 export type MessageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -326,7 +326,7 @@ export type MessageUncheckedUpdateInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -340,7 +340,7 @@ export type MessageCreateManyInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -350,7 +350,7 @@ export type MessageCreateManyInput = {
 export type MessageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -361,7 +361,7 @@ export type MessageUncheckedUpdateManyInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -396,7 +396,7 @@ export type MessageCountOrderByAggregateInput = {
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
-  reactions?: Prisma.SortOrder
+  encryptedReactions?: Prisma.SortOrder
   encryptedContent?: Prisma.SortOrder
   isEdited?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
@@ -549,7 +549,7 @@ export type MessageCreateattachmentsInput = {
   set: string[]
 }
 
-export type MessageCreatereactionsInput = {
+export type MessageCreateencryptedReactionsInput = {
   set: string[]
 }
 
@@ -578,7 +578,7 @@ export type MessageUpdateattachmentsInput = {
   push?: string | string[]
 }
 
-export type MessageUpdatereactionsInput = {
+export type MessageUpdateencryptedReactionsInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -624,7 +624,7 @@ export type MessageUncheckedUpdateManyWithoutReplyToNestedInput = {
 export type MessageCreateWithoutUserInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -638,7 +638,7 @@ export type MessageUncheckedCreateWithoutUserInput = {
   id?: string
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -660,7 +660,7 @@ export type MessageCreateManyUserInputEnvelope = {
 export type MessageCreateWithoutReadByInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -675,7 +675,7 @@ export type MessageUncheckedCreateWithoutReadByInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -712,7 +712,7 @@ export type MessageScalarWhereInput = {
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
-  reactions?: Prisma.StringNullableListFilter<"Message">
+  encryptedReactions?: Prisma.StringNullableListFilter<"Message">
   encryptedContent?: Prisma.StringFilter<"Message"> | string
   isEdited?: Prisma.BoolFilter<"Message"> | boolean
   timestamp?: Prisma.DateTimeFilter<"Message"> | Date | string
@@ -738,7 +738,7 @@ export type MessageUpdateManyWithWhereWithoutReadByInput = {
 export type MessageCreateWithoutChatInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -752,7 +752,7 @@ export type MessageUncheckedCreateWithoutChatInput = {
   id?: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -790,7 +790,7 @@ export type MessageUpdateManyWithWhereWithoutChatInput = {
 export type MessageCreateWithoutRepliesInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -805,7 +805,7 @@ export type MessageUncheckedCreateWithoutRepliesInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -821,7 +821,7 @@ export type MessageCreateOrConnectWithoutRepliesInput = {
 export type MessageCreateWithoutReplyToInput = {
   id?: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -836,7 +836,7 @@ export type MessageUncheckedCreateWithoutReplyToInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -868,7 +868,7 @@ export type MessageUpdateToOneWithWhereWithoutRepliesInput = {
 export type MessageUpdateWithoutRepliesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -883,7 +883,7 @@ export type MessageUncheckedUpdateWithoutRepliesInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -911,7 +911,7 @@ export type MessageCreateManyUserInput = {
   id?: string
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -921,7 +921,7 @@ export type MessageCreateManyUserInput = {
 export type MessageUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -935,7 +935,7 @@ export type MessageUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -948,7 +948,7 @@ export type MessageUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -958,7 +958,7 @@ export type MessageUncheckedUpdateManyWithoutUserInput = {
 export type MessageUpdateWithoutReadByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -973,7 +973,7 @@ export type MessageUncheckedUpdateWithoutReadByInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -986,7 +986,7 @@ export type MessageUncheckedUpdateManyWithoutReadByInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -997,7 +997,7 @@ export type MessageCreateManyChatInput = {
   id?: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -1007,7 +1007,7 @@ export type MessageCreateManyChatInput = {
 export type MessageUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1021,7 +1021,7 @@ export type MessageUncheckedUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1034,7 +1034,7 @@ export type MessageUncheckedUpdateManyWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1046,7 +1046,7 @@ export type MessageCreateManyReplyToInput = {
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
-  reactions?: Prisma.MessageCreatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
   isEdited?: boolean
   timestamp?: Date | string
@@ -1055,7 +1055,7 @@ export type MessageCreateManyReplyToInput = {
 export type MessageUpdateWithoutReplyToInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1070,7 +1070,7 @@ export type MessageUncheckedUpdateWithoutReplyToInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1083,7 +1083,7 @@ export type MessageUncheckedUpdateManyWithoutReplyToInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
-  reactions?: Prisma.MessageUpdatereactionsInput | string[]
+  encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
   isEdited?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timestamp?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1134,7 +1134,7 @@ export type MessageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
-  reactions?: boolean
+  encryptedReactions?: boolean
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
@@ -1152,7 +1152,7 @@ export type MessageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
-  reactions?: boolean
+  encryptedReactions?: boolean
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
@@ -1167,7 +1167,7 @@ export type MessageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
-  reactions?: boolean
+  encryptedReactions?: boolean
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
@@ -1182,14 +1182,14 @@ export type MessageSelectScalar = {
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
-  reactions?: boolean
+  encryptedReactions?: boolean
   encryptedContent?: boolean
   isEdited?: boolean
   timestamp?: boolean
   replyToId?: boolean
 }
 
-export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chatId" | "senderId" | "attachments" | "reactions" | "encryptedContent" | "isEdited" | "timestamp" | "replyToId", ExtArgs["result"]["message"]>
+export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chatId" | "senderId" | "attachments" | "encryptedReactions" | "encryptedContent" | "isEdited" | "timestamp" | "replyToId", ExtArgs["result"]["message"]>
 export type MessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   readBy?: boolean | Prisma.Message$readByArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1223,7 +1223,7 @@ export type $MessagePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     chatId: string
     senderId: string
     attachments: string[]
-    reactions: string[]
+    encryptedReactions: string[]
     encryptedContent: string
     isEdited: boolean
     timestamp: Date
@@ -1660,7 +1660,7 @@ export interface MessageFieldRefs {
   readonly chatId: Prisma.FieldRef<"Message", 'String'>
   readonly senderId: Prisma.FieldRef<"Message", 'String'>
   readonly attachments: Prisma.FieldRef<"Message", 'String[]'>
-  readonly reactions: Prisma.FieldRef<"Message", 'String[]'>
+  readonly encryptedReactions: Prisma.FieldRef<"Message", 'String[]'>
   readonly encryptedContent: Prisma.FieldRef<"Message", 'String'>
   readonly isEdited: Prisma.FieldRef<"Message", 'Boolean'>
   readonly timestamp: Prisma.FieldRef<"Message", 'DateTime'>

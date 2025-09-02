@@ -1,7 +1,9 @@
+import { encryptReaction } from '$lib/crypto/message';
 import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatWithoutMessages, ClientMessage, SafeUser } from '$lib/types';
+import { untrack } from 'svelte';
 import { getUserById } from '../../routes/chat/chat.remote';
 
 type MessageHandler = (messages: ClientMessage[]) => void;
@@ -56,32 +58,30 @@ export function handleInfoMessage(message: ClientMessage): void {
 }
 
 /** Opens an emoji picker for reacting on the message */
-export function handleReaction(message: ClientMessage): void {
+export function handleReaction(message: ClientMessage, userId: string, chatKey: CryptoKey): void {
 	console.log('Reaction message:', message.id);
 	const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
 	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
-	console.log('Message element:', messageBubble);
 	if (messageBubble) {
-		emojiPickerStore.open(messageBubble, (emoji: string) => {
-			console.log('Selected emoji:', emoji);
+		emojiPickerStore.open(messageBubble, async (reaction: string) => {
+			const encryptedReaction = await encryptReaction(reaction, userId, chatKey);
 			socketStore.reactToMessage({
 				messageId: message.id,
-				reaction: emoji
+				encryptedReaction: encryptedReaction
 			});
 		});
 	}
 }
 
 /** Adds or removes a reaction from the message */
-export function handleUpdateReaction(
+export async function handleUpdateReaction(
 	message: ClientMessage,
-	emoji: string,
+	encryptedReaction: string,
 	operation: 'add' | 'remove'
-): void {
-	console.log('Update reaction:', message.id, emoji, operation);
+): Promise<void> {
 	socketStore.updateReaction({
 		messageId: message.id,
-		reaction: emoji,
+		encryptedReaction: encryptedReaction,
 		operation
 	});
 }
@@ -137,6 +137,14 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 	} catch (err) {
 		console.error('Failed to get user for read status update:', err);
 	}
+}
+
+/** Updates the decrypted content of a message */
+export function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
+	untrack(() => {
+		message.decryptedContent = decryptedContent;
+		handleMessageUpdated(message, { triggerRerender: false });
+	});
 }
 
 /** Shows appropriate error message */

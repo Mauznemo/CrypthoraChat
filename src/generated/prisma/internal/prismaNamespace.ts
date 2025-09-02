@@ -952,7 +952,7 @@ export const MessageScalarFieldEnum = {
   chatId: 'chatId',
   senderId: 'senderId',
   attachments: 'attachments',
-  reactions: 'reactions',
+  encryptedReactions: 'encryptedReactions',
   encryptedContent: 'encryptedContent',
   isEdited: 'isEdited',
   timestamp: 'timestamp',

@@ -272,8 +272,9 @@
 				onReply={chatInput.replyToMessage}
 				onDelete={(message) => messages.handleDeleteMessage(message, activeChat)}
 				onInfo={messages.handleInfoMessage}
-				onReaction={messages.handleReaction}
-				onUpdateReaction={messages.handleUpdateReaction}
+				onReaction={(message) => messages.handleReaction(message, data.user?.id || '', chatKey!)}
+				onUpdateReaction={(message, encryptedReaction, operation) =>
+					messages.handleUpdateReaction(message, encryptedReaction, operation)}
 				onDecryptError={(error, message) => messages.handleDecryptError(error, message, data.user)}
 			></ChatMessages>
 		{/if}
