@@ -115,6 +115,13 @@ export function initializeSocket(server: HTTPServer) {
 				replyToId?: string | null;
 				attachments?: string[];
 			}) => {
+				const MAX_BASE64_LENGTH = 64 * 1024; // 64 KB
+
+				if (data.encryptedContent.length > MAX_BASE64_LENGTH) {
+					socket.emit('message-error', { error: 'Message too large' });
+					return;
+				}
+
 				try {
 					console.log('Received message from: ' + socket.user!.id + ' in chat: ' + data.chatId);
 					const chatUsers = await getChatUsers(data.chatId);

@@ -60,6 +60,7 @@
 		socketStore.onNewChat(handleCreateNewChat);
 		socketStore.onConnect(handleConnect);
 		socketStore.onMessageError((error) => {
+			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
 		});
 
