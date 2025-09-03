@@ -164,13 +164,15 @@
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div title={otherUser?.username} class="flex items-center space-x-2">
+					<div title={otherUser?.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
-							{otherUser?.username}
+							{otherUser?.displayName}
 						</p>
 					</div>
 
-					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">Not implemented</p>
+					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
+						@{otherUser?.username}
+					</p>
 				</div>
 				<button
 					onclick={(event) => handleShowContextMenu(event, chat)}
@@ -195,6 +197,13 @@
 					</svg>
 				</button>
 			{:else}
+				{@const allParticipants = chat.participants.map((p) => '@' + p.username).join(', ')}
+				{@const firstTwoParticipants = chat.participants.slice(0, 2).map((p) => '@' + p.username)}
+				{@const remainingCount = chat.participants.length - 2}
+				{@const participants =
+					remainingCount > 0
+						? firstTwoParticipants.join(', ') + ` +${remainingCount} others`
+						: firstTwoParticipants.join(', ')}
 				<!-- Profile picture -->
 				<div
 					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
@@ -203,7 +212,7 @@
 				</div>
 
 				<!-- Chat text -->
-				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
+				<div title={allParticipants} class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
 					<div title={chat.name} class="flex items-center space-x-2">
 						<svg
 							class="mt-1 h-5 w-5 text-white"
@@ -225,8 +234,8 @@
 						</p>
 					</div>
 
-					<p class="line-clamp-1 text-sm font-semibold break-words text-gray-400">
-						Not implemented
+					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
+						{participants}
 					</p>
 				</div>
 				<button

@@ -85,7 +85,7 @@
 			<div
 				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
 			>
-				<p>{message.user.username?.charAt(0).toUpperCase() || 'P'}</p>
+				<p>{message.user.displayName?.charAt(0).toUpperCase() || 'P'}</p>
 			</div>
 		{:else}
 			<!-- Spacer to maintain alignment -->
@@ -103,7 +103,9 @@
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
 			<div class="mb-0.5 pl-7 lg:pl-1.5">
-				<p class="text-sm font-medium text-gray-300">{message.user.username || 'Unknown'}</p>
+				<p class="line-clamp-1 max-w-[250px] text-sm font-medium break-all text-gray-300">
+					{message.user.displayName || 'Unknown'}
+				</p>
 			</div>
 		{/if}
 

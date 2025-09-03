@@ -36,10 +36,12 @@ export function handleDeleteMessage(message: ClientMessage): void {
 export function handleInfoMessage(message: ClientMessage): void {
 	console.log('Show message info:', message.id);
 	const readerNames =
-		message.readBy.length > 0 ? message.readBy.map((user) => user.username).join(', ') : 'No one';
+		message.readBy.length > 0
+			? message.readBy.map((user) => '@' + user.username).join(', ')
+			: 'No one';
 	modalStore.alert(
 		'Message Info',
-		'Sent by: ' + message.user.username + '\nRead by: ' + readerNames
+		'Sent by: @' + message.user.username + '\nRead by: ' + readerNames
 	);
 }
 
