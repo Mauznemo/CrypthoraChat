@@ -23,6 +23,7 @@
 				try {
 					await submit();
 					form.reset();
+					localStorage.clear();
 				} catch (error: any) {
 					const errorObj: Error | undefined = JSON.parse(error);
 					if (errorObj !== undefined) errorText = errorObj.message;

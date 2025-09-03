@@ -148,7 +148,7 @@
 			if (shouldAutoScroll && messageContainer) {
 				messageContainer.scrollTop = messageContainer.scrollHeight;
 			}
-		}, 10);
+		}, 100);
 	}
 
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {

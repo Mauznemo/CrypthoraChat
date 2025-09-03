@@ -24,6 +24,7 @@
 				try {
 					await submit();
 					form.reset();
+					localStorage.clear();
 					await generateAndStoreMasterKey();
 				} catch (error: any) {
 					const errorObj: Error | undefined = JSON.parse(error);
