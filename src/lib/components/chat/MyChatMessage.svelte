@@ -93,7 +93,7 @@
 			<div
 				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
 			>
-				<p>{message.user.username.charAt(0).toUpperCase() || 'P'}</p>
+				<p>{message.user.displayName.charAt(0).toUpperCase() || 'P'}</p>
 			</div>
 		{:else}
 			<!-- Spacer to maintain alignment -->

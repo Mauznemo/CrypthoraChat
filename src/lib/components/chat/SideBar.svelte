@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { Snippet } from 'svelte';
@@ -30,14 +31,19 @@
 		${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
 	`}
 >
-	<div class="flex items-center justify-start p-2">
+	<button
+		onclick={() => goto('/profile')}
+		class="flex cursor-pointer items-center justify-start p-2"
+	>
 		<div
 			class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
 		>
 			<p>{chatStore.user?.username?.[0].toUpperCase()}</p>
 		</div>
-		<p class="ml-2 text-2xl font-bold">{chatStore.user?.username}</p>
-	</div>
+		<p class="ml-2 line-clamp-1 max-w-[230px] text-2xl font-bold break-all">
+			{chatStore.user?.displayName}
+		</p>
+	</button>
 	{@render children()}
 </div>
 
