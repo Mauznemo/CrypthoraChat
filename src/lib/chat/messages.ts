@@ -145,17 +145,16 @@ export function handleDecryptError(
 
 	messages = messages.map((m) => (m.id === message.id ? { ...m, decryptionFailed: true } : m));
 
-	// decryptionFailed[message.id] = true;
-
 	// Check if the user's own key is wrong (chat owner always has correct key)
 	const myKeyWrong = message.chat.ownerId === message.user.id;
 
-	if (!myKeyWrong) {
-		const lastFail = localStorage.getItem('lastDecryptErrorDate');
+	const allErrors = JSON.parse(localStorage.getItem('lastDecryptErrors') || '{}');
 
-		if (lastFail) {
-			const lastFailDate = JSON.parse(lastFail);
-			const lastFailTime = new Date(lastFailDate).getTime();
+	if (!myKeyWrong) {
+		const lastFailTime = allErrors[message.chat.id];
+
+		if (lastFailTime) {
+			//const lastFailTime = new Date(lastFailDate).getTime();
 			const currentMessageTime = new Date(message.timestamp).getTime();
 
 			// If current message is older than the last failed message, ignore it
@@ -165,10 +164,8 @@ export function handleDecryptError(
 		}
 	}
 
-	localStorage.setItem(
-		'lastDecryptErrorDate',
-		JSON.stringify(new Date(message.timestamp).getTime())
-	);
+	allErrors[message.chat.id] = new Date(message.timestamp).getTime();
+	localStorage.setItem('lastDecryptErrors', JSON.stringify(allErrors));
 
 	const userOwnsChat = message.chat.ownerId === user?.id;
 
@@ -177,7 +174,11 @@ export function handleDecryptError(
 			'Error',
 			'Failed to decrypt message by user @' +
 				message.user.username +
-				'. Please re-share the chat key with them. Since they have a wrong one.'
+				'. Please re-share the chat key with them. Since they have a wrong one.',
+			{
+				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
+				id: 'decryption-chat-key-error'
+			}
 		);
 		return;
 	}
@@ -189,7 +190,7 @@ export function handleDecryptError(
 				message.user.username +
 				'. This means your chat key is wrong. Please re-input the correct key.',
 			{
-				onOk: () => modalStore.removeFromQueue('decryption-chat-key-error'),
+				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
 			}
 		);

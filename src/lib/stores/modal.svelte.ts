@@ -10,6 +10,7 @@ interface ModalConfig {
 	content: string;
 	buttons?: ModalButton[];
 	showCloseButton?: boolean;
+	onClose?: () => void;
 }
 
 class ModalStore {
@@ -41,6 +42,8 @@ class ModalStore {
 	close() {
 		this.isOpen = false;
 
+		this.config.onClose?.();
+
 		// Show next modal in queue if exists
 		if (this.modalQueue.length > 0) {
 			const nextModal = this.modalQueue.shift();
@@ -52,7 +55,13 @@ class ModalStore {
 	}
 
 	// Convenience methods for common modal types
-	confirm(title: string, content: string, onConfirm?: () => void, onCancel?: () => void) {
+	confirm(
+		title: string,
+		content: string,
+		onConfirm?: () => void,
+		onCancel?: () => void,
+		onClose?: () => void
+	) {
 		this.open({
 			title,
 			content,
@@ -73,11 +82,18 @@ class ModalStore {
 						this.close();
 					}
 				}
-			]
+			],
+			onClose: () => {
+				onClose?.();
+			}
 		});
 	}
 
-	alert(title: string, content: string, options?: { onOk?: () => void; id?: string }) {
+	alert(
+		title: string,
+		content: string,
+		options?: { onOk?: () => void; onClose?: () => void; id?: string }
+	) {
 		this.open({
 			title,
 			content,
@@ -91,7 +107,8 @@ class ModalStore {
 						this.close();
 					}
 				}
-			]
+			],
+			onClose: () => options?.onClose?.()
 		});
 	}
 }

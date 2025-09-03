@@ -17,25 +17,27 @@ import { showMasterKeyImport } from './masterKey';
 import { markReadAfterDelay, resetDecryptionFailed, setMessages } from './messages';
 
 /** Tries to select a chat and get its messages, shows an error modal if it fails */
-export async function trySelectChat(
-	newChat: ChatWithoutMessages
-): Promise<{ success: boolean; chatKey: CryptoKey | null }> {
+export async function trySelectChat(newChat: ChatWithoutMessages): Promise<{ success: boolean }> {
 	console.log('Chat selected (leaving previous):', chatStore.activeChat?.id);
 	socketStore.tryLeaveChat(chatStore.activeChat);
 	localStorage.setItem('lastChatId', newChat.id);
 
 	resetDecryptionFailed();
 
-	const chatKeySeedResult = await tryGetEncryptedChatKeySeed(newChat, chatStore.user?.id || '');
+	const chatKeySeedResult = await tryGetEncryptedChatKeySeed(newChat);
 
 	if (!chatKeySeedResult.success) {
-		return { success: false, chatKey: null };
+		chatStore.chatKey = null;
+		chatStore.activeChat = null;
+		return { success: false };
 	}
 
 	const decryptResult = await tryDecryptChatKey(chatKeySeedResult.encryptedChatKeySeed);
 
 	if (!decryptResult.success) {
-		return { success: false, chatKey: null };
+		chatStore.chatKey = null;
+		chatStore.activeChat = null;
+		return { success: false };
 	}
 
 	const success = await tryGetMessages(newChat);
@@ -47,10 +49,14 @@ export async function trySelectChat(
 
 		markReadAfterDelay(chatStore.messages);
 
-		return { success: true, chatKey: decryptResult.chatKey };
+		chatStore.chatKey = decryptResult.chatKey;
+		chatStore.activeChat = newChat;
+		return { success: true };
 	} else {
 		modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
-		return { success: false, chatKey: null };
+		chatStore.chatKey = null;
+		chatStore.activeChat = null;
+		return { success: false };
 	}
 }
 
@@ -93,8 +99,7 @@ export async function tryDecryptChatKey(
 
 /** Tries to get the encrypted chat key seed for the chat and shows an error modal if it fails */
 export async function tryGetEncryptedChatKeySeed(
-	chat: ChatWithoutMessages,
-	userId: string
+	chat: ChatWithoutMessages
 ): Promise<{ success: boolean; encryptedChatKeySeed: string }> {
 	const encryptedChatKeySeed = await getEncryptedChatKeySeed(chat.id);
 
@@ -104,7 +109,7 @@ export async function tryGetEncryptedChatKeySeed(
 			content:
 				'You dont have the key for ' +
 				(chat.type === 'dm'
-					? 'the dm with ' + chat.participants.find((p) => p.id !== userId)?.displayName
+					? 'the dm with ' + chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
 					: chat.name) +
 				' yet. Please get it from ' +
 				(chat.type === 'dm' ? 'them' : 'someone else in the chat who has it') +
@@ -114,24 +119,7 @@ export async function tryGetEncryptedChatKeySeed(
 					text: 'Enter Emoji Sequence',
 					variant: 'primary',
 					onClick: () => {
-						emojiKeyConverterStore.openInput(
-							'Enter Emoji Sequence for ' + chat.name,
-							true,
-							async (base64Seed) => {
-								const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
-								try {
-									await saveEncryptedChatKeySeed({
-										chatId: chat.id,
-										encryptedKeySeed: chatKeySeedEncrypted
-									});
-								} catch (err: any) {
-									console.error(err);
-									modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
-								}
-								emojiKeyConverterStore.close();
-								//handleChatSelected(chat);
-							}
-						);
+						openEmojiKeyInput(chat);
 					}
 				},
 				{
@@ -145,6 +133,32 @@ export async function tryGetEncryptedChatKeySeed(
 	}
 
 	return { success: true, encryptedChatKeySeed };
+}
+
+/** Opens the emoji key input modal to enter the emoji sequence for the chat key */
+export function openEmojiKeyInput(chat: ChatWithoutMessages): void {
+	const chatName =
+		chat.type === 'dm'
+			? chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
+			: chat.name;
+	emojiKeyConverterStore.openInput(
+		'Enter Emoji Sequence for ' + chatName,
+		true,
+		async (base64Seed) => {
+			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
+			try {
+				await saveEncryptedChatKeySeed({
+					chatId: chat.id,
+					encryptedKeySeed: chatKeySeedEncrypted
+				});
+			} catch (err: any) {
+				console.error(err);
+				modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
+			}
+			emojiKeyConverterStore.close();
+			trySelectChat(chat);
+		}
+	);
 }
 
 /** Tries to get all messages for the chat and shows an error modal if it fails */
