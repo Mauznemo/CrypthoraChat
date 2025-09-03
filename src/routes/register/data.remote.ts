@@ -9,10 +9,12 @@ export const register = form(async (data) => {
 	// Check the user is logged in
 	const username = data.get('username');
 	const password = data.get('password');
+	const confirmPassword = data.get('confirm-password');
 
 	const input = {
 		username: typeof username === 'string' ? username : '', // Fallback to empty string if not string (Valibot will catch it)
-		password: typeof password === 'string' ? password : ''
+		password: typeof password === 'string' ? password : '',
+		confirmPassword: typeof confirmPassword === 'string' ? confirmPassword : ''
 	};
 
 	// Validate against the schema
