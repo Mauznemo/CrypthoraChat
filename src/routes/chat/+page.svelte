@@ -158,11 +158,7 @@
 		const result = await trySelectChat(newChat);
 
 		if (result.success) {
-			chatStore.chatKey = result.chatKey;
-			chatStore.activeChat = newChat;
 			scrollToBottom();
-		} else {
-			chatStore.activeChat = null;
 		}
 
 		loadingChat = false;

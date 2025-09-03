@@ -13,6 +13,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { openEmojiKeyInput } from '$lib/chat/chats';
 
 	let {
 		onChatSelected,
@@ -73,24 +74,7 @@
 				label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
 				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 				action: async () => {
-					emojiKeyConverterStore.openInput(
-						// TODO: Duplicated code, already exists in chat page, move to lib later
-						'Enter Emoji Sequence for ' + chat.name,
-						true,
-						async (base64Seed) => {
-							const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
-							try {
-								await saveEncryptedChatKeySeed({
-									chatId: chat.id,
-									encryptedKeySeed: chatKeySeedEncrypted
-								});
-							} catch (err: any) {
-								console.error(err);
-								modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
-							}
-							emojiKeyConverterStore.close();
-						}
-					);
+					openEmojiKeyInput(chat);
 				}
 			});
 		}

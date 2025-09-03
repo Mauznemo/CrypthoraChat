@@ -201,6 +201,7 @@
 	$effect(() => {
 		if (emojiKeyConverterStore.isOpen) {
 			emojiSequence = [];
+			inputIndex = 0;
 			console.log('Opened emoji key converter');
 			mode = emojiKeyConverterStore.base64Seed ? 'display' : 'input';
 			console.log('Mode:', mode);
