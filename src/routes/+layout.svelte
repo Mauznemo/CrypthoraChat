@@ -4,6 +4,7 @@
 	import EmojiPicker from '$lib/components/chat/EmojiPicker.svelte';
 	import EmojiKeyConverter from '$lib/components/EmojiKeyConverter.svelte';
 	import ContextMenu from '$lib/components/ContextMenu.svelte';
+	import EmojiVerification from '$lib/components/EmojiVerification.svelte';
 
 	let { children } = $props();
 </script>
@@ -45,3 +46,4 @@
 <EmojiPicker />
 <EmojiKeyConverter />
 <ContextMenu />
+<EmojiVerification />

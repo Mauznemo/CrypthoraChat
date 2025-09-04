@@ -1,17 +1,14 @@
-import {
-	decryptChatKeySeedFromStorage,
-	encryptChatKeySeedForStorage,
-	getChatKeyFromSeed
-} from '$lib/crypto/chat';
+import { decryptKeyWithRSA, getPrivateKey } from '$lib/crypto/keyPair';
+import { decryptKeyFromStorage, encryptKeyForStorage } from '$lib/crypto/utils';
 import { chatStore } from '$lib/stores/chat.svelte';
-import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatWithoutMessages } from '$lib/types';
 import {
-	getEncryptedChatKeySeed,
+	getEncryptedChatKey,
 	getMessagesByChatId,
-	saveEncryptedChatKeySeed
+	getPublicEncryptedChatKey,
+	saveEncryptedChatKey
 } from '../../routes/chat/chat.remote';
 import { showMasterKeyImport } from './masterKey';
 import { markReadAfterDelay, resetDecryptionFailed, setMessages } from './messages';
@@ -24,15 +21,15 @@ export async function trySelectChat(newChat: ChatWithoutMessages): Promise<{ suc
 
 	resetDecryptionFailed();
 
-	const chatKeySeedResult = await tryGetEncryptedChatKeySeed(newChat);
+	const chatKeyResult = await tryGetEncryptedChatKey(newChat);
 
-	if (!chatKeySeedResult.success) {
+	if (!chatKeyResult.success) {
 		chatStore.chatKey = null;
 		chatStore.activeChat = null;
 		return { success: false };
 	}
 
-	const decryptResult = await tryDecryptChatKey(chatKeySeedResult.encryptedChatKeySeed);
+	const decryptResult = await tryDecryptChatKey(chatKeyResult.encryptedChatKey);
 
 	if (!decryptResult.success) {
 		chatStore.chatKey = null;
@@ -62,13 +59,11 @@ export async function trySelectChat(newChat: ChatWithoutMessages): Promise<{ suc
 
 /** Tries to decrypt the chat key and shows an error modal if it fails */
 export async function tryDecryptChatKey(
-	encryptedChatKeySeed: string
+	encryptedChatKey: string
 ): Promise<{ success: boolean; chatKey: CryptoKey | null }> {
 	try {
-		console.log('encrypted chat key seed:', encryptedChatKeySeed);
-		const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
-		console.log('chat key seed:', chatKeySeed);
-		const chatKey = await getChatKeyFromSeed(chatKeySeed);
+		console.log('encrypted chat key seed:', encryptedChatKey);
+		const chatKey = await decryptKeyFromStorage(encryptedChatKey);
 		return { success: true, chatKey };
 	} catch (error) {
 		modalStore.open({
@@ -97,68 +92,44 @@ export async function tryDecryptChatKey(
 	}
 }
 
-/** Tries to get the encrypted chat key seed for the chat and shows an error modal if it fails */
-export async function tryGetEncryptedChatKeySeed(
+/** Tries to get the encrypted chat key for the chat and shows an error modal if it fails */
+export async function tryGetEncryptedChatKey(
 	chat: ChatWithoutMessages
-): Promise<{ success: boolean; encryptedChatKeySeed: string }> {
-	const encryptedChatKeySeed = await getEncryptedChatKeySeed(chat.id);
+): Promise<{ success: boolean; encryptedChatKey: string }> {
+	const encryptedChatKey = await getEncryptedChatKey(chat.id);
 
-	if (!encryptedChatKeySeed) {
-		modalStore.open({
-			title: 'New Chat',
-			content:
-				'You dont have the key for ' +
-				(chat.type === 'dm'
-					? 'the dm with ' + chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
-					: chat.name) +
-				' yet. Please get it from ' +
-				(chat.type === 'dm' ? 'them' : 'someone else in the chat who has it') +
-				' in a secure way.',
-			buttons: [
-				{
-					text: 'Enter Emoji Sequence',
-					variant: 'primary',
-					onClick: () => {
-						openEmojiKeyInput(chat);
-					}
-				},
-				{
-					text: 'Scan QR Code',
-					variant: 'primary',
-					onClick: () => {}
-				}
-			]
-		});
-		return { success: false, encryptedChatKeySeed: '' };
+	if (!encryptedChatKey) {
+		try {
+			const publicEncryptedChatKey = await getPublicEncryptedChatKey(chat.id);
+			if (!publicEncryptedChatKey) {
+				return { success: false, encryptedChatKey: '' };
+			}
+
+			const privateKey = await getPrivateKey();
+
+			const decryptedChatKey = await decryptKeyWithRSA(publicEncryptedChatKey, privateKey);
+
+			const encryptedChatKey = await encryptKeyForStorage(decryptedChatKey);
+
+			await saveEncryptedChatKey({
+				chatId: chat.id,
+				encryptedKey: encryptedChatKey
+			});
+
+			return { success: true, encryptedChatKey: encryptedChatKey };
+		} catch (e: any) {
+			console.error(e);
+			modalStore.alert(
+				'Error',
+				'Failed to get chat key from public key: ' +
+					(e?.body?.message || e?.message || String(e) || 'Unknown error')
+			);
+		}
+
+		return { success: false, encryptedChatKey: '' };
 	}
 
-	return { success: true, encryptedChatKeySeed };
-}
-
-/** Opens the emoji key input modal to enter the emoji sequence for the chat key */
-export function openEmojiKeyInput(chat: ChatWithoutMessages): void {
-	const chatName =
-		chat.type === 'dm'
-			? chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
-			: chat.name;
-	emojiKeyConverterStore.openInput(
-		'Enter Emoji Sequence for ' + chatName,
-		true,
-		async (base64Seed) => {
-			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(base64Seed);
-			try {
-				await saveEncryptedChatKeySeed({
-					chatId: chat.id,
-					encryptedKeySeed: chatKeySeedEncrypted
-				});
-			} catch (err: any) {
-				console.error(err);
-				modalStore.alert('Error', 'Failed to save chat key: ' + err.body.message);
-			}
-			emojiKeyConverterStore.close();
-			trySelectChat(chat);
-		}
-	);
+	return { success: true, encryptedChatKey };
 }
 
 /** Tries to get all messages for the chat and shows an error modal if it fails */

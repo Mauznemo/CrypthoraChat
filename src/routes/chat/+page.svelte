@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import { getChatById } from './chat.remote';
+	import { getChatById, getUserById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 	import type { ChatWithoutMessages } from '$lib/types';
@@ -19,6 +19,7 @@
 	import { checkForMasterKey } from '$lib/chat/masterKey';
 	import { trySelectChat } from '$lib/chat/chats';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { verifyUser } from '$lib/crypto/userVerification';
 
 	let { data }: PageProps = $props();
 
@@ -59,6 +60,28 @@
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
 		socketStore.onNewChat(handleCreateNewChat);
 		socketStore.onConnect(handleConnect);
+		socketStore.onUserVerifyRequested((d) => {
+			console.log('User @' + d.requestorUsername + ' requested a verification');
+			modalStore.open({
+				title: 'Verify User Request',
+				content: 'User @' + d.requestorUsername + ' requested a verification',
+				buttons: [
+					{
+						text: 'Verify Now',
+						variant: 'primary',
+						onClick: async () => {
+							const user = await getUserById(d.requestorId);
+							verifyUser(user, false);
+						}
+					},
+					{
+						text: 'Decline',
+						variant: 'secondary',
+						onClick: () => {}
+					}
+				]
+			});
+		});
 		socketStore.onMessageError((error) => {
 			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
@@ -79,6 +102,7 @@
 		socketStore.off('messages-read');
 		socketStore.off('new-chat', handleCreateNewChat);
 		socketStore.off('reconnect', handleConnect);
+		socketStore.off('user-verify-requested');
 		socketStore.off('message-error');
 
 		//socketStore.disconnect();

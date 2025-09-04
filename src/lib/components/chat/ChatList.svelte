@@ -1,19 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		getEncryptedChatKeySeed,
-		getUserChats,
-		saveEncryptedChatKeySeed
-	} from '../../../routes/chat/chat.remote';
+	import { getUserChats } from '../../../routes/chat/chat.remote';
 	import type { ChatWithoutMessages } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
-	import { decryptChatKeySeedFromStorage, encryptChatKeySeedForStorage } from '$lib/crypto/chat';
-	import { modalStore } from '$lib/stores/modal.svelte';
-	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import { openEmojiKeyInput } from '$lib/chat/chats';
 
 	let {
 		onChatSelected,
@@ -35,49 +27,49 @@
 		event.stopPropagation();
 		event.preventDefault();
 
-		const encryptedChatKeySeed = await getEncryptedChatKeySeed(chat.id);
+		// const encryptedChatKey = await getEncryptedChatKey(chat.id);
 
 		const items: ContextMenuItem[] = [];
 		const isChatOwner = chat.ownerId === chatStore.user?.id;
 
-		if (encryptedChatKeySeed && (chat.type === 'group' || isChatOwner)) {
-			items.push({
-				id: 'share-key',
-				label: 'Share Key',
-				iconSvg:
-					'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
-				action: async () => {
-					if (!isChatOwner) {
-						modalStore.alert(
-							'Note',
-							'You are not the chat owner, make sure your key is correct before sharing it with others.'
-						);
-					}
-					try {
-						const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
-						const title =
-							chat.type === 'dm'
-								? 'Key for DM with ' +
-									chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
-								: 'Key for group ' + chat.name;
-						emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
-					} catch (error) {
-						modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
-					}
-				}
-			});
-		}
+		// if (encryptedChatKey && (chat.type === 'group' || isChatOwner)) {
+		// 	items.push({
+		// 		id: 'share-key',
+		// 		label: 'Share Key',
+		// 		iconSvg:
+		// 			'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
+		// 		action: async () => {
+		// 			if (!isChatOwner) {
+		// 				modalStore.alert(
+		// 					'Note',
+		// 					'You are not the chat owner, make sure your key is correct before sharing it with others.'
+		// 				);
+		// 			}
+		// 			try {
+		// 				const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
+		// 				const title =
+		// 					chat.type === 'dm'
+		// 						? 'Key for DM with ' +
+		// 							chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
+		// 						: 'Key for group ' + chat.name;
+		// 				emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
+		// 			} catch (error) {
+		// 				modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
+		// 			}
+		// 		}
+		// 	});
+		// }
 
-		if (!isChatOwner) {
-			items.push({
-				id: 're-input-key',
-				label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
-				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
-				action: async () => {
-					openEmojiKeyInput(chat);
-				}
-			});
-		}
+		// if (!isChatOwner) {
+		// 	items.push({
+		// 		id: 're-input-key',
+		// 		label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
+		// 		iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+		// 		action: async () => {
+		// 			openEmojiKeyInput(chat);
+		// 		}
+		// 	});
+		// }
 
 		if (chat.type === 'group' && isChatOwner) {
 			items.push({
