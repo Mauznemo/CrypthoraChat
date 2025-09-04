@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
-	import { encryptChatKeySeedForStorage, generateChatKeySeed } from '$lib/crypto/chat';
+	import { encryptChatKeyForUsers, generateChatKey } from '$lib/crypto/chat';
+	import { getUnverifiedUsers, verifyUser } from '$lib/crypto/userVerification';
+	import { encryptKeyForStorage } from '$lib/crypto/utils';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { PageProps } from '../$types';
-	import { saveEncryptedChatKeySeed } from '../../chat.remote';
+	import { saveEncryptedChatKey } from '../../chat.remote';
 	import { createGroup } from '../chatCreation.remote';
 
 	let { data }: PageProps = $props();
@@ -16,14 +18,50 @@
 
 	async function handleCreateGroup() {
 		try {
-			let result = await createGroup({ groupName, userIds: selectedUsers.map((u) => u.id) });
-			const chatKeySeed = generateChatKeySeed();
-			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(chatKeySeed);
+			const unverifiedUserIds = await getUnverifiedUsers(selectedUsers.map((u) => u.id));
+			const unverifiedUsers = selectedUsers.filter((u) => unverifiedUserIds.includes(u.id));
+
+			if (unverifiedUsers.length > 0) {
+				modalStore.open({
+					title:
+						selectedUsers.length === unverifiedUsers.length
+							? 'All users not verified'
+							: 'Some users not verified',
+					content:
+						(unverifiedUsers.length === 1 ? 'User ' : 'Users ') +
+						unverifiedUsers.map((u) => '@' + u.username).join(', ') +
+						(unverifiedUsers.length === 1 ? ' is' : ' are') +
+						' not verified. You need to verify with them once before creating a chat with them.',
+					buttons: [
+						{
+							text: 'Verify @' + unverifiedUsers[0].username,
+							variant: 'primary',
+							onClick: () => {
+								verifyUser(unverifiedUsers[0], true);
+							}
+						}
+					]
+				});
+				return;
+			}
+
+			const chatKey = await generateChatKey();
+			const encryptedUserChatKeys = await encryptChatKeyForUsers(
+				chatKey,
+				selectedUsers.map((u) => u.id)
+			);
+
+			let result = await createGroup({
+				groupName,
+				userIds: selectedUsers.map((u) => u.id),
+				encryptedUserChatKeys
+			});
+			const chatKeyEncrypted = await encryptKeyForStorage(chatKey);
 
 			try {
-				await saveEncryptedChatKeySeed({
+				await saveEncryptedChatKey({
 					chatId: result.chatId,
-					encryptedKeySeed: chatKeySeedEncrypted
+					encryptedKey: chatKeyEncrypted
 				});
 			} catch (err) {
 				console.error(err);
