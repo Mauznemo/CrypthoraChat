@@ -111,6 +111,17 @@ class ModalStore {
 			onClose: () => options?.onClose?.()
 		});
 	}
+
+	error(
+		error: any,
+		message: string = 'An error occurred:',
+		unknownMessage: string = 'Something went wrong'
+	) {
+		this.alert(
+			'Error',
+			message + ' ' + (error?.body?.message || error?.message || String(error) || unknownMessage)
+		);
+	}
 }
 
 export const modalStore = new ModalStore();
