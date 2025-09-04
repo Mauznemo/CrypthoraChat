@@ -47,7 +47,8 @@ model UserChatKey {
 model KeyPair {
   userId              String
   encryptedPrivateKey String //base64
-  publicKey           String //base64
+  publicKey           String //base64, for sharing with others
+  publicKeyHmac       String
   createdAt           DateTime @default(now())
   user                User     @relation(fields: [userId], references: [id])
 
