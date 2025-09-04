@@ -50,7 +50,7 @@ export async function trySelectChat(newChat: ChatWithoutMessages): Promise<{ suc
 		chatStore.activeChat = newChat;
 		return { success: true };
 	} else {
-		modalStore.alert('Error', 'Failed to select chat, make sure you are online.');
+		modalStore.error('Failed to select chat, make sure you are online.');
 		chatStore.chatKey = null;
 		chatStore.activeChat = null;
 		return { success: false };
@@ -100,8 +100,12 @@ export async function tryGetEncryptedChatKey(
 
 	if (!encryptedChatKey) {
 		try {
+			console.log('Getting chat key from public key');
 			const publicEncryptedChatKey = await getPublicEncryptedChatKey(chat.id);
 			if (!publicEncryptedChatKey) {
+				modalStore.error(
+					'Failed to get chat key from public key. Try leaving the chat and re-joining if the problem persists.'
+				);
 				return { success: false, encryptedChatKey: '' };
 			}
 
@@ -119,11 +123,7 @@ export async function tryGetEncryptedChatKey(
 			return { success: true, encryptedChatKey: encryptedChatKey };
 		} catch (e: any) {
 			console.error(e);
-			modalStore.alert(
-				'Error',
-				'Failed to get chat key from public key: ' +
-					(e?.body?.message || e?.message || String(e) || 'Unknown error')
-			);
+			modalStore.error(e, 'Failed to get chat key from public key:');
 		}
 
 		return { success: false, encryptedChatKey: '' };
@@ -145,7 +145,7 @@ export async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<
 		return true;
 	} catch (error: any) {
 		if (error.body) {
-			modalStore.alert('Error', 'Failed to get messages: ' + error.body.message);
+			modalStore.error(error, 'Failed to get messages:');
 		}
 	}
 
