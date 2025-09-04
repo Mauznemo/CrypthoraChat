@@ -12,41 +12,52 @@ const createGroupSchema = v.object({
 	userIds: v.pipe(
 		v.array(v.string(), 'You must provide a list of users.'),
 		v.minLength(1, 'You must select at least one user.')
-	)
+	),
+
+	encryptedUserChatKeys: v.record(v.string(), v.string())
 });
 
-export const createGroup = command(createGroupSchema, async ({ groupName, userIds }) => {
-	const { locals } = getRequestEvent();
+export const createGroup = command(
+	createGroupSchema,
+	async ({ groupName, userIds, encryptedUserChatKeys }) => {
+		const { locals } = getRequestEvent();
 
-	if (!locals.sessionId) {
-		error(401, 'Unauthorized');
-	}
-
-	const existingUsersCount = await db.user.count({
-		where: {
-			id: { in: userIds }
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
 		}
-	});
 
-	if (existingUsersCount !== userIds.length) {
-		error(400, 'One or more of the selected users do not exist.');
-	}
-
-	const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
-
-	const chat = await db.chat.create({
-		data: {
-			name: groupName,
-			type: 'group',
-			ownerId: locals.user!.id,
-			participants: {
-				connect: allParticipantIds.map((id) => ({ id }))
+		const existingUsersCount = await db.user.count({
+			where: {
+				id: { in: userIds }
 			}
-		}
-	});
+		});
 
-	return { success: true, chatId: chat.id };
-});
+		if (existingUsersCount !== userIds.length) {
+			error(400, 'One or more of the selected users do not exist.');
+		}
+
+		const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
+
+		const chat = await db.chat.create({
+			data: {
+				name: groupName,
+				type: 'group',
+				ownerId: locals.user!.id,
+				participants: {
+					connect: allParticipantIds.map((id) => ({ id }))
+				},
+				publicUserChatKeys: {
+					create: Object.entries(encryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
+						userId,
+						encryptedKey: encryptedChatKey
+					}))
+				}
+			}
+		});
+
+		return { success: true, chatId: chat.id };
+	}
+);
 
 const createDmSchema = v.object({
 	userId: v.string('You must select a user.'),

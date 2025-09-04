@@ -35,3 +35,15 @@ export async function encryptChatKeyForUser(chatKey: CryptoKey, userId: string):
 	const encryptedChatKey = await encryptKeyWithRSA(chatKey, userPublicKey);
 	return encryptedChatKey;
 }
+
+//** Uses the users public keys to encrypt the chat key for them */
+export async function encryptChatKeyForUsers(
+	chatKey: CryptoKey,
+	userIds: string[]
+): Promise<Record<string, string>> {
+	let encryptedChatKeys: Record<string, string> = {};
+	for (const userId of userIds) {
+		encryptedChatKeys[userId] = await encryptChatKeyForUser(chatKey, userId);
+	}
+	return encryptedChatKeys;
+}
