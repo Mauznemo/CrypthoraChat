@@ -1079,6 +1079,7 @@ export const KeyPairScalarFieldEnum = {
   userId: 'userId',
   encryptedPrivateKey: 'encryptedPrivateKey',
   publicKey: 'publicKey',
+  publicKeyHmac: 'publicKeyHmac',
   createdAt: 'createdAt'
 } as const
 

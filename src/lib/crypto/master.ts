@@ -29,6 +29,21 @@ export async function getMasterKey(): Promise<CryptoKey> {
 	);
 }
 
+export async function getHmacKey(): Promise<CryptoKey> {
+	const base64Seed = localStorage.getItem('masterSeed');
+	if (!base64Seed) {
+		throw new Error('Master seed not found. Generate or import it first.');
+	}
+	const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
+
+	const keyMaterial = await crypto.subtle.digest('SHA-256', seedBytes);
+
+	return crypto.subtle.importKey('raw', keyMaterial, { name: 'HMAC', hash: 'SHA-256' }, false, [
+		'sign',
+		'verify'
+	]);
+}
+
 export function hasMasterKey(): boolean {
 	return !!localStorage.getItem('masterSeed');
 }

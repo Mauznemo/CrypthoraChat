@@ -27,6 +27,7 @@ export type KeyPairMinAggregateOutputType = {
   userId: string | null
   encryptedPrivateKey: string | null
   publicKey: string | null
+  publicKeyHmac: string | null
   createdAt: Date | null
 }
 
@@ -34,6 +35,7 @@ export type KeyPairMaxAggregateOutputType = {
   userId: string | null
   encryptedPrivateKey: string | null
   publicKey: string | null
+  publicKeyHmac: string | null
   createdAt: Date | null
 }
 
@@ -41,6 +43,7 @@ export type KeyPairCountAggregateOutputType = {
   userId: number
   encryptedPrivateKey: number
   publicKey: number
+  publicKeyHmac: number
   createdAt: number
   _all: number
 }
@@ -50,6 +53,7 @@ export type KeyPairMinAggregateInputType = {
   userId?: true
   encryptedPrivateKey?: true
   publicKey?: true
+  publicKeyHmac?: true
   createdAt?: true
 }
 
@@ -57,6 +61,7 @@ export type KeyPairMaxAggregateInputType = {
   userId?: true
   encryptedPrivateKey?: true
   publicKey?: true
+  publicKeyHmac?: true
   createdAt?: true
 }
 
@@ -64,6 +69,7 @@ export type KeyPairCountAggregateInputType = {
   userId?: true
   encryptedPrivateKey?: true
   publicKey?: true
+  publicKeyHmac?: true
   createdAt?: true
   _all?: true
 }
@@ -144,6 +150,7 @@ export type KeyPairGroupByOutputType = {
   userId: string
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt: Date
   _count: KeyPairCountAggregateOutputType | null
   _min: KeyPairMinAggregateOutputType | null
@@ -172,6 +179,7 @@ export type KeyPairWhereInput = {
   userId?: Prisma.StringFilter<"KeyPair"> | string
   encryptedPrivateKey?: Prisma.StringFilter<"KeyPair"> | string
   publicKey?: Prisma.StringFilter<"KeyPair"> | string
+  publicKeyHmac?: Prisma.StringFilter<"KeyPair"> | string
   createdAt?: Prisma.DateTimeFilter<"KeyPair"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -180,6 +188,7 @@ export type KeyPairOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   encryptedPrivateKey?: Prisma.SortOrder
   publicKey?: Prisma.SortOrder
+  publicKeyHmac?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -191,6 +200,7 @@ export type KeyPairWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.KeyPairWhereInput | Prisma.KeyPairWhereInput[]
   encryptedPrivateKey?: Prisma.StringFilter<"KeyPair"> | string
   publicKey?: Prisma.StringFilter<"KeyPair"> | string
+  publicKeyHmac?: Prisma.StringFilter<"KeyPair"> | string
   createdAt?: Prisma.DateTimeFilter<"KeyPair"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "userId">
@@ -199,6 +209,7 @@ export type KeyPairOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   encryptedPrivateKey?: Prisma.SortOrder
   publicKey?: Prisma.SortOrder
+  publicKeyHmac?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.KeyPairCountOrderByAggregateInput
   _max?: Prisma.KeyPairMaxOrderByAggregateInput
@@ -212,12 +223,14 @@ export type KeyPairScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"KeyPair"> | string
   encryptedPrivateKey?: Prisma.StringWithAggregatesFilter<"KeyPair"> | string
   publicKey?: Prisma.StringWithAggregatesFilter<"KeyPair"> | string
+  publicKeyHmac?: Prisma.StringWithAggregatesFilter<"KeyPair"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"KeyPair"> | Date | string
 }
 
 export type KeyPairCreateInput = {
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutKeyPairInput
 }
@@ -226,12 +239,14 @@ export type KeyPairUncheckedCreateInput = {
   userId: string
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt?: Date | string
 }
 
 export type KeyPairUpdateInput = {
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutKeyPairNestedInput
 }
@@ -240,6 +255,7 @@ export type KeyPairUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -247,12 +263,14 @@ export type KeyPairCreateManyInput = {
   userId: string
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt?: Date | string
 }
 
 export type KeyPairUpdateManyMutationInput = {
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -260,6 +278,7 @@ export type KeyPairUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -272,6 +291,7 @@ export type KeyPairCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   encryptedPrivateKey?: Prisma.SortOrder
   publicKey?: Prisma.SortOrder
+  publicKeyHmac?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -279,6 +299,7 @@ export type KeyPairMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   encryptedPrivateKey?: Prisma.SortOrder
   publicKey?: Prisma.SortOrder
+  publicKeyHmac?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -286,6 +307,7 @@ export type KeyPairMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   encryptedPrivateKey?: Prisma.SortOrder
   publicKey?: Prisma.SortOrder
+  publicKeyHmac?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -324,12 +346,14 @@ export type KeyPairUncheckedUpdateOneWithoutUserNestedInput = {
 export type KeyPairCreateWithoutUserInput = {
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt?: Date | string
 }
 
 export type KeyPairUncheckedCreateWithoutUserInput = {
   encryptedPrivateKey: string
   publicKey: string
+  publicKeyHmac: string
   createdAt?: Date | string
 }
 
@@ -352,12 +376,14 @@ export type KeyPairUpdateToOneWithWhereWithoutUserInput = {
 export type KeyPairUpdateWithoutUserInput = {
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type KeyPairUncheckedUpdateWithoutUserInput = {
   encryptedPrivateKey?: Prisma.StringFieldUpdateOperationsInput | string
   publicKey?: Prisma.StringFieldUpdateOperationsInput | string
+  publicKeyHmac?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -367,6 +393,7 @@ export type KeyPairSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   userId?: boolean
   encryptedPrivateKey?: boolean
   publicKey?: boolean
+  publicKeyHmac?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["keyPair"]>
@@ -375,6 +402,7 @@ export type KeyPairSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   userId?: boolean
   encryptedPrivateKey?: boolean
   publicKey?: boolean
+  publicKeyHmac?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["keyPair"]>
@@ -383,6 +411,7 @@ export type KeyPairSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   userId?: boolean
   encryptedPrivateKey?: boolean
   publicKey?: boolean
+  publicKeyHmac?: boolean
   createdAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["keyPair"]>
@@ -391,10 +420,11 @@ export type KeyPairSelectScalar = {
   userId?: boolean
   encryptedPrivateKey?: boolean
   publicKey?: boolean
+  publicKeyHmac?: boolean
   createdAt?: boolean
 }
 
-export type KeyPairOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "encryptedPrivateKey" | "publicKey" | "createdAt", ExtArgs["result"]["keyPair"]>
+export type KeyPairOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "encryptedPrivateKey" | "publicKey" | "publicKeyHmac" | "createdAt", ExtArgs["result"]["keyPair"]>
 export type KeyPairInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -414,6 +444,7 @@ export type $KeyPairPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     userId: string
     encryptedPrivateKey: string
     publicKey: string
+    publicKeyHmac: string
     createdAt: Date
   }, ExtArgs["result"]["keyPair"]>
   composites: {}
@@ -842,6 +873,7 @@ export interface KeyPairFieldRefs {
   readonly userId: Prisma.FieldRef<"KeyPair", 'String'>
   readonly encryptedPrivateKey: Prisma.FieldRef<"KeyPair", 'String'>
   readonly publicKey: Prisma.FieldRef<"KeyPair", 'String'>
+  readonly publicKeyHmac: Prisma.FieldRef<"KeyPair", 'String'>
   readonly createdAt: Prisma.FieldRef<"KeyPair", 'DateTime'>
 }
     

@@ -1,4 +1,6 @@
-import { createUserKeyPair, getUserKeyPair } from './keyPair.remote';
+import { modalStore } from '$lib/stores/modal.svelte';
+import { createUserKeyPair, getUserKeyPair, updateUserKeyPair } from './keyPair.remote';
+import { getHmacKey } from './master';
 import {
 	arrayBufferToBase64,
 	base64ToArrayBuffer,
@@ -39,15 +41,58 @@ export async function generateAndStoreKeyPair(): Promise<void> {
 		console.log('Public Key Base64:', publicKeyBase64);
 		console.log('Encrypted Private Key Base64:', encryptedPrivateKeyBase64);
 
+		const publicKeyHmac = await hmacPublicKey(publicKeyBase64);
+
 		await createUserKeyPair({
 			encryptedPrivateKeyBase64: encryptedPrivateKeyBase64,
-			publicKeyBase64: publicKeyBase64
+			publicKeyBase64: publicKeyBase64,
+			publicKeyHmac
 		});
 	} catch (e: any) {
 		console.error(e);
 		throw new Error(e.body?.message || e);
 	}
 	console.log('Key pair stored');
+}
+
+/** Regenerates RSA key pair and stores it encrypted on the db */
+export async function regenerateAndStoreKeyPair(): Promise<void> {
+	try {
+		console.log('Regenerating key pair...');
+		const keyPair = await crypto.subtle.generateKey(
+			{
+				name: 'RSA-OAEP',
+				modulusLength: 2048, // or 4096 for higher security
+				publicExponent: new Uint8Array([1, 0, 1]),
+				hash: 'SHA-256'
+			},
+			true, // extractable
+			['encrypt', 'decrypt']
+		);
+		console.log('New Key pair generated');
+
+		const publicKeyBase64 = await exportPublicKeyBase64(keyPair.publicKey);
+		const encryptedPrivateKeyBase64 = await encryptKeyForStorage(keyPair.privateKey, 'private');
+
+		console.log('Public Key Base64:', publicKeyBase64);
+		console.log('Encrypted Private Key Base64:', encryptedPrivateKeyBase64);
+
+		const publicKeyHmac = await hmacPublicKey(publicKeyBase64);
+
+		await updateUserKeyPair({
+			encryptedPrivateKeyBase64: encryptedPrivateKeyBase64,
+			publicKeyBase64: publicKeyBase64,
+			publicKeyHmac
+		});
+	} catch (e: any) {
+		console.error(e);
+		throw new Error(e.body?.message || e);
+	}
+	modalStore.alert(
+		'Success',
+		'Your key pair has been regenerated.\nWhen you create a new chat or want to join one you will need to re-verify with the other users.'
+	);
+	console.log('New Key pair stored');
 }
 
 export async function getPrivateKey(): Promise<CryptoKey> {
@@ -116,59 +161,22 @@ export async function importPublicKeyBase64(base64Key: string): Promise<CryptoKe
 	return importedKey;
 }
 
-// export async function encryptKeyPairForStorage(
-// 	keyPair: KeyPairResult
-// ): Promise<{ encryptedPrivateKeyBase64: string; encryptedPublicKeyBase64: string }> {
-// 	const encryptedPrivateKey = await encryptKeyForStorage(keyPair.privateKey);
-// 	const encryptedPublicKey = await encryptKeyForStorage(keyPair.publicKey);
-// 	return {
-// 		encryptedPrivateKeyBase64: encryptedPrivateKey,
-// 		encryptedPublicKeyBase64: encryptedPublicKey
-// 	};
-// }
+export async function hmacPublicKey(publicKeyBase64: string): Promise<string> {
+	const masterKey = await getHmacKey();
+	const publicKeyBytes = base64ToArrayBuffer(publicKeyBase64);
 
-// export async function decryptKeyPairFromStorage(
-// 	encryptedPrivateKeyBase64: string,
-// 	encryptedPublicKeyBase64: string
-// ): Promise<KeyPairResult> {
-// 	const privateKey = await decryptKeyFromStorage(encryptedPrivateKeyBase64);
-// 	const publicKey = await decryptKeyFromStorage(encryptedPublicKeyBase64);
-// 	return {
-// 		privateKey,
-// 		publicKey,
-// 		publicKeyBase64: await exportPublicKeyBase64(publicKey)
-// 	};
-// }
+	const signature = await crypto.subtle.sign('HMAC', masterKey, publicKeyBytes);
 
-// /**
-//  * Example usage for RSA approach
-//  */
-// export async function exampleRSAUsage() {
-// 	// User A generates key pair
-// 	const userAKeys = await generateRSAKeyPair();
+	return arrayBufferToBase64(signature); // store alongside public key in DB
+}
 
-// 	// User B generates key pair
-// 	const userBKeys = await generateRSAKeyPair();
+export async function verifyPublicKeyHmac(
+	publicKeyBase64: string,
+	hmacBase64: string
+): Promise<boolean> {
+	const masterKey = await getHmacKey();
+	const publicKeyBytes = base64ToArrayBuffer(publicKeyBase64);
+	const hmacBytes = base64ToArrayBuffer(hmacBase64);
 
-// 	// Users exchange public keys (via your server/protocol)
-// 	// User A wants to share their AES chat key with User B
-
-// 	// Generate or get existing AES key for chat
-// 	const chatKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
-// 		'encrypt',
-// 		'decrypt'
-// 	]);
-
-// 	// User A encrypts chat key with User B's public key
-// 	const encryptedKeyForB = await encryptKeyWithRSA(chatKey, userBKeys.publicKey);
-
-// 	// Send encryptedKeyForB to User B
-// 	// User B decrypts to get the chat key
-// 	const decryptedChatKey = await decryptKeyWithRSA(encryptedKeyForB, userBKeys.privateKey);
-
-// 	console.log(
-// 		'Keys match:',
-// 		(await crypto.subtle.exportKey('raw', chatKey)) ===
-// 			(await crypto.subtle.exportKey('raw', decryptedChatKey))
-// 	);
-// }
+	return crypto.subtle.verify('HMAC', masterKey, hmacBytes, publicKeyBytes);
+}
