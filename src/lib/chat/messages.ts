@@ -174,7 +174,7 @@ export function handleDecryptError(
 			'Error',
 			'Failed to decrypt message by user @' +
 				message.user.username +
-				'. Please re-share the chat key with them. Since they have a wrong one.',
+				'. Something is wrong with their key.',
 			{
 				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
@@ -188,7 +188,7 @@ export function handleDecryptError(
 			'Error',
 			'Failed to decrypt message by chat owner @' +
 				message.user.username +
-				'. This means your chat key is wrong. Please re-input the correct key.',
+				'. Something is wrong with your key.',
 			{
 				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
@@ -197,8 +197,7 @@ export function handleDecryptError(
 		return;
 	}
 
-	modalStore.alert(
-		'Error',
+	modalStore.error(
 		'Failed to decrypt you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key.'
 	);
 }

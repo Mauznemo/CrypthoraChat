@@ -27,9 +27,10 @@ class ModalStore {
 		this.modalQueue = this.modalQueue.filter((modal) => modal.id !== id);
 	}
 
-	open(config: ModalConfig) {
+	open(config: ModalConfig, highPriority = false) {
 		if (this.isOpen) {
-			this.modalQueue.push(config);
+			if (highPriority) this.modalQueue.unshift(config);
+			else this.modalQueue.push(config);
 			return;
 		}
 		this.config = {
@@ -62,31 +63,34 @@ class ModalStore {
 		onCancel?: () => void,
 		onClose?: () => void
 	) {
-		this.open({
-			title,
-			content,
-			buttons: [
-				{
-					text: 'Cancel',
-					variant: 'secondary',
-					onClick: () => {
-						onCancel?.();
-						this.close();
+		this.open(
+			{
+				title,
+				content,
+				buttons: [
+					{
+						text: 'Cancel',
+						variant: 'secondary',
+						onClick: () => {
+							onCancel?.();
+							this.close();
+						}
+					},
+					{
+						text: 'Confirm',
+						variant: 'primary',
+						onClick: () => {
+							onConfirm?.();
+							this.close();
+						}
 					}
-				},
-				{
-					text: 'Confirm',
-					variant: 'primary',
-					onClick: () => {
-						onConfirm?.();
-						this.close();
-					}
+				],
+				onClose: () => {
+					onClose?.();
 				}
-			],
-			onClose: () => {
-				onClose?.();
-			}
-		});
+			},
+			true
+		);
 	}
 
 	alert(
@@ -112,15 +116,27 @@ class ModalStore {
 		});
 	}
 
+	error(error: any, message?: string, unknownMessage?: string): void;
+	error(message: string): void;
+
 	error(
-		error: any,
+		errorOrMessage: any,
 		message: string = 'An error occurred:',
 		unknownMessage: string = 'Something went wrong'
 	) {
-		this.alert(
-			'Error',
-			message + ' ' + (error?.body?.message || error?.message || String(error) || unknownMessage)
-		);
+		if (typeof errorOrMessage === 'string' && message === 'An error occurred:') {
+			this.alert('Error', errorOrMessage);
+		} else {
+			this.alert(
+				'Error',
+				message +
+					' ' +
+					(errorOrMessage?.body?.message ||
+						errorOrMessage?.message ||
+						String(errorOrMessage) ||
+						unknownMessage)
+			);
+		}
 	}
 }
 
