@@ -20,6 +20,7 @@
 	import { trySelectChat } from '$lib/chat/chats';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { verifyUser } from '$lib/crypto/userVerification';
+	import { checkPublicKey } from '$lib/crypto/keyPair';
 
 	let { data }: PageProps = $props();
 
@@ -39,6 +40,8 @@
 		const wasConnected = socketStore.connected;
 
 		await checkForMasterKey();
+
+		await checkPublicKey();
 
 		socketStore.connect();
 
