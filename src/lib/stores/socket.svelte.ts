@@ -156,6 +156,16 @@ class SocketStore {
 		});
 	}
 
+	requestUserVerify(data: { userId: string }) {
+		this.socket?.emit('request-user-verify', data);
+	}
+
+	onUserVerifyRequested(
+		callback: (data: { requestorId: string; requestorUsername: string }) => void
+	) {
+		this.socket?.on('requested-user-verify', callback);
+	}
+
 	subscribeToPush(subscription: PushSubscription) {
 		this.socket?.emit('subscribe-push', {
 			subscription: subscription.toJSON()

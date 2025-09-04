@@ -396,6 +396,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   UserChatKey: 'UserChatKey',
+  KeyPair: 'KeyPair',
+  PublicUserChatKey: 'PublicUserChatKey',
   Session: 'Session',
   Chat: 'Chat',
   Message: 'Message',
@@ -415,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userChatKey" | "session" | "chat" | "message" | "serverSettings"
+    modelProps: "user" | "userChatKey" | "keyPair" | "publicUserChatKey" | "session" | "chat" | "message" | "serverSettings"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -564,6 +566,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserChatKeyCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserChatKeyCountAggregateOutputType> | number
+        }
+      }
+    }
+    KeyPair: {
+      payload: Prisma.$KeyPairPayload<ExtArgs>
+      fields: Prisma.KeyPairFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.KeyPairFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.KeyPairFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        findFirst: {
+          args: Prisma.KeyPairFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.KeyPairFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        findMany: {
+          args: Prisma.KeyPairFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>[]
+        }
+        create: {
+          args: Prisma.KeyPairCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        createMany: {
+          args: Prisma.KeyPairCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.KeyPairCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>[]
+        }
+        delete: {
+          args: Prisma.KeyPairDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        update: {
+          args: Prisma.KeyPairUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        deleteMany: {
+          args: Prisma.KeyPairDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.KeyPairUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.KeyPairUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>[]
+        }
+        upsert: {
+          args: Prisma.KeyPairUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeyPairPayload>
+        }
+        aggregate: {
+          args: Prisma.KeyPairAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateKeyPair>
+        }
+        groupBy: {
+          args: Prisma.KeyPairGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeyPairGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.KeyPairCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeyPairCountAggregateOutputType> | number
+        }
+      }
+    }
+    PublicUserChatKey: {
+      payload: Prisma.$PublicUserChatKeyPayload<ExtArgs>
+      fields: Prisma.PublicUserChatKeyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PublicUserChatKeyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PublicUserChatKeyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        findFirst: {
+          args: Prisma.PublicUserChatKeyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PublicUserChatKeyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        findMany: {
+          args: Prisma.PublicUserChatKeyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>[]
+        }
+        create: {
+          args: Prisma.PublicUserChatKeyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        createMany: {
+          args: Prisma.PublicUserChatKeyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PublicUserChatKeyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>[]
+        }
+        delete: {
+          args: Prisma.PublicUserChatKeyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        update: {
+          args: Prisma.PublicUserChatKeyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        deleteMany: {
+          args: Prisma.PublicUserChatKeyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PublicUserChatKeyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PublicUserChatKeyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>[]
+        }
+        upsert: {
+          args: Prisma.PublicUserChatKeyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PublicUserChatKeyPayload>
+        }
+        aggregate: {
+          args: Prisma.PublicUserChatKeyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePublicUserChatKey>
+        }
+        groupBy: {
+          args: Prisma.PublicUserChatKeyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicUserChatKeyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PublicUserChatKeyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PublicUserChatKeyCountAggregateOutputType> | number
         }
       }
     }
@@ -925,6 +1075,25 @@ export const UserChatKeyScalarFieldEnum = {
 export type UserChatKeyScalarFieldEnum = (typeof UserChatKeyScalarFieldEnum)[keyof typeof UserChatKeyScalarFieldEnum]
 
 
+export const KeyPairScalarFieldEnum = {
+  userId: 'userId',
+  encryptedPrivateKey: 'encryptedPrivateKey',
+  publicKey: 'publicKey',
+  createdAt: 'createdAt'
+} as const
+
+export type KeyPairScalarFieldEnum = (typeof KeyPairScalarFieldEnum)[keyof typeof KeyPairScalarFieldEnum]
+
+
+export const PublicUserChatKeyScalarFieldEnum = {
+  userId: 'userId',
+  chatId: 'chatId',
+  encryptedKey: 'encryptedKey'
+} as const
+
+export type PublicUserChatKeyScalarFieldEnum = (typeof PublicUserChatKeyScalarFieldEnum)[keyof typeof PublicUserChatKeyScalarFieldEnum]
+
+
 export const SessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -940,8 +1109,7 @@ export const ChatScalarFieldEnum = {
   type: 'type',
   image: 'image',
   imageIv: 'imageIv',
-  ownerId: 'ownerId',
-  salt: 'salt'
+  ownerId: 'ownerId'
 } as const
 
 export type ChatScalarFieldEnum = (typeof ChatScalarFieldEnum)[keyof typeof ChatScalarFieldEnum]
@@ -1133,6 +1301,8 @@ export interface PrismaClientOptions {
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   userChatKey?: Prisma.UserChatKeyOmit
+  keyPair?: Prisma.KeyPairOmit
+  publicUserChatKey?: Prisma.PublicUserChatKeyOmit
   session?: Prisma.SessionOmit
   chat?: Prisma.ChatOmit
   message?: Prisma.MessageOmit

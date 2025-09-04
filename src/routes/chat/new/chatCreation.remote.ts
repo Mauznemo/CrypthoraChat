@@ -41,8 +41,7 @@ export const createGroup = command(createGroupSchema, async ({ groupName, userId
 			ownerId: locals.user!.id,
 			participants: {
 				connect: allParticipantIds.map((id) => ({ id }))
-			},
-			salt: Math.random().toString(36).substring(2, 15) // TODO: maybe change this
+			}
 		}
 	});
 
@@ -50,10 +49,11 @@ export const createGroup = command(createGroupSchema, async ({ groupName, userId
 });
 
 const createDmSchema = v.object({
-	userId: v.string('You must select a user.')
+	userId: v.string('You must select a user.'),
+	encryptedChatKey: v.string()
 });
 
-export const createDm = command(createDmSchema, async ({ userId }) => {
+export const createDm = command(createDmSchema, async ({ userId, encryptedChatKey }) => {
 	const { locals } = getRequestEvent();
 
 	if (!locals.sessionId) {
@@ -119,7 +119,12 @@ export const createDm = command(createDmSchema, async ({ userId }) => {
 			participants: {
 				connect: allParticipantIds.map((id) => ({ id }))
 			},
-			salt: Math.random().toString(36).substring(2, 15) // TODO: maybe change this
+			publicUserChatKeys: {
+				create: {
+					userId: userId,
+					encryptedKey: encryptedChatKey
+				}
+			}
 		}
 	});
 

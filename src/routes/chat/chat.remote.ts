@@ -121,7 +121,7 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 	return chat;
 });
 
-export const getEncryptedChatKeySeed = query(v.string(), async (chatId: string) => {
+export const getEncryptedChatKey = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
 
 	if (!locals.sessionId) {
@@ -143,9 +143,9 @@ export const getEncryptedChatKeySeed = query(v.string(), async (chatId: string) 
 	}
 });
 
-export const saveEncryptedChatKeySeed = command(
-	v.object({ chatId: v.string(), encryptedKeySeed: v.string() }),
-	async ({ chatId, encryptedKeySeed }) => {
+export const saveEncryptedChatKey = command(
+	v.object({ chatId: v.string(), encryptedKey: v.string() }),
+	async ({ chatId, encryptedKey }) => {
 		const { locals } = getRequestEvent();
 
 		if (!locals.sessionId) {
@@ -161,12 +161,12 @@ export const saveEncryptedChatKeySeed = command(
 					}
 				},
 				update: {
-					encryptedKey: encryptedKeySeed
+					encryptedKey: encryptedKey
 				},
 				create: {
 					userId: locals.user!.id,
 					chatId,
-					encryptedKey: encryptedKeySeed
+					encryptedKey: encryptedKey
 				}
 			});
 			return userChatKey?.encryptedKey;
@@ -175,3 +175,25 @@ export const saveEncryptedChatKeySeed = command(
 		}
 	}
 );
+
+export const getPublicEncryptedChatKey = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		const publicEncryptedChatKey = await db.publicUserChatKey.findUnique({
+			where: {
+				userId_chatId: {
+					userId: locals.user!.id,
+					chatId: chatId
+				}
+			}
+		});
+		return publicEncryptedChatKey?.encryptedKey;
+	} catch (e) {
+		error(404, 'Not found');
+	}
+});

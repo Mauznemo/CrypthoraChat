@@ -105,6 +105,18 @@ export function initializeSocket(server: HTTPServer) {
 			pushSubscriptions.set(userId, data.subscription);
 		});
 
+		socket.on('request-user-verify', (data) => {
+			const socketId = userSocketMap.get(data.userId);
+			if (!socketId) {
+				return;
+			}
+
+			io.to(socketId).emit('requested-user-verify', {
+				requestorId: socket.user!.id,
+				requestorUsername: socket.user!.username
+			});
+		});
+
 		// Handle new message
 		socket.on(
 			'send-message',

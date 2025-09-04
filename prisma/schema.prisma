@@ -16,27 +16,51 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  username     String        @unique
-  displayName  String
-  password     String
-  profilePic   String? // path to encrypted blob
-  profileIv    String? //IV for decryption, base64
-  userChatKeys UserChatKey[] // encrypted keys for each chat
-  isAdmin      Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  sessions     Session[]
-  ownedChats   Chat[]        @relation("OwnedChats")
-  chats        Chat[]        @relation("ChatParticipants")
-  messages     Message[]     @relation("SentMessages")
-  readMessages Message[]     @relation("ReadMessages")
+  id                 String              @id @default(cuid())
+  username           String              @unique
+  displayName        String
+  password           String
+  profilePic         String? // path to encrypted blob
+  profileIv          String? //IV for decryption, base64
+  userChatKeys       UserChatKey[] // encrypted keys for each chat
+  isAdmin            Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  sessions           Session[]
+  ownedChats         Chat[]              @relation("OwnedChats")
+  chats              Chat[]              @relation("ChatParticipants")
+  messages           Message[]           @relation("SentMessages")
+  readMessages       Message[]           @relation("ReadMessages")
+  publicUserChatKeys PublicUserChatKey[]
+  keyPair            KeyPair?
 }
 
+// With users master key encrypted chat keys for multi device setup
 model UserChatKey {
   userId       String
   chatId       String
   encryptedKey String //base64
   user         User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, chatId])
+}
+
+model KeyPair {
+  userId              String
+  encryptedPrivateKey String //base64
+  publicKey           String //base64
+  createdAt           DateTime @default(now())
+  user                User     @relation(fields: [userId], references: [id])
+
+  @@id([userId])
+}
+
+// For sharing of the chat key to each user newly added to a group/dm
+model PublicUserChatKey {
+  userId       String
+  chatId       String
+  encryptedKey String //base64, encrypted with users (verified) public key
+  user         User   @relation(fields: [userId], references: [id])
+  chat         Chat   @relation(fields: [chatId], references: [id])
 
   @@id([userId, chatId])
 }
@@ -49,16 +73,16 @@ model Session {
 }
 
 model Chat {
-  id           String    @id @default(uuid())
-  name         String? // Group name, null for DM
-  type         String // 'dm' or 'group'
-  image        String? // path to encrypted blob
-  imageIv      String? //IV for decryption, base64
-  ownerId      String
-  owner        User      @relation("OwnedChats", fields: [ownerId], references: [id])
-  participants User[]    @relation("ChatParticipants")
-  messages     Message[]
-  salt         String // salt for encryption, base64
+  id                 String              @id @default(uuid())
+  name               String? // Group name, null for DM
+  type               String // 'dm' or 'group'
+  image              String? // path to encrypted blob
+  imageIv            String? //IV for decryption, base64
+  ownerId            String
+  owner              User                @relation("OwnedChats", fields: [ownerId], references: [id])
+  participants       User[]              @relation("ChatParticipants")
+  messages           Message[]
+  publicUserChatKeys PublicUserChatKey[]
 }
 
 model Message {

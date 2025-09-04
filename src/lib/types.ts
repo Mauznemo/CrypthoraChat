@@ -33,7 +33,6 @@ export const chatWithoutMessagesFields = {
 	image: true,
 	imageIv: true,
 	ownerId: true,
-	salt: true,
 	participants: { select: safeUserFields }
 } satisfies Prisma.ChatSelect;
 

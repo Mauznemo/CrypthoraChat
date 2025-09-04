@@ -9,6 +9,8 @@
  */
 export type * from './models/User'
 export type * from './models/UserChatKey'
+export type * from './models/KeyPair'
+export type * from './models/PublicUserChatKey'
 export type * from './models/Session'
 export type * from './models/Chat'
 export type * from './models/Message'

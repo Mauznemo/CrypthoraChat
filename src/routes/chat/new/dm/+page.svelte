@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
-	import { encryptChatKeySeedForStorage, generateChatKeySeed } from '$lib/crypto/chat';
+	import { encryptChatKeyForUser, generateChatKey } from '$lib/crypto/chat';
+	import { isUserVerified, verifyUser } from '$lib/crypto/userVerification';
+	import { encryptKeyForStorage } from '$lib/crypto/utils';
+	import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
-	import { saveEncryptedChatKeySeed } from '../../chat.remote';
+	import { saveEncryptedChatKey } from '../../chat.remote';
 	import { createDm } from '../chatCreation.remote';
 	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
@@ -15,13 +18,40 @@
 
 	async function handleDmGroup() {
 		try {
-			let result = await createDm({ userId: selectedUser!.id });
-			const chatKeySeed = generateChatKeySeed();
-			const chatKeySeedEncrypted = await encryptChatKeySeedForStorage(chatKeySeed);
+			const userUnverified = await isUserVerified(selectedUser!.id);
+
+			if (!userUnverified) {
+				modalStore.open({
+					title: 'User not verified',
+					content:
+						'User @' +
+						selectedUser!.username +
+						' is not verified. You need to verify with them once before creating a chat with them.',
+					buttons: [
+						{
+							text: 'Verify Now',
+							variant: 'primary',
+							onClick: () => {
+								verifyUser(selectedUser!, true);
+							}
+						}
+					]
+				});
+				return;
+			}
+
+			const chatKey = await generateChatKey();
+			const encryptedUserChatKey = await encryptChatKeyForUser(chatKey, selectedUser!.id);
+
+			let result = await createDm({
+				userId: selectedUser!.id,
+				encryptedChatKey: encryptedUserChatKey
+			});
+			const chatKeyEncrypted = await encryptKeyForStorage(chatKey);
 			try {
-				await saveEncryptedChatKeySeed({
+				await saveEncryptedChatKey({
 					chatId: result.chatId,
-					encryptedKeySeed: chatKeySeedEncrypted
+					encryptedKey: chatKeyEncrypted
 				});
 			} catch (err) {
 				console.error(err);
