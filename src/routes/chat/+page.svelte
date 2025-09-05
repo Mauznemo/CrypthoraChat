@@ -17,7 +17,7 @@
 	import * as messages from '$lib/chat/messages';
 	import SideBar from '$lib/components/chat/SideBar.svelte';
 	import { checkForMasterKey } from '$lib/chat/masterKey';
-	import { trySelectChat } from '$lib/chat/chats';
+	import { handleKeyRotated, trySelectChat } from '$lib/chat/chats';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { verifyUser } from '$lib/crypto/userVerification';
 	import { checkPublicKey } from '$lib/crypto/keyPair';
@@ -29,9 +29,6 @@
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
 	let chatListComponent: ChatList;
-
-	let loadingChat = $state(true);
-	let shouldAutoScroll = $state(true);
 
 	onMount(async () => {
 		chatStore.user = data.user;
@@ -85,6 +82,7 @@
 				]
 			});
 		});
+		socketStore.onKeyRotated(handleKeyRotated);
 		socketStore.onMessageError((error) => {
 			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
@@ -106,6 +104,7 @@
 		socketStore.off('new-chat', handleCreateNewChat);
 		socketStore.off('reconnect', handleConnect);
 		socketStore.off('user-verify-requested');
+		socketStore.off('key-rotated', handleKeyRotated);
 		socketStore.off('message-error');
 
 		//socketStore.disconnect();
@@ -122,10 +121,10 @@
 	}
 
 	async function handleConnect(): Promise<void> {
-		loadingChat = true;
+		chatStore.loadingChat = true;
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (!lastChatId) {
-			loadingChat = false;
+			chatStore.loadingChat = false;
 			return;
 		}
 
@@ -133,7 +132,7 @@
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
-			loadingChat = false;
+			chatStore.loadingChat = false;
 			return;
 		}
 
@@ -166,29 +165,26 @@
 	function handleScroll(): void {
 		if (messageContainer) {
 			const { scrollTop, scrollHeight, clientHeight } = messageContainer;
-			shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
+			chatStore.shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
 		}
 	}
 
 	function scrollToBottom(): void {
 		setTimeout(() => {
-			if (shouldAutoScroll && messageContainer) {
+			if (chatStore.shouldAutoScroll && messageContainer) {
 				messageContainer.scrollTop = messageContainer.scrollHeight;
 			}
 		}, 100);
 	}
 
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
-		loadingChat = true;
-		shouldAutoScroll = true;
+		chatStore.shouldAutoScroll = true;
 
 		const result = await trySelectChat(newChat);
 
 		if (result.success) {
 			scrollToBottom();
 		}
-
-		loadingChat = false;
 	}
 
 	async function resetServiceWorkers(): Promise<void> {
@@ -267,13 +263,13 @@
 			</div>
 		</div>
 
-		{#if !chatStore.activeChat && !loadingChat}
+		{#if !chatStore.activeChat && !chatStore.loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<p class="text-2xl font-bold">No chat selected</p>
 			</div>
 		{/if}
 
-		{#if loadingChat}
+		{#if chatStore.loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<LoadingSpinner />
 			</div>

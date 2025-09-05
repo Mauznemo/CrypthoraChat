@@ -51,7 +51,8 @@
 			try {
 				await saveEncryptedChatKey({
 					chatId: result.chatId,
-					encryptedKey: chatKeyEncrypted
+					encryptedKey: chatKeyEncrypted,
+					keyVersion: 0
 				});
 			} catch (err) {
 				console.error(err);

@@ -257,7 +257,8 @@
 	onscroll={handleScrollUpdate}
 	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
 >
-	{#each chatStore.messages as message, index (message.id + message.encryptedContent)}
+	{#each chatStore.messages as message, index (message.id + message.encryptedContent + index)}
+		{console.log('Key:', message.id + message.encryptedContent + index)}
 		<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
 		{@const isFromMe = message.senderId === chatStore.user?.id}
 		{@const isFirstInGroup =

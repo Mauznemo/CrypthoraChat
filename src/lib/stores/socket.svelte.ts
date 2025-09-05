@@ -74,6 +74,7 @@ class SocketStore {
 
 	sendMessage(data: {
 		chatId: string;
+		keyVersion: number;
 		senderId: string;
 		encryptedContent: string;
 		replyToId?: string | null;
@@ -82,7 +83,7 @@ class SocketStore {
 		this.socket?.emit('send-message', data);
 	}
 
-	editMessage(data: { messageId: string; encryptedContent: string }) {
+	editMessage(data: { messageId: string; encryptedContent: string; keyVersion: number }) {
 		this.socket?.emit('edit-message', data);
 	}
 
@@ -154,6 +155,14 @@ class SocketStore {
 				callback(data);
 			}
 		});
+	}
+
+	notifyKeyRotated(data: { chatId: string }) {
+		this.socket?.emit('key-rotated', data);
+	}
+
+	onKeyRotated(callback: () => void) {
+		this.socket?.on('key-rotated', callback);
 	}
 
 	requestUserVerify(data: { userId: string }) {

@@ -12,12 +12,12 @@ export function extractMentions(
 		const username = match[1];
 		// Only match if the username is an exact match (case insensitive)
 		const participant = chatStore.activeChat?.participants.find(
-			(p) => p.username.toLowerCase() === username.toLowerCase()
+			(p) => p.user.username.toLowerCase() === username.toLowerCase()
 		);
 
 		if (participant) {
 			mentions.push({
-				username: participant.username,
+				username: participant.user.username,
 				fullMatch: match[0],
 				startIndex: match.index,
 				endIndex: match.index + match[0].length

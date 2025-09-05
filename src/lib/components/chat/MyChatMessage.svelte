@@ -55,7 +55,7 @@
 				const [reactorId, encryptedReaction] = reactionKey.split(':');
 				let decryptedReaction: string;
 				try {
-					decryptedReaction = await decryptReaction(encryptedReaction);
+					decryptedReaction = await decryptReaction(encryptedReaction, message.usedKeyVersion);
 				} catch (error) {
 					return null;
 				}

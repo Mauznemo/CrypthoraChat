@@ -29,9 +29,27 @@ async function getChatUsers(chatId: string) {
 	// TODO: Add some caching to this
 	const chat = await db.chat.findUnique({
 		where: { id: chatId },
-		include: { participants: { select: { id: true, username: true } } }
+		include: {
+			participants: {
+				include: {
+					user: {
+						select: {
+							id: true,
+							username: true
+						}
+					}
+				}
+			}
+		}
 	});
-	return chat?.participants || [];
+
+	// Flatten into an array of user objects
+	return (
+		chat?.participants.map((p) => ({
+			id: p.user.id,
+			username: p.user.username
+		})) || []
+	);
 }
 
 export function initializeSocket(server: HTTPServer) {
@@ -117,12 +135,16 @@ export function initializeSocket(server: HTTPServer) {
 			});
 		});
 
+		socket.on('key-rotated', async (data) => {
+			io.to(data.chatId).emit('key-rotated');
+		});
+
 		// Handle new message
 		socket.on(
 			'send-message',
 			async (data: {
 				chatId: string;
-				//senderId: string;
+				keyVersion: number;
 				encryptedContent: string;
 				replyToId?: string | null;
 				attachments?: string[];
@@ -146,6 +168,7 @@ export function initializeSocket(server: HTTPServer) {
 					const newMessage = await db.message.create({
 						data: {
 							chatId: data.chatId,
+							usedKeyVersion: data.keyVersion,
 							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
 							attachments: data.attachments || [],
@@ -204,40 +227,44 @@ export function initializeSocket(server: HTTPServer) {
 		);
 
 		// Handle message editing
-		socket.on('edit-message', async (data: { messageId: string; encryptedContent: string }) => {
-			try {
-				// Verify user owns the message and update it
-				const updatedMessage = await db.message.update({
-					where: {
-						id: data.messageId,
-						senderId: socket.user!.id // Ensure user owns the message
-					},
-					data: {
-						encryptedContent: data.encryptedContent,
-						readBy: {
-							set: [] // Clear read status on edit
+		socket.on(
+			'edit-message',
+			async (data: { messageId: string; encryptedContent: string; keyVersion: number }) => {
+				try {
+					// Verify user owns the message and update it
+					const updatedMessage = await db.message.update({
+						where: {
+							id: data.messageId,
+							senderId: socket.user!.id // Ensure user owns the message
 						},
-						isEdited: true
-					},
-					include: {
-						user: true,
-						chat: true,
-						readBy: true,
-						replyTo: {
-							include: {
-								user: true
+						data: {
+							usedKeyVersion: data.keyVersion,
+							encryptedContent: data.encryptedContent,
+							readBy: {
+								set: [] // Clear read status on edit
+							},
+							isEdited: true
+						},
+						include: {
+							user: true,
+							chat: true,
+							readBy: true,
+							replyTo: {
+								include: {
+									user: true
+								}
 							}
 						}
-					}
-				});
+					});
 
-				// Emit to all users in the chat
-				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
-			} catch (error) {
-				console.error('Error editing message:', error);
-				socket.emit('message-error', { error: 'Failed to edit message' });
+					// Emit to all users in the chat
+					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+				} catch (error) {
+					console.error('Error editing message:', error);
+					socket.emit('message-error', { error: 'Failed to edit message' });
+				}
 			}
-		});
+		);
 
 		// Handle message deletion
 		socket.on('delete-message', async (data: { messageId: string; chatId: string }) => {
