@@ -28,12 +28,13 @@ export type SafeUser = Prisma.UserGetPayload<{
 
 export const chatWithoutMessagesFields = {
 	id: true,
+	currentKeyVersion: true,
 	name: true,
 	type: true,
 	image: true,
 	imageIv: true,
 	ownerId: true,
-	participants: { select: safeUserFields }
+	participants: { include: { user: { select: safeUserFields } } }
 } satisfies Prisma.ChatSelect;
 
 export type ChatWithoutMessages = Prisma.ChatGetPayload<{

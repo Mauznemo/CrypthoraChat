@@ -61,11 +61,12 @@
 			try {
 				await saveEncryptedChatKey({
 					chatId: result.chatId,
-					encryptedKey: chatKeyEncrypted
+					encryptedKey: chatKeyEncrypted,
+					keyVersion: 0
 				});
 			} catch (err) {
 				console.error(err);
-				modalStore.alert('Error', 'Failed to save chat key: ' + err);
+				modalStore.error(err, 'Failed to save chat key:');
 			}
 
 			if (result.success) {

@@ -26,19 +26,16 @@ export type AggregateUserChatKey = {
 export type UserChatKeyMinAggregateOutputType = {
   userId: string | null
   chatId: string | null
-  encryptedKey: string | null
 }
 
 export type UserChatKeyMaxAggregateOutputType = {
   userId: string | null
   chatId: string | null
-  encryptedKey: string | null
 }
 
 export type UserChatKeyCountAggregateOutputType = {
   userId: number
   chatId: number
-  encryptedKey: number
   _all: number
 }
 
@@ -46,19 +43,16 @@ export type UserChatKeyCountAggregateOutputType = {
 export type UserChatKeyMinAggregateInputType = {
   userId?: true
   chatId?: true
-  encryptedKey?: true
 }
 
 export type UserChatKeyMaxAggregateInputType = {
   userId?: true
   chatId?: true
-  encryptedKey?: true
 }
 
 export type UserChatKeyCountAggregateInputType = {
   userId?: true
   chatId?: true
-  encryptedKey?: true
   _all?: true
 }
 
@@ -137,7 +131,6 @@ export type UserChatKeyGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type UserChatKeyGroupByOutputType = {
   userId: string
   chatId: string
-  encryptedKey: string
   _count: UserChatKeyCountAggregateOutputType | null
   _min: UserChatKeyMinAggregateOutputType | null
   _max: UserChatKeyMaxAggregateOutputType | null
@@ -164,15 +157,15 @@ export type UserChatKeyWhereInput = {
   NOT?: Prisma.UserChatKeyWhereInput | Prisma.UserChatKeyWhereInput[]
   userId?: Prisma.StringFilter<"UserChatKey"> | string
   chatId?: Prisma.StringFilter<"UserChatKey"> | string
-  encryptedKey?: Prisma.StringFilter<"UserChatKey"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  keyVersions?: Prisma.UserChatKeyVersionListRelationFilter
 }
 
 export type UserChatKeyOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
-  encryptedKey?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
+  keyVersions?: Prisma.UserChatKeyVersionOrderByRelationAggregateInput
 }
 
 export type UserChatKeyWhereUniqueInput = Prisma.AtLeast<{
@@ -182,14 +175,13 @@ export type UserChatKeyWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.UserChatKeyWhereInput | Prisma.UserChatKeyWhereInput[]
   userId?: Prisma.StringFilter<"UserChatKey"> | string
   chatId?: Prisma.StringFilter<"UserChatKey"> | string
-  encryptedKey?: Prisma.StringFilter<"UserChatKey"> | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  keyVersions?: Prisma.UserChatKeyVersionListRelationFilter
 }, "userId_chatId">
 
 export type UserChatKeyOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
-  encryptedKey?: Prisma.SortOrder
   _count?: Prisma.UserChatKeyCountOrderByAggregateInput
   _max?: Prisma.UserChatKeyMaxOrderByAggregateInput
   _min?: Prisma.UserChatKeyMinOrderByAggregateInput
@@ -201,48 +193,44 @@ export type UserChatKeyScalarWhereWithAggregatesInput = {
   NOT?: Prisma.UserChatKeyScalarWhereWithAggregatesInput | Prisma.UserChatKeyScalarWhereWithAggregatesInput[]
   userId?: Prisma.StringWithAggregatesFilter<"UserChatKey"> | string
   chatId?: Prisma.StringWithAggregatesFilter<"UserChatKey"> | string
-  encryptedKey?: Prisma.StringWithAggregatesFilter<"UserChatKey"> | string
 }
 
 export type UserChatKeyCreateInput = {
   chatId: string
-  encryptedKey: string
   user: Prisma.UserCreateNestedOneWithoutUserChatKeysInput
+  keyVersions?: Prisma.UserChatKeyVersionCreateNestedManyWithoutUserChatKeyInput
 }
 
 export type UserChatKeyUncheckedCreateInput = {
   userId: string
   chatId: string
-  encryptedKey: string
+  keyVersions?: Prisma.UserChatKeyVersionUncheckedCreateNestedManyWithoutUserChatKeyInput
 }
 
 export type UserChatKeyUpdateInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutUserChatKeysNestedInput
+  keyVersions?: Prisma.UserChatKeyVersionUpdateManyWithoutUserChatKeyNestedInput
 }
 
 export type UserChatKeyUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
+  keyVersions?: Prisma.UserChatKeyVersionUncheckedUpdateManyWithoutUserChatKeyNestedInput
 }
 
 export type UserChatKeyCreateManyInput = {
   userId: string
   chatId: string
-  encryptedKey: string
 }
 
 export type UserChatKeyUpdateManyMutationInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UserChatKeyUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UserChatKeyListRelationFilter = {
@@ -263,19 +251,21 @@ export type UserChatKeyUserIdChatIdCompoundUniqueInput = {
 export type UserChatKeyCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
-  encryptedKey?: Prisma.SortOrder
 }
 
 export type UserChatKeyMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
-  encryptedKey?: Prisma.SortOrder
 }
 
 export type UserChatKeyMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
-  encryptedKey?: Prisma.SortOrder
+}
+
+export type UserChatKeyScalarRelationFilter = {
+  is?: Prisma.UserChatKeyWhereInput
+  isNot?: Prisma.UserChatKeyWhereInput
 }
 
 export type UserChatKeyCreateNestedManyWithoutUserInput = {
@@ -320,14 +310,28 @@ export type UserChatKeyUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.UserChatKeyScalarWhereInput | Prisma.UserChatKeyScalarWhereInput[]
 }
 
+export type UserChatKeyCreateNestedOneWithoutKeyVersionsInput = {
+  create?: Prisma.XOR<Prisma.UserChatKeyCreateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedCreateWithoutKeyVersionsInput>
+  connectOrCreate?: Prisma.UserChatKeyCreateOrConnectWithoutKeyVersionsInput
+  connect?: Prisma.UserChatKeyWhereUniqueInput
+}
+
+export type UserChatKeyUpdateOneRequiredWithoutKeyVersionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserChatKeyCreateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedCreateWithoutKeyVersionsInput>
+  connectOrCreate?: Prisma.UserChatKeyCreateOrConnectWithoutKeyVersionsInput
+  upsert?: Prisma.UserChatKeyUpsertWithoutKeyVersionsInput
+  connect?: Prisma.UserChatKeyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserChatKeyUpdateToOneWithWhereWithoutKeyVersionsInput, Prisma.UserChatKeyUpdateWithoutKeyVersionsInput>, Prisma.UserChatKeyUncheckedUpdateWithoutKeyVersionsInput>
+}
+
 export type UserChatKeyCreateWithoutUserInput = {
   chatId: string
-  encryptedKey: string
+  keyVersions?: Prisma.UserChatKeyVersionCreateNestedManyWithoutUserChatKeyInput
 }
 
 export type UserChatKeyUncheckedCreateWithoutUserInput = {
   chatId: string
-  encryptedKey: string
+  keyVersions?: Prisma.UserChatKeyVersionUncheckedCreateNestedManyWithoutUserChatKeyInput
 }
 
 export type UserChatKeyCreateOrConnectWithoutUserInput = {
@@ -362,61 +366,123 @@ export type UserChatKeyScalarWhereInput = {
   NOT?: Prisma.UserChatKeyScalarWhereInput | Prisma.UserChatKeyScalarWhereInput[]
   userId?: Prisma.StringFilter<"UserChatKey"> | string
   chatId?: Prisma.StringFilter<"UserChatKey"> | string
-  encryptedKey?: Prisma.StringFilter<"UserChatKey"> | string
+}
+
+export type UserChatKeyCreateWithoutKeyVersionsInput = {
+  chatId: string
+  user: Prisma.UserCreateNestedOneWithoutUserChatKeysInput
+}
+
+export type UserChatKeyUncheckedCreateWithoutKeyVersionsInput = {
+  userId: string
+  chatId: string
+}
+
+export type UserChatKeyCreateOrConnectWithoutKeyVersionsInput = {
+  where: Prisma.UserChatKeyWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserChatKeyCreateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedCreateWithoutKeyVersionsInput>
+}
+
+export type UserChatKeyUpsertWithoutKeyVersionsInput = {
+  update: Prisma.XOR<Prisma.UserChatKeyUpdateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedUpdateWithoutKeyVersionsInput>
+  create: Prisma.XOR<Prisma.UserChatKeyCreateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedCreateWithoutKeyVersionsInput>
+  where?: Prisma.UserChatKeyWhereInput
+}
+
+export type UserChatKeyUpdateToOneWithWhereWithoutKeyVersionsInput = {
+  where?: Prisma.UserChatKeyWhereInput
+  data: Prisma.XOR<Prisma.UserChatKeyUpdateWithoutKeyVersionsInput, Prisma.UserChatKeyUncheckedUpdateWithoutKeyVersionsInput>
+}
+
+export type UserChatKeyUpdateWithoutKeyVersionsInput = {
+  chatId?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneRequiredWithoutUserChatKeysNestedInput
+}
+
+export type UserChatKeyUncheckedUpdateWithoutKeyVersionsInput = {
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  chatId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UserChatKeyCreateManyUserInput = {
   chatId: string
-  encryptedKey: string
 }
 
 export type UserChatKeyUpdateWithoutUserInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
+  keyVersions?: Prisma.UserChatKeyVersionUpdateManyWithoutUserChatKeyNestedInput
 }
 
 export type UserChatKeyUncheckedUpdateWithoutUserInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
+  keyVersions?: Prisma.UserChatKeyVersionUncheckedUpdateManyWithoutUserChatKeyNestedInput
 }
 
 export type UserChatKeyUncheckedUpdateManyWithoutUserInput = {
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
-  encryptedKey?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
+
+/**
+ * Count Type UserChatKeyCountOutputType
+ */
+
+export type UserChatKeyCountOutputType = {
+  keyVersions: number
+}
+
+export type UserChatKeyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  keyVersions?: boolean | UserChatKeyCountOutputTypeCountKeyVersionsArgs
+}
+
+/**
+ * UserChatKeyCountOutputType without action
+ */
+export type UserChatKeyCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserChatKeyCountOutputType
+   */
+  select?: Prisma.UserChatKeyCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserChatKeyCountOutputType without action
+ */
+export type UserChatKeyCountOutputTypeCountKeyVersionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserChatKeyVersionWhereInput
+}
 
 
 export type UserChatKeySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   chatId?: boolean
-  encryptedKey?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  keyVersions?: boolean | Prisma.UserChatKey$keyVersionsArgs<ExtArgs>
+  _count?: boolean | Prisma.UserChatKeyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["userChatKey"]>
 
 export type UserChatKeySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   chatId?: boolean
-  encryptedKey?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["userChatKey"]>
 
 export type UserChatKeySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   userId?: boolean
   chatId?: boolean
-  encryptedKey?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["userChatKey"]>
 
 export type UserChatKeySelectScalar = {
   userId?: boolean
   chatId?: boolean
-  encryptedKey?: boolean
 }
 
-export type UserChatKeyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "chatId" | "encryptedKey", ExtArgs["result"]["userChatKey"]>
+export type UserChatKeyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"userId" | "chatId", ExtArgs["result"]["userChatKey"]>
 export type UserChatKeyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  keyVersions?: boolean | Prisma.UserChatKey$keyVersionsArgs<ExtArgs>
+  _count?: boolean | Prisma.UserChatKeyCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserChatKeyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -429,11 +495,11 @@ export type $UserChatKeyPayload<ExtArgs extends runtime.Types.Extensions.Interna
   name: "UserChatKey"
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
+    keyVersions: Prisma.$UserChatKeyVersionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     userId: string
     chatId: string
-    encryptedKey: string
   }, ExtArgs["result"]["userChatKey"]>
   composites: {}
 }
@@ -829,6 +895,7 @@ readonly fields: UserChatKeyFieldRefs;
 export interface Prisma__UserChatKeyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  keyVersions<T extends Prisma.UserChatKey$keyVersionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserChatKey$keyVersionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserChatKeyVersionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -860,7 +927,6 @@ export interface Prisma__UserChatKeyClient<T, Null = never, ExtArgs extends runt
 export interface UserChatKeyFieldRefs {
   readonly userId: Prisma.FieldRef<"UserChatKey", 'String'>
   readonly chatId: Prisma.FieldRef<"UserChatKey", 'String'>
-  readonly encryptedKey: Prisma.FieldRef<"UserChatKey", 'String'>
 }
     
 
@@ -1254,6 +1320,30 @@ export type UserChatKeyDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Limit how many UserChatKeys to delete.
    */
   limit?: number
+}
+
+/**
+ * UserChatKey.keyVersions
+ */
+export type UserChatKey$keyVersionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserChatKeyVersion
+   */
+  select?: Prisma.UserChatKeyVersionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserChatKeyVersion
+   */
+  omit?: Prisma.UserChatKeyVersionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserChatKeyVersionInclude<ExtArgs> | null
+  where?: Prisma.UserChatKeyVersionWhereInput
+  orderBy?: Prisma.UserChatKeyVersionOrderByWithRelationInput | Prisma.UserChatKeyVersionOrderByWithRelationInput[]
+  cursor?: Prisma.UserChatKeyVersionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserChatKeyVersionScalarFieldEnum | Prisma.UserChatKeyVersionScalarFieldEnum[]
 }
 
 /**

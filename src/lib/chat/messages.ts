@@ -41,7 +41,12 @@ export function handleInfoMessage(message: ClientMessage): void {
 			: 'No one';
 	modalStore.alert(
 		'Message Info',
-		'Sent by: @' + message.user.username + '\nRead by: ' + readerNames
+		'Sent by: @' +
+			message.user.username +
+			'\nRead by: ' +
+			readerNames +
+			'\nUsed Key Version: ' +
+			message.usedKeyVersion
 	);
 }
 
@@ -52,7 +57,7 @@ export function handleReaction(message: ClientMessage, userId: string): void {
 	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
 	if (messageBubble) {
 		emojiPickerStore.open(messageBubble, async (reaction: string) => {
-			const encryptedReaction = await encryptReaction(reaction, userId);
+			const encryptedReaction = await encryptReaction(reaction, userId, message.usedKeyVersion);
 			socketStore.reactToMessage({
 				messageId: message.id,
 				encryptedReaction: encryptedReaction

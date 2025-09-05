@@ -6,6 +6,8 @@
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { tryRotateChatKey } from '$lib/chat/chats';
 
 	let {
 		onChatSelected,
@@ -60,16 +62,18 @@
 		// 	});
 		// }
 
-		// if (!isChatOwner) {
-		// 	items.push({
-		// 		id: 're-input-key',
-		// 		label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
-		// 		iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
-		// 		action: async () => {
-		// 			openEmojiKeyInput(chat);
-		// 		}
-		// 	});
-		// }
+		if (isChatOwner) {
+			items.push({
+				id: 'rotate-key',
+				label: 'Rotate Key',
+				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+				action: async () => {
+					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
+						tryRotateChatKey(chat);
+					});
+				}
+			});
+		}
 
 		if (chat.type === 'group' && isChatOwner) {
 			items.push({
@@ -130,7 +134,7 @@
 				: 'hover:bg-gray-700/40 '}"
 		>
 			{#if chat.type === 'dm'}
-				{@const otherUser = chat.participants.find((p) => p.id !== chatStore.user?.id)}
+				{@const otherUser = chat.participants.find((p) => p.user.id !== chatStore.user?.id)}
 				<!-- Profile picture -->
 				<div
 					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
@@ -140,14 +144,14 @@
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div title={otherUser?.displayName} class="flex items-center space-x-2">
+					<div title={otherUser?.user.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
-							{otherUser?.displayName}
+							{otherUser?.user.displayName}
 						</p>
 					</div>
 
 					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
-						@{otherUser?.username}
+						@{otherUser?.user.username}
 					</p>
 				</div>
 				<button
@@ -173,8 +177,10 @@
 					</svg>
 				</button>
 			{:else}
-				{@const allParticipants = chat.participants.map((p) => '@' + p.username).join(', ')}
-				{@const firstTwoParticipants = chat.participants.slice(0, 2).map((p) => '@' + p.username)}
+				{@const allParticipants = chat.participants.map((p) => '@' + p.user.username).join(', ')}
+				{@const firstTwoParticipants = chat.participants
+					.slice(0, 2)
+					.map((p) => '@' + p.user.username)}
 				{@const remainingCount = chat.participants.length - 2}
 				{@const participants =
 					remainingCount > 0

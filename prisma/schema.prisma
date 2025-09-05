@@ -21,13 +21,13 @@ model User {
   displayName        String
   password           String
   profilePic         String? // path to encrypted blob
-  profileIv          String? //IV for decryption, base64
+  profileIv          String? // IV for decryption, base64
   userChatKeys       UserChatKey[] // encrypted keys for each chat
   isAdmin            Boolean             @default(false)
   createdAt          DateTime            @default(now())
   sessions           Session[]
   ownedChats         Chat[]              @relation("OwnedChats")
-  chats              Chat[]              @relation("ChatParticipants")
+  chatParticipations ChatParticipant[]
   messages           Message[]           @relation("SentMessages")
   readMessages       Message[]           @relation("ReadMessages")
   publicUserChatKeys PublicUserChatKey[]
@@ -36,18 +36,28 @@ model User {
 
 // With users master key encrypted chat keys for multi device setup
 model UserChatKey {
-  userId       String
-  chatId       String
-  encryptedKey String //base64
-  user         User   @relation(fields: [userId], references: [id])
+  userId      String
+  chatId      String
+  user        User                 @relation(fields: [userId], references: [id])
+  keyVersions UserChatKeyVersion[]
 
   @@id([userId, chatId])
 }
 
+model UserChatKeyVersion {
+  userChatKey  UserChatKey @relation(fields: [userId, chatId], references: [userId, chatId])
+  userId       String
+  chatId       String
+  keyVersion   Int
+  encryptedKey String // base64
+
+  @@id([userId, chatId, keyVersion])
+}
+
 model KeyPair {
   userId              String
-  encryptedPrivateKey String //base64
-  publicKey           String //base64, for sharing with others
+  encryptedPrivateKey String // base64
+  publicKey           String // base64, for sharing with others
   publicKeyHmac       String
   createdAt           DateTime @default(now())
   user                User     @relation(fields: [userId], references: [id])
@@ -59,11 +69,12 @@ model KeyPair {
 model PublicUserChatKey {
   userId       String
   chatId       String
-  encryptedKey String //base64, encrypted with users (verified) public key
+  keyVersion   Int
+  encryptedKey String // base64, encrypted with users (verified) public key
   user         User   @relation(fields: [userId], references: [id])
   chat         Chat   @relation(fields: [chatId], references: [id])
 
-  @@id([userId, chatId])
+  @@id([userId, chatId, keyVersion])
 }
 
 model Session {
@@ -75,23 +86,37 @@ model Session {
 
 model Chat {
   id                 String              @id @default(uuid())
+  currentKeyVersion  Int
   name               String? // Group name, null for DM
   type               String // 'dm' or 'group'
   image              String? // path to encrypted blob
-  imageIv            String? //IV for decryption, base64
+  imageIv            String? // IV for decryption, base64
   ownerId            String
   owner              User                @relation("OwnedChats", fields: [ownerId], references: [id])
-  participants       User[]              @relation("ChatParticipants")
+  participants       ChatParticipant[]
   messages           Message[]
   publicUserChatKeys PublicUserChatKey[]
 }
 
+model ChatParticipant {
+  chatId         String
+  userId         String
+  joinKeyVersion Int
+  joinedAt       DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([chatId, userId])
+}
+
 model Message {
   id                 String    @id @default(uuid())
+  usedKeyVersion     Int
   chatId             String
   senderId           String
   attachments        String[]
-  encryptedReactions String[] //userId:encryptedReactions base64
+  encryptedReactions String[] // userId:encryptedReactions base64
   readBy             User[]    @relation("ReadMessages")
   encryptedContent   String // Encrypted message blob, base64
   isEdited           Boolean   @default(false)

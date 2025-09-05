@@ -9,10 +9,12 @@
  */
 export type * from './models/User'
 export type * from './models/UserChatKey'
+export type * from './models/UserChatKeyVersion'
 export type * from './models/KeyPair'
 export type * from './models/PublicUserChatKey'
 export type * from './models/Session'
 export type * from './models/Chat'
+export type * from './models/ChatParticipant'
 export type * from './models/Message'
 export type * from './models/ServerSettings'
 export type * from './commonInputTypes'

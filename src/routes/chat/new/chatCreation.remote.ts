@@ -1,5 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { db } from '$lib/db';
+import { safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -36,26 +37,36 @@ export const createGroup = command(
 			error(400, 'One or more of the selected users do not exist.');
 		}
 
-		const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
+		try {
+			const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
 
-		const chat = await db.chat.create({
-			data: {
-				name: groupName,
-				type: 'group',
-				ownerId: locals.user!.id,
-				participants: {
-					connect: allParticipantIds.map((id) => ({ id }))
-				},
-				publicUserChatKeys: {
-					create: Object.entries(encryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
-						userId,
-						encryptedKey: encryptedChatKey
-					}))
+			const chat = await db.chat.create({
+				data: {
+					name: groupName,
+					currentKeyVersion: 0,
+					type: 'group',
+					ownerId: locals.user!.id,
+					participants: {
+						create: allParticipantIds.map((id) => ({
+							user: { connect: { id } },
+							joinKeyVersion: 0
+						}))
+					},
+					publicUserChatKeys: {
+						create: Object.entries(encryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
+							userId,
+							encryptedKey: encryptedChatKey,
+							keyVersion: 0
+						}))
+					}
 				}
-			}
-		});
+			});
 
-		return { success: true, chatId: chat.id };
+			return { success: true, chatId: chat.id };
+		} catch (e) {
+			console.error('Failed to create group:', e);
+			error(500, 'Failed to create group');
+		}
 	}
 );
 
@@ -88,25 +99,18 @@ export const createDm = command(createDmSchema, async ({ userId, encryptedChatKe
 			type: 'dm',
 			participants: {
 				every: {
-					id: {
-						in: [userId, locals.user!.id]
-					}
+					userId: { in: [userId, locals.user!.id] }
 				}
 			},
-			// Ensure it's exactly 2 participants (just these two users)
 			AND: [
 				{
 					participants: {
-						some: {
-							id: userId
-						}
+						some: { userId: userId }
 					}
 				},
 				{
 					participants: {
-						some: {
-							id: locals.user!.id
-						}
+						some: { userId: locals.user!.id }
 					}
 				}
 			]
@@ -120,24 +124,33 @@ export const createDm = command(createDmSchema, async ({ userId, encryptedChatKe
 		error(400, 'A DM with this user already exists.');
 	}
 
-	const allParticipantIds = [...new Set([userId, locals.user!.id])];
+	try {
+		const allParticipantIds = [...new Set([userId, locals.user!.id])];
 
-	const chat = await db.chat.create({
-		data: {
-			name: userId,
-			type: 'dm',
-			ownerId: locals.user!.id,
-			participants: {
-				connect: allParticipantIds.map((id) => ({ id }))
-			},
-			publicUserChatKeys: {
-				create: {
-					userId: userId,
-					encryptedKey: encryptedChatKey
+		const chat = await db.chat.create({
+			data: {
+				name: userId,
+				currentKeyVersion: 0,
+				type: 'dm',
+				ownerId: locals.user!.id,
+				participants: {
+					create: allParticipantIds.map((id) => ({
+						user: { connect: { id } },
+						joinKeyVersion: 0
+					}))
+				},
+				publicUserChatKeys: {
+					create: {
+						userId: userId,
+						encryptedKey: encryptedChatKey,
+						keyVersion: 0
+					}
 				}
 			}
-		}
-	});
-
-	return { success: true, chatId: chat.id };
+		});
+		return { success: true, chatId: chat.id };
+	} catch (e) {
+		console.error('Failed to create DM:', e);
+		error(500, 'Failed to create DM');
+	}
 });
