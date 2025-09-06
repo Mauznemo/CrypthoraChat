@@ -1,6 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 import type { User } from '$prisma';
+import type { Server } from 'socket.io';
 declare global {
 	namespace App {
 		// interface Error {}
@@ -16,6 +17,7 @@ declare global {
 			message?: string;
 		}
 	}
+	var _io: Server | null;
 }
 
 export {};
