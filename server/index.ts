@@ -1,6 +1,6 @@
 import http from 'http';
 import express from 'express';
-import { initializeSocket } from './socket';
+import { initializeSocket } from '../src/lib/server/socket';
 import { handler } from '../build/handler.js';
 import cors from 'cors';
 

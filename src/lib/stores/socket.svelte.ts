@@ -1,6 +1,6 @@
 // lib/stores/socket.svelte.ts
 import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
-import type { Prisma } from '$prisma';
+import type { Prisma, SystemMessage } from '$prisma';
 import { Socket } from 'socket.io-client';
 import ioClient from 'socket.io-client';
 
@@ -133,6 +133,10 @@ class SocketStore {
 
 	onMessageError(callback: (error: { error: string }) => void) {
 		this.socket?.on('message-error', callback);
+	}
+
+	onNewSystemMessage(callback: (message: SystemMessage) => void) {
+		this.socket?.on('new-system-message', callback);
 	}
 
 	off(event: string, callback?: Function) {

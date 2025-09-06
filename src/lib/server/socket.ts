@@ -1,7 +1,7 @@
 // server/socket.ts or in your main server file
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
-import { db } from '../src/lib/db';
+import { db } from '../db';
 import { validateSession } from '$lib/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
@@ -52,8 +52,16 @@ async function getChatUsers(chatId: string) {
 	);
 }
 
+let io: Server;
+
+export function getIO(): Server {
+	if (!io) throw new Error('Socket not initialized');
+	console.log('getIO (Socket initialized)');
+	return io;
+}
+
 export function initializeSocket(server: HTTPServer) {
-	const io = new Server(server);
+	io = new Server(server);
 
 	// Add this map after io initialization
 	const userSocketMap = new Map<string, string>();

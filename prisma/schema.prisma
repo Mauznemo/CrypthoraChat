@@ -95,6 +95,7 @@ model Chat {
   owner              User                @relation("OwnedChats", fields: [ownerId], references: [id])
   participants       ChatParticipant[]
   messages           Message[]
+  systemMessages     SystemMessage[]
   publicUserChatKeys PublicUserChatKey[]
 }
 
@@ -126,6 +127,15 @@ model Message {
   replyTo            Message?  @relation("Replies", fields: [replyToId], references: [id])
   replyToId          String?
   replies            Message[] @relation("Replies")
+}
+
+model SystemMessage {
+  id             String   @id @default(uuid())
+  usedKeyVersion Int // current key version at time of message so new users don't get old system messages
+  chatId         String
+  content        String
+  timestamp      DateTime @default(now())
+  chat           Chat     @relation(fields: [chatId], references: [id])
 }
 
 model ServerSettings {
