@@ -158,7 +158,7 @@
 	<div
 		in:fade={{ duration: 200 }}
 		out:fade={{ duration: 200 }}
-		class="fixed inset-0 z-30 flex items-center justify-center bg-black/50"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
 	>
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}

@@ -1,3 +1,5 @@
+import type { Snippet } from 'svelte';
+
 interface ModalButton {
 	text: string;
 	variant?: 'primary' | 'secondary' | 'danger';
@@ -11,6 +13,7 @@ interface ModalConfig {
 	buttons?: ModalButton[];
 	showCloseButton?: boolean;
 	onClose?: () => void;
+	customContent?: Snippet;
 }
 
 class ModalStore {
