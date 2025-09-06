@@ -89,6 +89,10 @@
 				{/if}
 			</div>
 
+			{#if modalStore.config.customContent}
+				{@render modalStore.config.customContent?.()}
+			{/if}
+
 			<!-- Content -->
 			<div class="mb-6 whitespace-pre-wrap text-gray-300">
 				{modalStore.config.content}

@@ -114,15 +114,86 @@ export const getUserChats = query(async () => {
 	return userWithChats?.chatParticipations.map((participation) => participation.chat) ?? [];
 });
 
-export const addUserToChat = command(v.string(), async (chatId: string) => {
-	const { locals } = getRequestEvent();
+const addUserToChatSchema = v.object({
+	chatId: v.string(),
+	userIds: v.pipe(
+		v.array(v.string(), 'You must provide a list of users.'),
+		v.minLength(1, 'You must select at least one user.')
+	),
 
-	if (!locals.sessionId) {
-		error(401, 'Unauthorized');
-	}
-
-	sendSystemMessage(chatId, locals.user!.username + ' clicked add user');
+	encryptedUserChatKeys: v.record(v.string(), v.string())
 });
+
+export const addUserToChat = command(
+	addUserToChatSchema,
+	async ({ chatId, userIds, encryptedUserChatKeys }) => {
+		const { locals } = getRequestEvent();
+
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
+		}
+
+		const chat = await db.chat.findUnique({
+			where: { id: chatId },
+			select: { ownerId: true, currentKeyVersion: true, participants: { select: { userId: true } } }
+		});
+
+		if (!chat) {
+			error(404, 'Chat not found');
+		}
+
+		if (chat.ownerId !== locals.user!.id) {
+			error(403, 'You do not own this chat, please ask the owner to add new members.');
+		}
+
+		const newUsersCount = await db.user.findMany({
+			where: {
+				id: { in: userIds }
+			}
+		});
+
+		if (newUsersCount.length !== userIds.length) {
+			error(400, 'One or more of the selected users do not exist.');
+		}
+
+		if (chat.participants.some((participant) => userIds.includes(participant.userId))) {
+			error(400, 'One or more of the selected users are already in the chat.');
+		}
+
+		try {
+			const updatedChat = await db.chat.update({
+				where: {
+					id: chatId
+				},
+				data: {
+					participants: {
+						create: userIds.map((id) => ({
+							user: { connect: { id } },
+							joinKeyVersion: chat.currentKeyVersion
+						}))
+					},
+					publicUserChatKeys: {
+						create: Object.entries(encryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
+							userId,
+							encryptedKey: encryptedChatKey,
+							keyVersion: chat.currentKeyVersion
+						}))
+					}
+				}
+			});
+
+			newUsersCount.forEach((user) => {
+				sendSystemMessage(
+					chatId,
+					locals.user!.username + ' added @' + user.username + ' to the chat.'
+				);
+			});
+		} catch (e) {
+			console.error('Failed to add users to chat:', e);
+			error(500, 'Failed to add users to chat');
+		}
+	}
+);
 
 export const getChatById = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();

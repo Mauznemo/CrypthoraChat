@@ -104,7 +104,8 @@
 		socketStore.off('messages-read');
 		socketStore.off('new-chat', handleCreateNewChat);
 		socketStore.off('reconnect', handleConnect);
-		socketStore.off('user-verify-requested');
+		socketStore.off('new-system-message');
+		socketStore.off('requested-user-verify');
 		socketStore.off('key-rotated', handleKeyRotated);
 		socketStore.off('message-error');
 
