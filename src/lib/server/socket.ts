@@ -52,16 +52,16 @@ async function getChatUsers(chatId: string) {
 	);
 }
 
-let io: Server;
+globalThis._io ??= null;
 
 export function getIO(): Server {
-	if (!io) throw new Error('Socket not initialized');
-	console.log('getIO (Socket initialized)');
-	return io;
+	if (!globalThis._io) throw new Error('Socket not initialized');
+	return globalThis._io;
 }
 
 export function initializeSocket(server: HTTPServer) {
-	io = new Server(server);
+	globalThis._io = new Server(server);
+	const io: Server = globalThis._io;
 
 	// Add this map after io initialization
 	const userSocketMap = new Map<string, string>();
