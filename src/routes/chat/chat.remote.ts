@@ -1,6 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { chatWithoutMessagesFields, safeUserFields, type MessageWithRelations } from '$lib/types';
+import { getIO } from '$lib/server/socket';
+import { chatWithoutMessagesFields, safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -80,23 +81,14 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		}
 	}
 
-	// Mark all messages as read // Can't mark the as read in case decryption fails and they weren't actually read
-	// if (locals.user?.id) {
-	// 	const messageIds = messages.map((message) => message.id);
-
-	// 	await db.user.update({
-	// 		where: { id: locals.user.id },
-	// 		data: {
-	// 			readMessages: {
-	// 				connect: messageIds.map((id) => ({ id }))
-	// 			}
-	// 		}
-	// 	});
-	// }
+	const systemMessages = await db.systemMessage.findMany({
+		where: { chatId, usedKeyVersion: { gte: participant.joinKeyVersion } },
+		orderBy: { timestamp: 'asc' }
+	});
 
 	console.log('Queried messages: ', messages.length);
 
-	return messages;
+	return { messages, systemMessages };
 });
 
 export const getUserChats = query(async () => {
@@ -122,6 +114,16 @@ export const getUserChats = query(async () => {
 	return userWithChats?.chatParticipations.map((participation) => participation.chat) ?? [];
 });
 
+export const addUserToChat = command(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	sendSystemMessage(chatId, locals.user!.username + ' clicked add user');
+});
+
 export const getChatById = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
 
@@ -138,6 +140,30 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 
 	return chat;
 });
+
+// TODO: Move this to separate file
+async function sendSystemMessage(chatId: string, content: string) {
+	const io = getIO();
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { currentKeyVersion: true }
+	});
+
+	if (!chat) {
+		error(404, 'Chat not found');
+	}
+
+	const message = await db.systemMessage.create({
+		data: {
+			chatId,
+			content,
+			usedKeyVersion: chat.currentKeyVersion
+		}
+	});
+
+	io.to(chatId).emit('new-system-message', message);
+}
 
 const rotateChatKeySchema = v.object({
 	chatId: v.string(),
@@ -183,6 +209,8 @@ export const rotateChatKey = command(
 					}
 				}
 			});
+
+			sendSystemMessage(chatId, `The chat key has been rotated to version ${newKeyVersion}.`);
 		} catch (e) {
 			console.log('Error rotating chat key:', e);
 			error(500, 'Something went wrong.');

@@ -1,5 +1,5 @@
 import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
-import type { User } from '$prisma';
+import type { SystemMessage, User } from '$prisma';
 
 class Chat {
 	user: User | null = $state(null);
@@ -15,12 +15,17 @@ class Chat {
 	// 	// return this.versionedChatKey[highestVersion];
 	// });
 	//chatKey: CryptoKey | null = $state(null);
+	combinedMessages = $derived.by(() => {
+		return [...this.messages, ...this.systemMessages].sort(
+			(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+		);
+	});
 	messages: ClientMessage[] = $state([]);
+	systemMessages: SystemMessage[] = $state([]);
 	loadingChat = $state(true);
 	shouldAutoScroll = $state(true);
 
 	getNewestChatKey(): CryptoKey | null {
-		console.log('newestChatKey:', this.versionedChatKey);
 		if (this.activeChat === null) return null;
 
 		const key = this.versionedChatKey[this.activeChat.currentKeyVersion];

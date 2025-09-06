@@ -6,6 +6,7 @@ import type { ClientMessage, SafeUser } from '$lib/types';
 import { untrack } from 'svelte';
 import { getUserById } from '../../routes/chat/chat.remote';
 import { chatStore } from '$lib/stores/chat.svelte';
+import type { SystemMessage } from '$prisma';
 
 function updateMessages() {
 	chatStore.messages = messages;
@@ -213,6 +214,16 @@ export function setMessages(newMessages: ClientMessage[]): void {
 	updateMessages();
 }
 
+/** Sets the system messages array */
+export function setSystemMessages(newMessages: SystemMessage[]): void {
+	chatStore.systemMessages = newMessages;
+}
+
+/** Checks if the message is a client message or a system message */
+export function isClientMessage(message: ClientMessage | SystemMessage): message is ClientMessage {
+	return 'encryptedContent' in message;
+}
+
 /** Resets the decryptionFailed Record */
 export function resetDecryptionFailed(): void {
 	messages = messages.map((m) => ({ ...m, decryptionFailed: undefined }));
@@ -265,6 +276,10 @@ export function handleNewMessage(message: ClientMessage): void {
 	}
 
 	markReadIfVisible(message);
+}
+
+export function handleNewSystemMessage(message: SystemMessage): void {
+	chatStore.systemMessages = [...chatStore.systemMessages, message];
 }
 
 /** Marks all unread messages as read when the page becomes visible */

@@ -15,7 +15,12 @@ import {
 	saveEncryptedChatKey
 } from '../../routes/chat/chat.remote';
 import { showMasterKeyImport } from './masterKey';
-import { markReadAfterDelay, resetDecryptionFailed, setMessages } from './messages';
+import {
+	markReadAfterDelay,
+	resetDecryptionFailed,
+	setMessages,
+	setSystemMessages
+} from './messages';
 
 export function handleKeyRotated(): void {
 	console.log('Key rotated');
@@ -182,7 +187,7 @@ export async function tryGetEncryptedChatKeys(chat: ChatWithoutMessages): Promis
 
 				await saveEncryptedChatKey({
 					chatId: chat.id,
-					keyVersion: chat.currentKeyVersion,
+					keyVersion: publicEncryptedChatKey.keyVersion,
 					encryptedKey: encryptedChatKey
 				});
 			}
@@ -196,6 +201,7 @@ export async function tryGetEncryptedChatKeys(chat: ChatWithoutMessages): Promis
 			}
 
 			//await removePublicEncryptedChatKeys(chat.id);
+			console.log('Got Key versions from public:', newKeys);
 
 			return { success: true, keyVersions: keyVersions };
 		} catch (e: any) {
@@ -217,7 +223,9 @@ export async function tryGetMessages(chat: ChatWithoutMessages | null): Promise<
 	}
 	try {
 		await getMessagesByChatId(chat.id).refresh();
-		setMessages(await getMessagesByChatId(chat.id));
+		const messages = await getMessagesByChatId(chat.id);
+		setSystemMessages(messages.systemMessages);
+		setMessages(messages.messages);
 
 		return true;
 	} catch (error: any) {

@@ -59,6 +59,7 @@
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
 		socketStore.onNewChat(handleCreateNewChat);
+		socketStore.onNewSystemMessage((m) => messages.handleNewSystemMessage(m));
 		socketStore.onConnect(handleConnect);
 		socketStore.onUserVerifyRequested((d) => {
 			console.log('User @' + d.requestorUsername + ' requested a verification');
