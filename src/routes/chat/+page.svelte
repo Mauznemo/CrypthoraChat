@@ -17,10 +17,11 @@
 	import * as messages from '$lib/chat/messages';
 	import SideBar from '$lib/components/chat/SideBar.svelte';
 	import { checkForMasterKey } from '$lib/chat/masterKey';
-	import { handleKeyRotated, trySelectChat } from '$lib/chat/chats';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { verifyUser } from '$lib/crypto/userVerification';
 	import { checkPublicKey } from '$lib/crypto/keyPair';
+	import { chatList } from '$lib/chat/chatList';
+	import { chats } from '$lib/chat/chats';
 
 	let { data }: PageProps = $props();
 
@@ -28,7 +29,6 @@
 	let messageContainer: HTMLDivElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
-	let chatListComponent: ChatList;
 
 	onMount(async () => {
 		chatStore.user = data.user;
@@ -59,7 +59,11 @@
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
 		socketStore.onNewChat(handleCreateNewChat);
-		socketStore.onNewSystemMessage((m) => messages.handleNewSystemMessage(m));
+		socketStore.onNewSystemMessage((m) => {
+			messages.handleNewSystemMessage(m);
+			scrollToBottom();
+		});
+		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onConnect(handleConnect);
 		socketStore.onUserVerifyRequested((d) => {
 			console.log('User @' + d.requestorUsername + ' requested a verification');
@@ -83,7 +87,7 @@
 				]
 			});
 		});
-		socketStore.onKeyRotated(handleKeyRotated);
+		socketStore.onKeyRotated(chats.handleKeyRotated);
 		socketStore.onMessageError((error) => {
 			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
@@ -106,7 +110,8 @@
 		socketStore.off('reconnect', handleConnect);
 		socketStore.off('new-system-message');
 		socketStore.off('requested-user-verify');
-		socketStore.off('key-rotated', handleKeyRotated);
+		socketStore.off('chat-users-updated');
+		socketStore.off('key-rotated', chats.handleKeyRotated);
 		socketStore.off('message-error');
 
 		//socketStore.disconnect();
@@ -134,6 +139,7 @@
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
+			localStorage.removeItem('lastChatId');
 			chatStore.loadingChat = false;
 			return;
 		}
@@ -161,7 +167,7 @@
 	}): Promise<void> {
 		const chat = await getChatById(data.chatId);
 		if (!chat) return;
-		chatListComponent.addChat(chat);
+		chatList.addChat(chat);
 	}
 
 	function handleScroll(): void {
@@ -182,7 +188,7 @@
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
 		chatStore.shouldAutoScroll = true;
 
-		const result = await trySelectChat(newChat);
+		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
 			scrollToBottom();
@@ -213,11 +219,7 @@
 
 <div class="flex h-dvh min-h-0">
 	<SideBar bind:this={sideBar}>
-		<ChatList
-			bind:this={chatListComponent}
-			onChatSelected={selectChat}
-			onCreateChat={handleCreateChat}
-		/>
+		<ChatList onChatSelected={selectChat} onCreateChat={handleCreateChat} />
 		<button
 			onclick={resetServiceWorkers}
 			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"

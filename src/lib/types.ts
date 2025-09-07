@@ -40,3 +40,13 @@ export const chatWithoutMessagesFields = {
 export type ChatWithoutMessages = Prisma.ChatGetPayload<{
 	select: typeof chatWithoutMessagesFields;
 }>;
+
+export type ChatParticipant = Prisma.ChatParticipantGetPayload<{
+	select: {
+		chatId: true;
+		userId: true;
+		joinKeyVersion: true;
+		joinedAt: true;
+		user: { select: typeof safeUserFields };
+	};
+}>;

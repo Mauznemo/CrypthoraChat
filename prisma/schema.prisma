@@ -45,7 +45,7 @@ model UserChatKey {
 }
 
 model UserChatKeyVersion {
-  userChatKey  UserChatKey @relation(fields: [userId, chatId], references: [userId, chatId])
+  userChatKey  UserChatKey @relation(fields: [userId, chatId], references: [userId, chatId], onDelete: Cascade)
   userId       String
   chatId       String
   keyVersion   Int

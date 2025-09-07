@@ -1,19 +1,23 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { tryDecryptChatKeys, tryGetEncryptedChatKeys } from '$lib/chat/chats';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
-	import { encryptChatKeyForUsers, generateChatKey } from '$lib/crypto/chat';
+	import { encryptChatKeyForUsers } from '$lib/crypto/chat';
 	import { getUnverifiedUsers, verifyUser } from '$lib/crypto/userVerification';
-	import { encryptKeyForStorage } from '$lib/crypto/utils';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import type { ChatWithoutMessages, SafeUser } from '$lib/types';
+	import type { SafeUser } from '$lib/types';
 	import { fade } from 'svelte/transition';
 	import { addUserToChat, getCurrentChatKeyVersion } from '../../../routes/chat/chat.remote';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
+	import { chats } from '$lib/chat/chats';
 
 	let selectedUsers: SafeUser[] = $state([]);
+
+	$effect(() => {
+		if (addUserToChatStore.isOpen) {
+			selectedUsers = [];
+		}
+	});
 
 	async function handleAddUser() {
 		try {
@@ -49,14 +53,14 @@
 			const newChatKeyVersion = await getCurrentChatKeyVersion(addUserToChatStore.chat.id);
 			if (newChatKeyVersion) addUserToChatStore.chat.currentKeyVersion = newChatKeyVersion;
 
-			const chatKeyResult = await tryGetEncryptedChatKeys(addUserToChatStore.chat);
+			const chatKeyResult = await chats.tryGetEncryptedChatKeys(addUserToChatStore.chat);
 
 			if (!chatKeyResult.success) {
 				modalStore.error('Failed to get chat key so cannot be shared with users.');
 				return;
 			}
 
-			const decryptResult = await tryDecryptChatKeys(chatKeyResult.keyVersions);
+			const decryptResult = await chats.tryDecryptChatKeys(chatKeyResult.keyVersions);
 
 			if (!decryptResult.success) {
 				return;

@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { addUserToChat, getUserChats } from '../../../routes/chat/chat.remote';
+	import { addUserToChat, getUserChats, leaveChat } from '../../../routes/chat/chat.remote';
 	import type { ChatWithoutMessages } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { tryRotateChatKey } from '$lib/chat/chats';
 	import AddUserToChat from './AddUserToChat.svelte';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
+	import { chats } from '$lib/chat/chats';
+	import { chatList } from '$lib/chat/chatList';
 
 	let {
 		onChatSelected,
@@ -19,12 +20,7 @@
 		onCreateChat: () => void;
 	} = $props();
 
-	let chats: ChatWithoutMessages[] = $state([]);
 	let loadingChats = $state(true);
-
-	export function addChat(newChat: ChatWithoutMessages): void {
-		chats = [...chats, newChat];
-	}
 
 	async function handleShowContextMenu(event: Event, chat: ChatWithoutMessages): Promise<void> {
 		console.log('showContextMenu');
@@ -71,7 +67,7 @@
 				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 				action: async () => {
 					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
-						tryRotateChatKey(chat);
+						chats.tryRotateChatKey(chat);
 					});
 				}
 			});
@@ -103,7 +99,15 @@
 			id: 'leave',
 			label: chat.type === 'group' ? 'Leave Group' : 'Delete Chat',
 			iconSvg: 'M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2',
-			action: () => console.log('Edit clicked')
+			action: async () => {
+				try {
+					await leaveChat(chat.id);
+					chats.tryDeselectChat(chat);
+					chatList.removeChat(chat.id);
+				} catch (error) {
+					modalStore.error(error, 'Failed to leave chat:');
+				}
+			}
 		});
 
 		contextMenuStore.open(event.target as HTMLElement, items);
@@ -111,7 +115,7 @@
 
 	onMount(async () => {
 		loadingChats = true;
-		chats = await getUserChats();
+		chatStore.chats = await getUserChats();
 		loadingChats = false;
 	});
 </script>
@@ -124,7 +128,7 @@
 			<LoadingSpinner />
 		</div>
 	{/if}
-	{#each chats as chat, index}
+	{#each chatStore.chats as chat, index}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			onclick={() => {

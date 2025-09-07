@@ -18,6 +18,7 @@ declare global {
 		}
 	}
 	var _io: Server | null;
+	var _userSocketMap: Map<string, string>;
 }
 
 export {};
