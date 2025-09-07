@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import { getChatById, getUserById } from './chat.remote';
+	import { getChatById, getUserById } from '$lib/chat/chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 	import type { ChatWithoutMessages } from '$lib/types';

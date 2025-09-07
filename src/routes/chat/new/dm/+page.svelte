@@ -8,7 +8,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
-	import { saveEncryptedChatKey } from '../../chat.remote';
+	import { saveEncryptedChatKey } from '$lib/chat/chat.remote';
 	import { createDm } from '../chatCreation.remote';
 	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';

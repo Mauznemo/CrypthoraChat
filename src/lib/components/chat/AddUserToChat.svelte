@@ -7,7 +7,7 @@
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import { fade } from 'svelte/transition';
-	import { addUserToChat, getCurrentChatKeyVersion } from '../../../routes/chat/chat.remote';
+	import { addUserToChat, getCurrentChatKeyVersion } from '$lib/chat/chat.remote';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
 
