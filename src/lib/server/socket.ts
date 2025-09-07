@@ -1,7 +1,7 @@
 // server/socket.ts or in your main server file
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
-import { db } from '../src/lib/db';
+import { db } from '../db';
 import { validateSession } from '$lib/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
@@ -29,16 +29,45 @@ async function getChatUsers(chatId: string) {
 	// TODO: Add some caching to this
 	const chat = await db.chat.findUnique({
 		where: { id: chatId },
-		include: { participants: { select: { id: true, username: true } } }
+		include: {
+			participants: {
+				include: {
+					user: {
+						select: {
+							id: true,
+							username: true
+						}
+					}
+				}
+			}
+		}
 	});
-	return chat?.participants || [];
+
+	// Flatten into an array of user objects
+	return (
+		chat?.participants.map((p) => ({
+			id: p.user.id,
+			username: p.user.username
+		})) || []
+	);
+}
+
+globalThis._io ??= null;
+globalThis._userSocketMap ??= new Map<string, string>();
+
+export function getIO(): Server {
+	if (!globalThis._io) throw new Error('Socket not initialized');
+	return globalThis._io;
+}
+
+export function getUserSocket(userId: string): string | null {
+	if (!globalThis._userSocketMap) throw new Error('User socket map not initialized');
+	return globalThis._userSocketMap.get(userId) || null;
 }
 
 export function initializeSocket(server: HTTPServer) {
-	const io = new Server(server);
-
-	// Add this map after io initialization
-	const userSocketMap = new Map<string, string>();
+	globalThis._io = new Server(server);
+	const io: Server = globalThis._io;
 
 	// Authentication middleware
 	io.use(async (socket: AuthenticatedSocket, next) => {
@@ -83,7 +112,7 @@ export function initializeSocket(server: HTTPServer) {
 	io.on('connection', (socket: AuthenticatedSocket) => {
 		// Add this after connection
 		if (socket.user) {
-			userSocketMap.set(socket.user.id, socket.id);
+			globalThis._userSocketMap.set(socket.user.id, socket.id);
 		}
 
 		console.log('User connected:', socket.id, 'User:', socket.user?.username);
@@ -105,12 +134,28 @@ export function initializeSocket(server: HTTPServer) {
 			pushSubscriptions.set(userId, data.subscription);
 		});
 
+		socket.on('request-user-verify', (data) => {
+			const socketId = globalThis._userSocketMap.get(data.userId);
+			if (!socketId) {
+				return;
+			}
+
+			io.to(socketId).emit('requested-user-verify', {
+				requestorId: socket.user!.id,
+				requestorUsername: socket.user!.username
+			});
+		});
+
+		socket.on('key-rotated', async (data) => {
+			io.to(data.chatId).emit('key-rotated');
+		});
+
 		// Handle new message
 		socket.on(
 			'send-message',
 			async (data: {
 				chatId: string;
-				//senderId: string;
+				keyVersion: number;
 				encryptedContent: string;
 				replyToId?: string | null;
 				attachments?: string[];
@@ -134,6 +179,7 @@ export function initializeSocket(server: HTTPServer) {
 					const newMessage = await db.message.create({
 						data: {
 							chatId: data.chatId,
+							usedKeyVersion: data.keyVersion,
 							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
 							attachments: data.attachments || [],
@@ -159,7 +205,7 @@ export function initializeSocket(server: HTTPServer) {
 					console.log('Sending push notifications to users: ' + chatUsers.length);
 					for (const user of chatUsers) {
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
-						if (userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
+						if (globalThis._userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
 
 						const subscription = pushSubscriptions.get(user.id);
 						if (subscription) {
@@ -192,40 +238,44 @@ export function initializeSocket(server: HTTPServer) {
 		);
 
 		// Handle message editing
-		socket.on('edit-message', async (data: { messageId: string; encryptedContent: string }) => {
-			try {
-				// Verify user owns the message and update it
-				const updatedMessage = await db.message.update({
-					where: {
-						id: data.messageId,
-						senderId: socket.user!.id // Ensure user owns the message
-					},
-					data: {
-						encryptedContent: data.encryptedContent,
-						readBy: {
-							set: [] // Clear read status on edit
+		socket.on(
+			'edit-message',
+			async (data: { messageId: string; encryptedContent: string; keyVersion: number }) => {
+				try {
+					// Verify user owns the message and update it
+					const updatedMessage = await db.message.update({
+						where: {
+							id: data.messageId,
+							senderId: socket.user!.id // Ensure user owns the message
 						},
-						isEdited: true
-					},
-					include: {
-						user: true,
-						chat: true,
-						readBy: true,
-						replyTo: {
-							include: {
-								user: true
+						data: {
+							usedKeyVersion: data.keyVersion,
+							encryptedContent: data.encryptedContent,
+							readBy: {
+								set: [] // Clear read status on edit
+							},
+							isEdited: true
+						},
+						include: {
+							user: true,
+							chat: true,
+							readBy: true,
+							replyTo: {
+								include: {
+									user: true
+								}
 							}
 						}
-					}
-				});
+					});
 
-				// Emit to all users in the chat
-				io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
-			} catch (error) {
-				console.error('Error editing message:', error);
-				socket.emit('message-error', { error: 'Failed to edit message' });
+					// Emit to all users in the chat
+					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+				} catch (error) {
+					console.error('Error editing message:', error);
+					socket.emit('message-error', { error: 'Failed to edit message' });
+				}
 			}
-		});
+		);
 
 		// Handle message deletion
 		socket.on('delete-message', async (data: { messageId: string; chatId: string }) => {
@@ -383,38 +433,26 @@ export function initializeSocket(server: HTTPServer) {
 			});
 		});
 
-		// Add these new event handlers
 		socket.on(
 			'chat-created',
 			(data: { userIds: string[]; chatId: string; type: 'dm' | 'group' }) => {
-				// Find socket IDs for all target users
 				const targetSockets = data.userIds
-					.map((userId) => userSocketMap.get(userId))
+					.map((userId) => globalThis._userSocketMap.get(userId))
 					.filter((socketId): socketId is string => socketId !== undefined);
 
-				// Emit to specific users if we have their sockets
-				if (targetSockets.length > 0) {
-					targetSockets.forEach((socketId) => {
-						io.to(socketId).emit('new-chat-created', {
-							chatId: data.chatId,
-							type: data.type
-						});
-					});
-				} else {
-					// Fallback: broadcast to all with user filter info
-					io.emit('new-chat-created', {
+				targetSockets.forEach((socketId) => {
+					io.to(socketId).emit('new-chat-created', {
 						chatId: data.chatId,
-						type: data.type,
-						forUsers: data.userIds
+						type: data.type
 					});
-				}
+				});
 			}
 		);
 
 		socket.on('disconnect', () => {
 			// Remove from user socket map
 			if (socket.user) {
-				userSocketMap.delete(socket.user.id);
+				globalThis._userSocketMap.delete(socket.user.id);
 			}
 			console.log('User disconnected:', socket.id);
 		});

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { User } from '$prisma';
 	import { onMount } from 'svelte';
 	import MyChatMessage from './MyChatMessage.svelte';
 	import ChatMessage from './ChatMessage.svelte';
-	import type { MessageWithRelations } from '$lib/types';
+	import type { ClientMessage, MessageWithRelations } from '$lib/types';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { isClientMessage } from '$lib/chat/messages';
 
 	interface ToolbarPosition {
 		x: number;
@@ -257,47 +257,63 @@
 	onscroll={handleScrollUpdate}
 	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
 >
-	{#each chatStore.messages as message, index (message.id + message.encryptedContent)}
-		<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
-		{@const isFromMe = message.senderId === chatStore.user?.id}
-		{@const isFirstInGroup =
-			index === 0 || chatStore.messages[index - 1].senderId !== message.senderId}
-		{@const showProfile = isFirstInGroup}
+	{#each chatStore.combinedMessages as message, index (message.id + (isClientMessage(message) ? message.encryptedContent : '') + index)}
+		{#if isClientMessage(message)}
+			{console.log('Key:', message.id + message.encryptedContent + index)}
+			{console.log('ClientMessage:', message.id, 'by:', message.senderId)}
+			<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
+			{@const isFromMe = message.senderId === chatStore.user?.id}
+			{@const isFirstInGroup =
+				index === 0 ||
+				!isClientMessage(chatStore.combinedMessages[index - 1]) ||
+				(chatStore.combinedMessages[index - 1] as ClientMessage).senderId !== message.senderId}
+			{@const showProfile = isFirstInGroup}
 
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
-			class="message-wrapper relative"
-			data-message-id={message.id}
-			onmouseleave={handleMessageLeave}
-			ontouchend={handleTouchEnd}
-			ontouchmove={handleTouchMove}
-		>
-			{#if isFromMe}
-				{@const isLast =
-					index === chatStore.messages.length - 1 ||
-					!(chatStore.messages[index + 1].senderId === chatStore.user?.id)}
-				<MyChatMessage
-					{message}
-					{showProfile}
-					{isLast}
-					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
-					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
-					onUpdateReaction={(encryptedReaction, operation) =>
-						onUpdateReaction(message, encryptedReaction, operation)}
-				/>
-			{:else}
-				<ChatMessage
-					{message}
-					{showProfile}
-					onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
-					onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
-					onUpdateReaction={(encryptedReaction, operation) =>
-						onUpdateReaction(message, encryptedReaction, operation)}
-					{onDecryptError}
-				/>
-			{/if}
-		</div>
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="message-wrapper relative"
+				data-message-id={message.id}
+				onmouseleave={handleMessageLeave}
+				ontouchend={handleTouchEnd}
+				ontouchmove={handleTouchMove}
+			>
+				{#if isFromMe}
+					{@const isLast =
+						index === chatStore.combinedMessages.length - 1 ||
+						(index + 1 < chatStore.combinedMessages.length &&
+							(!isClientMessage(chatStore.combinedMessages[index + 1]) ||
+								(chatStore.combinedMessages[index + 1] as ClientMessage).senderId !==
+									chatStore.user?.id))}
+					<MyChatMessage
+						{message}
+						{showProfile}
+						{isLast}
+						onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
+						onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
+						onUpdateReaction={(encryptedReaction, operation) =>
+							onUpdateReaction(message, encryptedReaction, operation)}
+					/>
+				{:else}
+					<ChatMessage
+						{message}
+						{showProfile}
+						onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
+						onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
+						onUpdateReaction={(encryptedReaction, operation) =>
+							onUpdateReaction(message, encryptedReaction, operation)}
+						{onDecryptError}
+					/>
+				{/if}
+			</div>
+		{:else}
+			{console.log('SystemMessage:', message.id)}
+			<!-- SystemMessage specific code -->
+			<div class="text-center text-xs text-gray-400">
+				<p>{message.content}</p>
+			</div>
+		{/if}
 	{/each}
+
 	<div class="h-4"></div>
 
 	<!-- Single floating toolbar -->

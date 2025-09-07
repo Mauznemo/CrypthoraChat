@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { generateAndStoreKeyPair } from '$lib/crypto/keyPair';
 	import { generateAndStoreMasterKey } from '$lib/crypto/master';
+	import { idb } from '$lib/idb';
 	import { register } from './data.remote';
 
 	let { data } = $props();
 
 	let errorText: String = $state('');
 	let showPassword = $state(false);
+	let redirectToProfile = $state(true);
 
 	$effect(() => {
-		if (data.user != null) {
+		if (data.user != null && redirectToProfile) {
 			goto('/profile');
 		}
 	});
@@ -22,14 +25,19 @@
 		<form
 			{...register.enhance(async ({ form, data, submit }) => {
 				try {
+					redirectToProfile = false;
+					localStorage.clear();
+					await idb!.clear('master');
+					await idb!.clear('verifiedUsers');
 					await submit();
 					form.reset();
-					localStorage.clear();
 					await generateAndStoreMasterKey();
-				} catch (error: any) {
-					const errorObj: Error | undefined = JSON.parse(error);
-					if (errorObj !== undefined) errorText = errorObj.message;
-					else errorText = 'Something went wrong! ' + error;
+					await generateAndStoreKeyPair();
+					goto('/chat');
+				} catch (e: any) {
+					console.error(e);
+
+					errorText = e?.body?.message || e?.message || String(e) || 'Something went wrong';
 				}
 			})}
 		>

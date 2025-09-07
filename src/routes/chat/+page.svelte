@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import { getChatById } from './chat.remote';
+	import { getChatById, getUserById } from './chat.remote';
 	import { onDestroy, onMount } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 	import type { ChatWithoutMessages } from '$lib/types';
@@ -17,8 +17,11 @@
 	import * as messages from '$lib/chat/messages';
 	import SideBar from '$lib/components/chat/SideBar.svelte';
 	import { checkForMasterKey } from '$lib/chat/masterKey';
-	import { trySelectChat } from '$lib/chat/chats';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { verifyUser } from '$lib/crypto/userVerification';
+	import { checkPublicKey } from '$lib/crypto/keyPair';
+	import { chatList } from '$lib/chat/chatList';
+	import { chats } from '$lib/chat/chats';
 
 	let { data }: PageProps = $props();
 
@@ -26,10 +29,6 @@
 	let messageContainer: HTMLDivElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
-	let chatListComponent: ChatList;
-
-	let loadingChat = $state(true);
-	let shouldAutoScroll = $state(true);
 
 	onMount(async () => {
 		chatStore.user = data.user;
@@ -38,6 +37,8 @@
 		const wasConnected = socketStore.connected;
 
 		await checkForMasterKey();
+
+		await checkPublicKey();
 
 		socketStore.connect();
 
@@ -58,7 +59,35 @@
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
 		socketStore.onNewChat(handleCreateNewChat);
+		socketStore.onNewSystemMessage((m) => {
+			messages.handleNewSystemMessage(m);
+			scrollToBottom();
+		});
+		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onConnect(handleConnect);
+		socketStore.onUserVerifyRequested((d) => {
+			console.log('User @' + d.requestorUsername + ' requested a verification');
+			modalStore.open({
+				title: 'Verify User Request',
+				content: 'User @' + d.requestorUsername + ' requested a verification',
+				buttons: [
+					{
+						text: 'Verify Now',
+						variant: 'primary',
+						onClick: async () => {
+							const user = await getUserById(d.requestorId);
+							verifyUser(user, false);
+						}
+					},
+					{
+						text: 'Decline',
+						variant: 'secondary',
+						onClick: () => {}
+					}
+				]
+			});
+		});
+		socketStore.onKeyRotated(chats.handleKeyRotated);
 		socketStore.onMessageError((error) => {
 			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
@@ -79,6 +108,10 @@
 		socketStore.off('messages-read');
 		socketStore.off('new-chat', handleCreateNewChat);
 		socketStore.off('reconnect', handleConnect);
+		socketStore.off('new-system-message');
+		socketStore.off('requested-user-verify');
+		socketStore.off('chat-users-updated');
+		socketStore.off('key-rotated', chats.handleKeyRotated);
 		socketStore.off('message-error');
 
 		//socketStore.disconnect();
@@ -95,10 +128,10 @@
 	}
 
 	async function handleConnect(): Promise<void> {
-		loadingChat = true;
+		chatStore.loadingChat = true;
 		const lastChatId = localStorage.getItem('lastChatId');
 		if (!lastChatId) {
-			loadingChat = false;
+			chatStore.loadingChat = false;
 			return;
 		}
 
@@ -106,7 +139,8 @@
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
-			loadingChat = false;
+			localStorage.removeItem('lastChatId');
+			chatStore.loadingChat = false;
 			return;
 		}
 
@@ -133,35 +167,32 @@
 	}): Promise<void> {
 		const chat = await getChatById(data.chatId);
 		if (!chat) return;
-		chatListComponent.addChat(chat);
+		chatList.addChat(chat);
 	}
 
 	function handleScroll(): void {
 		if (messageContainer) {
 			const { scrollTop, scrollHeight, clientHeight } = messageContainer;
-			shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
+			chatStore.shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
 		}
 	}
 
 	function scrollToBottom(): void {
 		setTimeout(() => {
-			if (shouldAutoScroll && messageContainer) {
+			if (chatStore.shouldAutoScroll && messageContainer) {
 				messageContainer.scrollTop = messageContainer.scrollHeight;
 			}
 		}, 100);
 	}
 
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
-		loadingChat = true;
-		shouldAutoScroll = true;
+		chatStore.shouldAutoScroll = true;
 
-		const result = await trySelectChat(newChat);
+		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
 			scrollToBottom();
 		}
-
-		loadingChat = false;
 	}
 
 	async function resetServiceWorkers(): Promise<void> {
@@ -188,11 +219,7 @@
 
 <div class="flex h-dvh min-h-0">
 	<SideBar bind:this={sideBar}>
-		<ChatList
-			bind:this={chatListComponent}
-			onChatSelected={selectChat}
-			onCreateChat={handleCreateChat}
-		/>
+		<ChatList onChatSelected={selectChat} onCreateChat={handleCreateChat} />
 		<button
 			onclick={resetServiceWorkers}
 			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
@@ -240,13 +267,13 @@
 			</div>
 		</div>
 
-		{#if !chatStore.activeChat && !loadingChat}
+		{#if !chatStore.activeChat && !chatStore.loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<p class="text-2xl font-bold">No chat selected</p>
 			</div>
 		{/if}
 
-		{#if loadingChat}
+		{#if chatStore.loadingChat}
 			<div class="flex h-full items-center justify-center">
 				<LoadingSpinner />
 			</div>

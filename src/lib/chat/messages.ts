@@ -6,6 +6,7 @@ import type { ClientMessage, SafeUser } from '$lib/types';
 import { untrack } from 'svelte';
 import { getUserById } from '../../routes/chat/chat.remote';
 import { chatStore } from '$lib/stores/chat.svelte';
+import type { SystemMessage } from '$prisma';
 
 function updateMessages() {
 	chatStore.messages = messages;
@@ -41,7 +42,12 @@ export function handleInfoMessage(message: ClientMessage): void {
 			: 'No one';
 	modalStore.alert(
 		'Message Info',
-		'Sent by: @' + message.user.username + '\nRead by: ' + readerNames
+		'Sent by: @' +
+			message.user.username +
+			'\nRead by: ' +
+			readerNames +
+			'\nUsed Key Version: ' +
+			message.usedKeyVersion
 	);
 }
 
@@ -52,7 +58,7 @@ export function handleReaction(message: ClientMessage, userId: string): void {
 	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
 	if (messageBubble) {
 		emojiPickerStore.open(messageBubble, async (reaction: string) => {
-			const encryptedReaction = await encryptReaction(reaction, userId);
+			const encryptedReaction = await encryptReaction(reaction, userId, message.usedKeyVersion);
 			socketStore.reactToMessage({
 				messageId: message.id,
 				encryptedReaction: encryptedReaction
@@ -174,7 +180,7 @@ export function handleDecryptError(
 			'Error',
 			'Failed to decrypt message by user @' +
 				message.user.username +
-				'. Please re-share the chat key with them. Since they have a wrong one.',
+				'. Something is wrong with their key.',
 			{
 				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
@@ -188,7 +194,7 @@ export function handleDecryptError(
 			'Error',
 			'Failed to decrypt message by chat owner @' +
 				message.user.username +
-				'. This means your chat key is wrong. Please re-input the correct key.',
+				'. Something is wrong with your key.',
 			{
 				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
@@ -197,8 +203,7 @@ export function handleDecryptError(
 		return;
 	}
 
-	modalStore.alert(
-		'Error',
+	modalStore.error(
 		'Failed to decrypt you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key.'
 	);
 }
@@ -207,6 +212,16 @@ export function handleDecryptError(
 export function setMessages(newMessages: ClientMessage[]): void {
 	messages = newMessages;
 	updateMessages();
+}
+
+/** Sets the system messages array */
+export function setSystemMessages(newMessages: SystemMessage[]): void {
+	chatStore.systemMessages = newMessages;
+}
+
+/** Checks if the message is a client message or a system message */
+export function isClientMessage(message: ClientMessage | SystemMessage): message is ClientMessage {
+	return 'encryptedContent' in message;
 }
 
 /** Resets the decryptionFailed Record */
@@ -261,6 +276,10 @@ export function handleNewMessage(message: ClientMessage): void {
 	}
 
 	markReadIfVisible(message);
+}
+
+export function handleNewSystemMessage(message: SystemMessage): void {
+	chatStore.systemMessages = [...chatStore.systemMessages, message];
 }
 
 /** Marks all unread messages as read when the page becomes visible */
