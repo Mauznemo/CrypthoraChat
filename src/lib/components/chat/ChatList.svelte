@@ -1,19 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		getEncryptedChatKeySeed,
-		getUserChats,
-		saveEncryptedChatKeySeed
-	} from '../../../routes/chat/chat.remote';
+	import { addUserToChat, getUserChats, leaveChat } from '../../../routes/chat/chat.remote';
 	import type { ChatWithoutMessages } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
-	import { decryptChatKeySeedFromStorage, encryptChatKeySeedForStorage } from '$lib/crypto/chat';
-	import { modalStore } from '$lib/stores/modal.svelte';
-	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import { openEmojiKeyInput } from '$lib/chat/chats';
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import AddUserToChat from './AddUserToChat.svelte';
+	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
+	import { chats } from '$lib/chat/chats';
+	import { chatList } from '$lib/chat/chatList';
 
 	let {
 		onChatSelected,
@@ -23,60 +20,69 @@
 		onCreateChat: () => void;
 	} = $props();
 
-	let chats: ChatWithoutMessages[] = $state([]);
 	let loadingChats = $state(true);
-
-	export function addChat(newChat: ChatWithoutMessages): void {
-		chats = [...chats, newChat];
-	}
 
 	async function handleShowContextMenu(event: Event, chat: ChatWithoutMessages): Promise<void> {
 		console.log('showContextMenu');
 		event.stopPropagation();
 		event.preventDefault();
 
-		const encryptedChatKeySeed = await getEncryptedChatKeySeed(chat.id);
+		// const encryptedChatKey = await getEncryptedChatKey(chat.id);
 
 		const items: ContextMenuItem[] = [];
 		const isChatOwner = chat.ownerId === chatStore.user?.id;
 
-		if (encryptedChatKeySeed && (chat.type === 'group' || isChatOwner)) {
-			items.push({
-				id: 'share-key',
-				label: 'Share Key',
-				iconSvg:
-					'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
-				action: async () => {
-					if (!isChatOwner) {
-						modalStore.alert(
-							'Note',
-							'You are not the chat owner, make sure your key is correct before sharing it with others.'
-						);
-					}
-					try {
-						const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
-						const title =
-							chat.type === 'dm'
-								? 'Key for DM with ' +
-									chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
-								: 'Key for group ' + chat.name;
-						emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
-					} catch (error) {
-						modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
-					}
-				}
-			});
-		}
+		// if (encryptedChatKey && (chat.type === 'group' || isChatOwner)) {
+		// 	items.push({
+		// 		id: 'share-key',
+		// 		label: 'Share Key',
+		// 		iconSvg:
+		// 			'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
+		// 		action: async () => {
+		// 			if (!isChatOwner) {
+		// 				modalStore.alert(
+		// 					'Note',
+		// 					'You are not the chat owner, make sure your key is correct before sharing it with others.'
+		// 				);
+		// 			}
+		// 			try {
+		// 				const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
+		// 				const title =
+		// 					chat.type === 'dm'
+		// 						? 'Key for DM with ' +
+		// 							chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
+		// 						: 'Key for group ' + chat.name;
+		// 				emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
+		// 			} catch (error) {
+		// 				modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
+		// 			}
+		// 		}
+		// 	});
+		// }
 
-		if (!isChatOwner) {
+		if (isChatOwner) {
 			items.push({
-				id: 're-input-key',
-				label: encryptedChatKeySeed ? 'Re-input Key' : 'Input Key',
+				id: 'rotate-key',
+				label: 'Rotate Key',
 				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 				action: async () => {
-					openEmojiKeyInput(chat);
+					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
+						chats.tryRotateChatKey(chat);
+					});
 				}
 			});
+
+			if (chat.type === 'group') {
+				items.push({
+					id: 'add-user',
+					label: 'Add User',
+					iconSvg:
+						'M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+					action: () => {
+						addUserToChatStore.open(chat);
+					}
+				});
+			}
 		}
 
 		if (chat.type === 'group' && isChatOwner) {
@@ -89,21 +95,19 @@
 			});
 		}
 
-		if (chat.type === 'group') {
-			items.push({
-				id: 'add-user',
-				label: 'Add Users',
-				iconSvg:
-					'M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
-				action: () => {}
-			});
-		}
-
 		items.push({
 			id: 'leave',
 			label: chat.type === 'group' ? 'Leave Group' : 'Delete Chat',
 			iconSvg: 'M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2',
-			action: () => console.log('Edit clicked')
+			action: async () => {
+				try {
+					await leaveChat(chat.id);
+					chats.tryDeselectChat(chat);
+					chatList.removeChat(chat.id);
+				} catch (error) {
+					modalStore.error(error, 'Failed to leave chat:');
+				}
+			}
 		});
 
 		contextMenuStore.open(event.target as HTMLElement, items);
@@ -111,7 +115,7 @@
 
 	onMount(async () => {
 		loadingChats = true;
-		chats = await getUserChats();
+		chatStore.chats = await getUserChats();
 		loadingChats = false;
 	});
 </script>
@@ -124,7 +128,7 @@
 			<LoadingSpinner />
 		</div>
 	{/if}
-	{#each chats as chat, index}
+	{#each chatStore.chats as chat, index}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			onclick={() => {
@@ -138,7 +142,7 @@
 				: 'hover:bg-gray-700/40 '}"
 		>
 			{#if chat.type === 'dm'}
-				{@const otherUser = chat.participants.find((p) => p.id !== chatStore.user?.id)}
+				{@const otherUser = chat.participants.find((p) => p.user.id !== chatStore.user?.id)}
 				<!-- Profile picture -->
 				<div
 					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
@@ -148,14 +152,14 @@
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div title={otherUser?.displayName} class="flex items-center space-x-2">
+					<div title={otherUser?.user.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
-							{otherUser?.displayName}
+							{otherUser?.user.displayName}
 						</p>
 					</div>
 
 					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
-						@{otherUser?.username}
+						@{otherUser?.user.username}
 					</p>
 				</div>
 				<button
@@ -181,8 +185,10 @@
 					</svg>
 				</button>
 			{:else}
-				{@const allParticipants = chat.participants.map((p) => '@' + p.username).join(', ')}
-				{@const firstTwoParticipants = chat.participants.slice(0, 2).map((p) => '@' + p.username)}
+				{@const allParticipants = chat.participants.map((p) => '@' + p.user.username).join(', ')}
+				{@const firstTwoParticipants = chat.participants
+					.slice(0, 2)
+					.map((p) => '@' + p.user.username)}
 				{@const remainingCount = chat.participants.length - 2}
 				{@const participants =
 					remainingCount > 0

@@ -19,12 +19,23 @@ export type MessageModel = runtime.Types.Result.DefaultSelection<Prisma.$Message
 
 export type AggregateMessage = {
   _count: MessageCountAggregateOutputType | null
+  _avg: MessageAvgAggregateOutputType | null
+  _sum: MessageSumAggregateOutputType | null
   _min: MessageMinAggregateOutputType | null
   _max: MessageMaxAggregateOutputType | null
 }
 
+export type MessageAvgAggregateOutputType = {
+  usedKeyVersion: number | null
+}
+
+export type MessageSumAggregateOutputType = {
+  usedKeyVersion: number | null
+}
+
 export type MessageMinAggregateOutputType = {
   id: string | null
+  usedKeyVersion: number | null
   chatId: string | null
   senderId: string | null
   encryptedContent: string | null
@@ -35,6 +46,7 @@ export type MessageMinAggregateOutputType = {
 
 export type MessageMaxAggregateOutputType = {
   id: string | null
+  usedKeyVersion: number | null
   chatId: string | null
   senderId: string | null
   encryptedContent: string | null
@@ -45,6 +57,7 @@ export type MessageMaxAggregateOutputType = {
 
 export type MessageCountAggregateOutputType = {
   id: number
+  usedKeyVersion: number
   chatId: number
   senderId: number
   attachments: number
@@ -57,8 +70,17 @@ export type MessageCountAggregateOutputType = {
 }
 
 
+export type MessageAvgAggregateInputType = {
+  usedKeyVersion?: true
+}
+
+export type MessageSumAggregateInputType = {
+  usedKeyVersion?: true
+}
+
 export type MessageMinAggregateInputType = {
   id?: true
+  usedKeyVersion?: true
   chatId?: true
   senderId?: true
   encryptedContent?: true
@@ -69,6 +91,7 @@ export type MessageMinAggregateInputType = {
 
 export type MessageMaxAggregateInputType = {
   id?: true
+  usedKeyVersion?: true
   chatId?: true
   senderId?: true
   encryptedContent?: true
@@ -79,6 +102,7 @@ export type MessageMaxAggregateInputType = {
 
 export type MessageCountAggregateInputType = {
   id?: true
+  usedKeyVersion?: true
   chatId?: true
   senderId?: true
   attachments?: true
@@ -128,6 +152,18 @@ export type MessageAggregateArgs<ExtArgs extends runtime.Types.Extensions.Intern
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: MessageAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: MessageSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: MessageMinAggregateInputType
@@ -158,12 +194,15 @@ export type MessageGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   _count?: MessageCountAggregateInputType | true
+  _avg?: MessageAvgAggregateInputType
+  _sum?: MessageSumAggregateInputType
   _min?: MessageMinAggregateInputType
   _max?: MessageMaxAggregateInputType
 }
 
 export type MessageGroupByOutputType = {
   id: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments: string[]
@@ -173,6 +212,8 @@ export type MessageGroupByOutputType = {
   timestamp: Date
   replyToId: string | null
   _count: MessageCountAggregateOutputType | null
+  _avg: MessageAvgAggregateOutputType | null
+  _sum: MessageSumAggregateOutputType | null
   _min: MessageMinAggregateOutputType | null
   _max: MessageMaxAggregateOutputType | null
 }
@@ -197,6 +238,7 @@ export type MessageWhereInput = {
   OR?: Prisma.MessageWhereInput[]
   NOT?: Prisma.MessageWhereInput | Prisma.MessageWhereInput[]
   id?: Prisma.StringFilter<"Message"> | string
+  usedKeyVersion?: Prisma.IntFilter<"Message"> | number
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
@@ -214,6 +256,7 @@ export type MessageWhereInput = {
 
 export type MessageOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  usedKeyVersion?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
@@ -234,6 +277,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.MessageWhereInput | Prisma.MessageWhereInput[]
   OR?: Prisma.MessageWhereInput[]
   NOT?: Prisma.MessageWhereInput | Prisma.MessageWhereInput[]
+  usedKeyVersion?: Prisma.IntFilter<"Message"> | number
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
@@ -251,6 +295,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
 
 export type MessageOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  usedKeyVersion?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
@@ -260,8 +305,10 @@ export type MessageOrderByWithAggregationInput = {
   timestamp?: Prisma.SortOrder
   replyToId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.MessageCountOrderByAggregateInput
+  _avg?: Prisma.MessageAvgOrderByAggregateInput
   _max?: Prisma.MessageMaxOrderByAggregateInput
   _min?: Prisma.MessageMinOrderByAggregateInput
+  _sum?: Prisma.MessageSumOrderByAggregateInput
 }
 
 export type MessageScalarWhereWithAggregatesInput = {
@@ -269,6 +316,7 @@ export type MessageScalarWhereWithAggregatesInput = {
   OR?: Prisma.MessageScalarWhereWithAggregatesInput[]
   NOT?: Prisma.MessageScalarWhereWithAggregatesInput | Prisma.MessageScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Message"> | string
+  usedKeyVersion?: Prisma.IntWithAggregatesFilter<"Message"> | number
   chatId?: Prisma.StringWithAggregatesFilter<"Message"> | string
   senderId?: Prisma.StringWithAggregatesFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
@@ -281,6 +329,7 @@ export type MessageScalarWhereWithAggregatesInput = {
 
 export type MessageCreateInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -295,6 +344,7 @@ export type MessageCreateInput = {
 
 export type MessageUncheckedCreateInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -309,6 +359,7 @@ export type MessageUncheckedCreateInput = {
 
 export type MessageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -323,6 +374,7 @@ export type MessageUpdateInput = {
 
 export type MessageUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -337,6 +389,7 @@ export type MessageUncheckedUpdateInput = {
 
 export type MessageCreateManyInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -349,6 +402,7 @@ export type MessageCreateManyInput = {
 
 export type MessageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -358,6 +412,7 @@ export type MessageUpdateManyMutationInput = {
 
 export type MessageUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -393,6 +448,7 @@ export type MessageNullableScalarRelationFilter = {
 
 export type MessageCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  usedKeyVersion?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   attachments?: Prisma.SortOrder
@@ -403,8 +459,13 @@ export type MessageCountOrderByAggregateInput = {
   replyToId?: Prisma.SortOrder
 }
 
+export type MessageAvgOrderByAggregateInput = {
+  usedKeyVersion?: Prisma.SortOrder
+}
+
 export type MessageMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  usedKeyVersion?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   encryptedContent?: Prisma.SortOrder
@@ -415,12 +476,17 @@ export type MessageMaxOrderByAggregateInput = {
 
 export type MessageMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  usedKeyVersion?: Prisma.SortOrder
   chatId?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
   encryptedContent?: Prisma.SortOrder
   isEdited?: Prisma.SortOrder
   timestamp?: Prisma.SortOrder
   replyToId?: Prisma.SortOrder
+}
+
+export type MessageSumOrderByAggregateInput = {
+  usedKeyVersion?: Prisma.SortOrder
 }
 
 export type MessageCreateNestedManyWithoutUserInput = {
@@ -623,6 +689,7 @@ export type MessageUncheckedUpdateManyWithoutReplyToNestedInput = {
 
 export type MessageCreateWithoutUserInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -636,6 +703,7 @@ export type MessageCreateWithoutUserInput = {
 
 export type MessageUncheckedCreateWithoutUserInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
@@ -659,6 +727,7 @@ export type MessageCreateManyUserInputEnvelope = {
 
 export type MessageCreateWithoutReadByInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -672,6 +741,7 @@ export type MessageCreateWithoutReadByInput = {
 
 export type MessageUncheckedCreateWithoutReadByInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -709,6 +779,7 @@ export type MessageScalarWhereInput = {
   OR?: Prisma.MessageScalarWhereInput[]
   NOT?: Prisma.MessageScalarWhereInput | Prisma.MessageScalarWhereInput[]
   id?: Prisma.StringFilter<"Message"> | string
+  usedKeyVersion?: Prisma.IntFilter<"Message"> | number
   chatId?: Prisma.StringFilter<"Message"> | string
   senderId?: Prisma.StringFilter<"Message"> | string
   attachments?: Prisma.StringNullableListFilter<"Message">
@@ -737,6 +808,7 @@ export type MessageUpdateManyWithWhereWithoutReadByInput = {
 
 export type MessageCreateWithoutChatInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -750,6 +822,7 @@ export type MessageCreateWithoutChatInput = {
 
 export type MessageUncheckedCreateWithoutChatInput = {
   id?: string
+  usedKeyVersion: number
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
@@ -789,6 +862,7 @@ export type MessageUpdateManyWithWhereWithoutChatInput = {
 
 export type MessageCreateWithoutRepliesInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -802,6 +876,7 @@ export type MessageCreateWithoutRepliesInput = {
 
 export type MessageUncheckedCreateWithoutRepliesInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -820,6 +895,7 @@ export type MessageCreateOrConnectWithoutRepliesInput = {
 
 export type MessageCreateWithoutReplyToInput = {
   id?: string
+  usedKeyVersion: number
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
   encryptedContent: string
@@ -833,6 +909,7 @@ export type MessageCreateWithoutReplyToInput = {
 
 export type MessageUncheckedCreateWithoutReplyToInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -867,6 +944,7 @@ export type MessageUpdateToOneWithWhereWithoutRepliesInput = {
 
 export type MessageUpdateWithoutRepliesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -880,6 +958,7 @@ export type MessageUpdateWithoutRepliesInput = {
 
 export type MessageUncheckedUpdateWithoutRepliesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -909,6 +988,7 @@ export type MessageUpdateManyWithWhereWithoutReplyToInput = {
 
 export type MessageCreateManyUserInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
@@ -920,6 +1000,7 @@ export type MessageCreateManyUserInput = {
 
 export type MessageUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -933,6 +1014,7 @@ export type MessageUpdateWithoutUserInput = {
 
 export type MessageUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
@@ -946,6 +1028,7 @@ export type MessageUncheckedUpdateWithoutUserInput = {
 
 export type MessageUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
@@ -957,6 +1040,7 @@ export type MessageUncheckedUpdateManyWithoutUserInput = {
 
 export type MessageUpdateWithoutReadByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -970,6 +1054,7 @@ export type MessageUpdateWithoutReadByInput = {
 
 export type MessageUncheckedUpdateWithoutReadByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -983,6 +1068,7 @@ export type MessageUncheckedUpdateWithoutReadByInput = {
 
 export type MessageUncheckedUpdateManyWithoutReadByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -995,6 +1081,7 @@ export type MessageUncheckedUpdateManyWithoutReadByInput = {
 
 export type MessageCreateManyChatInput = {
   id?: string
+  usedKeyVersion: number
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageCreateencryptedReactionsInput | string[]
@@ -1006,6 +1093,7 @@ export type MessageCreateManyChatInput = {
 
 export type MessageUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1019,6 +1107,7 @@ export type MessageUpdateWithoutChatInput = {
 
 export type MessageUncheckedUpdateWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
@@ -1032,6 +1121,7 @@ export type MessageUncheckedUpdateWithoutChatInput = {
 
 export type MessageUncheckedUpdateManyWithoutChatInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
@@ -1043,6 +1133,7 @@ export type MessageUncheckedUpdateManyWithoutChatInput = {
 
 export type MessageCreateManyReplyToInput = {
   id?: string
+  usedKeyVersion: number
   chatId: string
   senderId: string
   attachments?: Prisma.MessageCreateattachmentsInput | string[]
@@ -1054,6 +1145,7 @@ export type MessageCreateManyReplyToInput = {
 
 export type MessageUpdateWithoutReplyToInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
   encryptedReactions?: Prisma.MessageUpdateencryptedReactionsInput | string[]
   encryptedContent?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1067,6 +1159,7 @@ export type MessageUpdateWithoutReplyToInput = {
 
 export type MessageUncheckedUpdateWithoutReplyToInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -1080,6 +1173,7 @@ export type MessageUncheckedUpdateWithoutReplyToInput = {
 
 export type MessageUncheckedUpdateManyWithoutReplyToInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  usedKeyVersion?: Prisma.IntFieldUpdateOperationsInput | number
   chatId?: Prisma.StringFieldUpdateOperationsInput | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
   attachments?: Prisma.MessageUpdateattachmentsInput | string[]
@@ -1131,6 +1225,7 @@ export type MessageCountOutputTypeCountRepliesArgs<ExtArgs extends runtime.Types
 
 export type MessageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  usedKeyVersion?: boolean
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
@@ -1149,6 +1244,7 @@ export type MessageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 
 export type MessageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  usedKeyVersion?: boolean
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
@@ -1164,6 +1260,7 @@ export type MessageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type MessageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  usedKeyVersion?: boolean
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
@@ -1179,6 +1276,7 @@ export type MessageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 
 export type MessageSelectScalar = {
   id?: boolean
+  usedKeyVersion?: boolean
   chatId?: boolean
   senderId?: boolean
   attachments?: boolean
@@ -1189,7 +1287,7 @@ export type MessageSelectScalar = {
   replyToId?: boolean
 }
 
-export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "chatId" | "senderId" | "attachments" | "encryptedReactions" | "encryptedContent" | "isEdited" | "timestamp" | "replyToId", ExtArgs["result"]["message"]>
+export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usedKeyVersion" | "chatId" | "senderId" | "attachments" | "encryptedReactions" | "encryptedContent" | "isEdited" | "timestamp" | "replyToId", ExtArgs["result"]["message"]>
 export type MessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   readBy?: boolean | Prisma.Message$readByArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1220,6 +1318,7 @@ export type $MessagePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    usedKeyVersion: number
     chatId: string
     senderId: string
     attachments: string[]
@@ -1657,6 +1756,7 @@ export interface Prisma__MessageClient<T, Null = never, ExtArgs extends runtime.
  */
 export interface MessageFieldRefs {
   readonly id: Prisma.FieldRef<"Message", 'String'>
+  readonly usedKeyVersion: Prisma.FieldRef<"Message", 'Int'>
   readonly chatId: Prisma.FieldRef<"Message", 'String'>
   readonly senderId: Prisma.FieldRef<"Message", 'String'>
   readonly attachments: Prisma.FieldRef<"Message", 'String[]'>

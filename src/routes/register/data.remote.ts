@@ -64,5 +64,5 @@ export const register = form(async (data) => {
 		error(500, 'Something went wrong. Please try again.');
 	}
 
-	redirect(302, '/chat');
+	//redirect(302, '/chat');
 });

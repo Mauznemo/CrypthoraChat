@@ -34,7 +34,7 @@
 
 	function getButtonClasses(variant: string = 'primary') {
 		const baseClasses =
-			'frosted-glass px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-full';
+			'frosted-glass px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-full cursor-pointer';
 
 		switch (variant) {
 			case 'primary':
@@ -42,7 +42,7 @@
 			case 'secondary':
 				return `${baseClasses} bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600`;
 			case 'danger':
-				return `${baseClasses} bg-red-600 text-white hover:bg-red-700 focus:ring-red-500`;
+				return `${baseClasses} bg-red-700/40 text-white hover:bg-red-600/40 focus:ring-red-500`;
 			default:
 				return `${baseClasses} bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500`;
 		}
@@ -88,6 +88,10 @@
 					</button>
 				{/if}
 			</div>
+
+			{#if modalStore.config.customContent}
+				{@render modalStore.config.customContent?.()}
+			{/if}
 
 			<!-- Content -->
 			<div class="mb-6 whitespace-pre-wrap text-gray-300">

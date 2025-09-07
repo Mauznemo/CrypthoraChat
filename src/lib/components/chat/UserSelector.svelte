@@ -7,12 +7,14 @@
 		userId,
 		selectedUsers = $bindable<SafeUser[]>(),
 		selectedUser = $bindable<SafeUser | null>(),
+		filterOutUserIds,
 		onSelected
 	}: {
 		selectMultiple: boolean;
 		userId: string;
 		selectedUsers?: SafeUser[];
 		selectedUser?: SafeUser | null;
+		filterOutUserIds?: string[];
 		onSelected: (user: SafeUser) => void;
 	} = $props();
 
@@ -29,6 +31,10 @@
 				//await findUsers(searchValue).refresh();
 				const queriedUsers = await findUsers(searchValue);
 				users = queriedUsers.filter((u) => u.id !== userId);
+
+				if (filterOutUserIds) {
+					users = users.filter((u) => !filterOutUserIds.includes(u.id));
+				}
 
 				if (selectMultiple) foundUsers = users.length - selectedUsers.length > 0;
 				else foundUsers = users.length > 0;

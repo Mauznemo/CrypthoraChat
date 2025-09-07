@@ -56,6 +56,21 @@ export type User = Prisma.UserModel
  */
 export type UserChatKey = Prisma.UserChatKeyModel
 /**
+ * Model UserChatKeyVersion
+ * 
+ */
+export type UserChatKeyVersion = Prisma.UserChatKeyVersionModel
+/**
+ * Model KeyPair
+ * 
+ */
+export type KeyPair = Prisma.KeyPairModel
+/**
+ * Model PublicUserChatKey
+ * 
+ */
+export type PublicUserChatKey = Prisma.PublicUserChatKeyModel
+/**
  * Model Session
  * 
  */
@@ -66,10 +81,20 @@ export type Session = Prisma.SessionModel
  */
 export type Chat = Prisma.ChatModel
 /**
+ * Model ChatParticipant
+ * 
+ */
+export type ChatParticipant = Prisma.ChatParticipantModel
+/**
  * Model Message
  * 
  */
 export type Message = Prisma.MessageModel
+/**
+ * Model SystemMessage
+ * 
+ */
+export type SystemMessage = Prisma.SystemMessageModel
 /**
  * Model ServerSettings
  * 

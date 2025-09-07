@@ -76,7 +76,8 @@
 			const encryptedContent = await encryptMessage(messageContent);
 			socketStore.editMessage({
 				messageId: messageEditing.id,
-				encryptedContent: encryptedContent
+				encryptedContent: encryptedContent,
+				keyVersion: chatStore.activeChat.currentKeyVersion
 			});
 
 			messageEditing = null;
@@ -88,6 +89,7 @@
 
 			socketStore.sendMessage({
 				chatId: chatStore.activeChat.id,
+				keyVersion: chatStore.activeChat.currentKeyVersion,
 				senderId: chatStore.user.id,
 				encryptedContent: encryptedContent,
 				replyToId: messageReplying ? messageReplying.id : null,
@@ -219,7 +221,7 @@
 	{@const filteredUsers =
 		currentMention !== null
 			? chatStore.activeChat?.participants?.filter((participant) =>
-					participant.username.toLowerCase().startsWith(currentMention.toLowerCase())
+					participant.user.username.toLowerCase().startsWith(currentMention.toLowerCase())
 				) || []
 			: []}
 
@@ -230,11 +232,11 @@
 					onclick={() => {
 						chatValue =
 							chatValue.slice(0, chatValue.length - (currentMention?.length || 0)) +
-							participant.username;
+							participant.user.username;
 					}}
 				>
-					<strong>@{participant.username.slice(0, currentMention?.length)}</strong
-					>{participant.username.slice(currentMention?.length)}
+					<strong>@{participant.user.username.slice(0, currentMention?.length)}</strong
+					>{participant.user.username.slice(currentMention?.length)}
 				</button>
 			{/each}
 		</div>

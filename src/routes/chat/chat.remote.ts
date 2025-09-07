@@ -1,6 +1,12 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { chatWithoutMessagesFields, safeUserFields, type MessageWithRelations } from '$lib/types';
+import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
+import {
+	chatWithoutMessagesFields,
+	safeUserFields,
+	type ChatParticipant,
+	type SafeUser
+} from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -44,8 +50,22 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		error(401, 'Unauthorized');
 	}
 
+	const participant = await db.chatParticipant.findUnique({
+		where: {
+			chatId_userId: { chatId, userId: locals.user!.id }
+		},
+		select: { joinKeyVersion: true }
+	});
+
+	if (!participant) {
+		error(403, 'You are not a participant of this chat');
+	}
+
 	const messages = await db.message.findMany({
-		where: { chatId },
+		where: {
+			chatId,
+			usedKeyVersion: { gte: participant.joinKeyVersion }
+		},
 		orderBy: { timestamp: 'asc' },
 		include: {
 			user: { select: safeUserFields },
@@ -66,23 +86,14 @@ export const getMessagesByChatId = query(v.string(), async (chatId) => {
 		}
 	}
 
-	// Mark all messages as read // Can't mark the as read in case decryption fails and they weren't actually read
-	// if (locals.user?.id) {
-	// 	const messageIds = messages.map((message) => message.id);
-
-	// 	await db.user.update({
-	// 		where: { id: locals.user.id },
-	// 		data: {
-	// 			readMessages: {
-	// 				connect: messageIds.map((id) => ({ id }))
-	// 			}
-	// 		}
-	// 	});
-	// }
+	const systemMessages = await db.systemMessage.findMany({
+		where: { chatId, usedKeyVersion: { gte: participant.joinKeyVersion } },
+		orderBy: { timestamp: 'asc' }
+	});
 
 	console.log('Queried messages: ', messages.length);
 
-	return messages;
+	return { messages, systemMessages };
 });
 
 export const getUserChats = query(async () => {
@@ -95,13 +106,257 @@ export const getUserChats = query(async () => {
 	const userWithChats = await db.user.findUnique({
 		where: { id: locals.user!.id },
 		select: {
-			chats: {
-				select: chatWithoutMessagesFields
+			chatParticipations: {
+				select: {
+					chat: {
+						select: chatWithoutMessagesFields
+					}
+				}
 			}
 		}
 	});
 
-	return userWithChats?.chats ?? [];
+	return userWithChats?.chatParticipations.map((participation) => participation.chat) ?? [];
+});
+
+const addUserToChatSchema = v.object({
+	chatId: v.string(),
+	userIds: v.pipe(
+		v.array(v.string(), 'You must provide a list of users.'),
+		v.minLength(1, 'You must select at least one user.')
+	),
+
+	encryptedUserChatKeys: v.record(v.string(), v.string())
+});
+
+export const addUserToChat = command(
+	addUserToChatSchema,
+	async ({ chatId, userIds, encryptedUserChatKeys }) => {
+		const { locals } = getRequestEvent();
+
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
+		}
+
+		const chat = await db.chat.findUnique({
+			where: { id: chatId },
+			select: { ownerId: true, currentKeyVersion: true, participants: { select: { userId: true } } }
+		});
+
+		if (!chat) {
+			error(404, 'Chat not found');
+		}
+
+		if (chat.ownerId !== locals.user!.id) {
+			error(403, 'You do not own this chat, please ask the owner to add new members.');
+		}
+
+		const newUsersCount = await db.user.findMany({
+			where: {
+				id: { in: userIds }
+			}
+		});
+
+		if (newUsersCount.length !== userIds.length) {
+			error(400, 'One or more of the selected users do not exist.');
+		}
+
+		if (chat.participants.some((participant) => userIds.includes(participant.userId))) {
+			error(400, 'One or more of the selected users are already in the chat.');
+		}
+
+		try {
+			const updatedChat = await db.chat.update({
+				where: {
+					id: chatId
+				},
+				data: {
+					participants: {
+						create: userIds.map((id) => ({
+							user: { connect: { id } },
+							joinKeyVersion: chat.currentKeyVersion
+						}))
+					},
+					publicUserChatKeys: {
+						create: Object.entries(encryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
+							userId,
+							encryptedKey: encryptedChatKey,
+							keyVersion: chat.currentKeyVersion
+						}))
+					}
+				},
+				include: { participants: { include: { user: { select: safeUserFields } } } }
+			});
+
+			newUsersCount.forEach((user) => {
+				sendSystemMessage(
+					chatId,
+					locals.user!.username + ' added @' + user.username + ' to the chat.'
+				);
+
+				sendEventToChat(chatId, 'chat-users-updated', {
+					chatParticipant: updatedChat.participants.find(
+						(p) => p.userId === user.id
+					) as ChatParticipant,
+					chatId,
+					action: 'add'
+				});
+			});
+		} catch (e) {
+			console.error('Failed to add users to chat:', e);
+			error(500, 'Failed to add users to chat');
+		}
+	}
+);
+
+const removeUserFromChatSchema = v.object({
+	chatId: v.string(),
+	userId: v.string()
+});
+
+export const removeUserFromChat = command(removeUserFromChatSchema, async ({ chatId, userId }) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { ownerId: true, participants: { select: { userId: true } } }
+	});
+
+	if (!chat) {
+		error(404, 'Chat not found');
+	}
+
+	if (chat.ownerId !== locals.user!.id) {
+		error(403, 'You do not own this chat, please ask the owner to remove members.');
+	}
+
+	const user = await db.user.findUnique({
+		where: {
+			id: userId
+		}
+	});
+
+	if (!user) {
+		error(404, 'User not found');
+	}
+
+	if (!chat.participants.some((participant) => participant.userId === userId)) {
+		error(400, 'User is not in the chat.');
+	}
+
+	try {
+		await db.userChatKey.delete({
+			where: {
+				userId_chatId: {
+					userId,
+					chatId
+				}
+			}
+		});
+	} catch (e) {
+		// Ignore since the user might not have a key
+		console.log('Failed to delete user chat key, might not exist');
+	}
+
+	try {
+		await db.chatParticipant.delete({
+			where: {
+				chatId_userId: {
+					chatId,
+					userId
+				}
+			}
+		});
+
+		await db.publicUserChatKey.deleteMany({
+			where: {
+				chatId: chatId,
+				userId: userId
+			}
+		});
+
+		sendSystemMessage(
+			chatId,
+			locals.user!.username + ' removed @' + user.username + ' from the chat.'
+		);
+
+		sendEventToChat(chatId, 'chat-users-updated', {
+			user: user as SafeUser,
+			chatId,
+			action: 'remove'
+		});
+	} catch (e) {
+		console.error('Failed to remove user from chat:', e);
+		error(500, 'Failed to remove user from chat');
+	}
+});
+
+export const leaveChat = command(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { participants: { select: { userId: true } } }
+	});
+
+	if (!chat) {
+		error(404, 'Chat not found');
+	}
+
+	if (!chat.participants.some((participant) => participant.userId === locals.user!.id)) {
+		error(400, 'You are not in the chat.');
+	}
+
+	try {
+		await db.userChatKey.delete({
+			where: {
+				userId_chatId: {
+					userId: locals.user!.id,
+					chatId
+				}
+			}
+		});
+	} catch (e) {
+		// Ignore since the user might not have a key
+		console.log('Failed to delete user chat key, might not exist');
+	}
+
+	try {
+		await db.chatParticipant.delete({
+			where: {
+				chatId_userId: {
+					chatId,
+					userId: locals.user!.id
+				}
+			}
+		});
+
+		await db.publicUserChatKey.deleteMany({
+			where: {
+				chatId: chatId,
+				userId: locals.user!.id
+			}
+		});
+
+		sendSystemMessage(chatId, '@' + locals.user!.username + ' left the chat.');
+
+		sendEventToChat(chatId, 'chat-users-updated', {
+			user: locals.user! as SafeUser,
+			chatId,
+			action: 'remove'
+		});
+	} catch (e) {
+		console.error('Failed to leave chat:', e);
+		error(500, 'Failed to leave chat');
+	}
 });
 
 export const getChatById = query(v.string(), async (chatId: string) => {
@@ -121,31 +376,15 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 	return chat;
 });
 
-export const getEncryptedChatKeySeed = query(v.string(), async (chatId: string) => {
-	const { locals } = getRequestEvent();
-
-	if (!locals.sessionId) {
-		error(401, 'Unauthorized');
-	}
-
-	try {
-		const userChatKey = await db.userChatKey.findUnique({
-			where: {
-				userId_chatId: {
-					userId: locals.user!.id,
-					chatId
-				}
-			}
-		});
-		return userChatKey?.encryptedKey;
-	} catch (e) {
-		error(404, 'Not found');
-	}
+const rotateChatKeySchema = v.object({
+	chatId: v.string(),
+	newEncryptedUserChatKeys: v.record(v.string(), v.string()),
+	newKeyVersion: v.number()
 });
 
-export const saveEncryptedChatKeySeed = command(
-	v.object({ chatId: v.string(), encryptedKeySeed: v.string() }),
-	async ({ chatId, encryptedKeySeed }) => {
+export const rotateChatKey = command(
+	rotateChatKeySchema,
+	async ({ chatId, newEncryptedUserChatKeys, newKeyVersion }) => {
 		const { locals } = getRequestEvent();
 
 		if (!locals.sessionId) {
@@ -153,25 +392,191 @@ export const saveEncryptedChatKeySeed = command(
 		}
 
 		try {
-			const userChatKey = await db.userChatKey.upsert({
+			const chat = await db.chat.findUnique({
+				where: { id: chatId },
+				select: { ownerId: true }
+			});
+
+			if (!chat) {
+				error(404, 'Chat not found');
+			}
+
+			if (chat?.ownerId !== locals.user?.id) {
+				error(403, 'You are not the owner of this chat');
+			}
+
+			console.log('Rotating chat key:', newKeyVersion);
+
+			const updatedChat = await db.chat.update({
+				where: { id: chatId },
+				data: {
+					currentKeyVersion: newKeyVersion,
+					publicUserChatKeys: {
+						create: Object.entries(newEncryptedUserChatKeys).map(([userId, encryptedChatKey]) => ({
+							userId,
+							encryptedKey: encryptedChatKey,
+							keyVersion: newKeyVersion
+						}))
+					}
+				}
+			});
+
+			sendSystemMessage(chatId, `The chat key has been rotated to version ${newKeyVersion}.`);
+		} catch (e) {
+			console.log('Error rotating chat key:', e);
+			error(500, 'Something went wrong.');
+		}
+	}
+);
+
+export const getCurrentChatKeyVersion = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		const chat = await db.chat.findUnique({
+			where: {
+				id: chatId
+			},
+			select: {
+				currentKeyVersion: true
+			}
+		});
+
+		return chat?.currentKeyVersion;
+	} catch (e) {
+		console.log('Error getting chat key version:', e);
+		error(404, 'Not found');
+	}
+});
+
+const getEncryptedChatKeysSchema = v.object({ chatId: v.string(), keyVersion: v.number() });
+
+export const getEncryptedChatKeys = query(getEncryptedChatKeysSchema, async ({ chatId }) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		const userChatKeys = await db.userChatKey.findUnique({
+			where: {
+				userId_chatId: {
+					userId: locals.user!.id,
+					chatId: chatId
+				}
+			},
+			select: { keyVersions: { select: { encryptedKey: true, keyVersion: true } } }
+		});
+
+		return userChatKeys;
+	} catch (e) {
+		console.log('Error getting encrypted chat key:', e);
+		error(404, 'Not found');
+	}
+});
+
+const saveEncryptedChatKeySchema = v.object({
+	chatId: v.string(),
+	encryptedKey: v.string(),
+	keyVersion: v.number()
+});
+
+export const saveEncryptedChatKey = command(
+	saveEncryptedChatKeySchema,
+	async ({ chatId, encryptedKey, keyVersion }) => {
+		const { locals } = getRequestEvent();
+
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
+		}
+
+		try {
+			await db.userChatKey.upsert({
 				where: {
 					userId_chatId: {
 						userId: locals.user!.id,
 						chatId: chatId
 					}
 				},
+				update: {},
+				create: {
+					userId: locals.user!.id,
+					chatId: chatId
+				}
+			});
+
+			const userChatKeyVersion = await db.userChatKeyVersion.upsert({
+				where: {
+					userId_chatId_keyVersion: {
+						userId: locals.user!.id,
+						chatId: chatId,
+						keyVersion: keyVersion
+					}
+				},
 				update: {
-					encryptedKey: encryptedKeySeed
+					encryptedKey: encryptedKey,
+					keyVersion: keyVersion
 				},
 				create: {
 					userId: locals.user!.id,
 					chatId,
-					encryptedKey: encryptedKeySeed
+					keyVersion,
+					encryptedKey: encryptedKey
 				}
 			});
-			return userChatKey?.encryptedKey;
+
+			return userChatKeyVersion?.encryptedKey;
 		} catch (e) {
+			console.error('Failed to save encrypted chat key:', e);
 			error(500, 'Something went wrong');
 		}
 	}
 );
+
+export const getPublicEncryptedChatKeys = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		const publicEncryptedChatKeys = await db.publicUserChatKey.findMany({
+			where: {
+				userId: locals.user!.id,
+				chatId: chatId
+			},
+			select: { encryptedKey: true, keyVersion: true },
+			orderBy: { keyVersion: 'desc' }
+		});
+		return publicEncryptedChatKeys;
+	} catch (e) {
+		console.error('Failed to get public encrypted chat key:', e);
+		error(404, 'Not found');
+	}
+});
+
+export const removePublicEncryptedChatKeys = command(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	try {
+		await db.publicUserChatKey.deleteMany({
+			where: {
+				userId: locals.user!.id,
+				chatId: chatId
+			}
+		});
+	} catch (e) {
+		console.error('Failed to remove public encrypted chat keys:', e);
+		error(500, 'Failed to remove public encrypted chat keys');
+	}
+});

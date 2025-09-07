@@ -1,60 +1,13 @@
-import { getMasterKey } from './master';
+import { encryptKeyWithRSA, importPublicKeyBase64 } from './keyPair';
+import { getUserPublicKey } from './keyPair.remote';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 
-export function generateChatKeySeed(): string {
-	const seed = crypto.getRandomValues(new Uint8Array(16));
-	const base64Seed = arrayBufferToBase64(seed.buffer);
-	return base64Seed;
-	/*return crypto.subtle.generateKey(
+export async function generateChatKey(): Promise<CryptoKey> {
+	return crypto.subtle.generateKey(
 		{ name: 'AES-GCM', length: 256 },
-		true, // Exportable for QR/sharing
-		['encrypt', 'decrypt']
-	);*/
-}
-
-export async function getChatKeyFromSeed(base64Seed: string): Promise<CryptoKey> {
-	if (!base64Seed) {
-		throw new Error('Key seed not found.');
-	}
-	const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
-
-	// Derive key material from seed (no salt)
-	const keyMaterial = await crypto.subtle.digest('SHA-256', seedBytes);
-
-	return crypto.subtle.importKey(
-		'raw',
-		keyMaterial, // Full 32 bytes for AES-256
-		'AES-GCM',
-		false, // Not exportable after import for security
+		true, // Exportable for sharing
 		['encrypt', 'decrypt']
 	);
-}
-
-// Encrypt chat key for DB storage
-export async function encryptChatKeySeedForStorage(base64Seed: string): Promise<string> {
-	const masterKey = await getMasterKey();
-	const seedBuf = base64ToArrayBuffer(base64Seed);
-	const iv = crypto.getRandomValues(new Uint8Array(12));
-	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, masterKey, seedBuf);
-	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
-	combined.set(iv, 0);
-	combined.set(new Uint8Array(encrypted), iv.byteLength);
-	console.log('encryptChatKeySeedForStorage:', arrayBufferToBase64(combined.buffer));
-	return arrayBufferToBase64(combined.buffer);
-}
-
-// Decrypt chat key from DB
-export async function decryptChatKeySeedFromStorage(encryptedSeedBase64: string): Promise<string> {
-	const masterKey = await getMasterKey();
-	const combined = new Uint8Array(base64ToArrayBuffer(encryptedSeedBase64));
-	const iv = combined.slice(0, 12);
-	const encryptedData = combined.slice(12);
-	const decrypted = await crypto.subtle.decrypt(
-		{ name: 'AES-GCM', iv },
-		masterKey,
-		encryptedData.buffer
-	);
-	return arrayBufferToBase64(decrypted);
 }
 
 // Export chat key to base64 for sharing (e.g., QR)
@@ -73,4 +26,24 @@ export async function importChatKeyFromSharing(base64Key: string): Promise<Crypt
 		true, // Exportable if needed later
 		['encrypt', 'decrypt']
 	);
+}
+
+//** Uses the users public key to encrypt the chat key for them */
+export async function encryptChatKeyForUser(chatKey: CryptoKey, userId: string): Promise<string> {
+	const userPublicKeyBase64 = await getUserPublicKey(userId);
+	const userPublicKey = await importPublicKeyBase64(userPublicKeyBase64);
+	const encryptedChatKey = await encryptKeyWithRSA(chatKey, userPublicKey);
+	return encryptedChatKey;
+}
+
+//** Uses the users public keys to encrypt the chat key for them */
+export async function encryptChatKeyForUsers(
+	chatKey: CryptoKey,
+	userIds: string[]
+): Promise<Record<string, string>> {
+	let encryptedChatKeys: Record<string, string> = {};
+	for (const userId of userIds) {
+		encryptedChatKeys[userId] = await encryptChatKeyForUser(chatKey, userId);
+	}
+	return encryptedChatKeys;
 }
