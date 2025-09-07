@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { addUserToChat, getUserChats, leaveChat } from '../../../routes/chat/chat.remote';
+	import { getUserChats, leaveChat } from '$lib/chat/chat.remote';
 	import type { ChatWithoutMessages } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import AddUserToChat from './AddUserToChat.svelte';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
 	import { chatList } from '$lib/chat/chatList';

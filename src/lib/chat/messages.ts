@@ -4,7 +4,7 @@ import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ClientMessage, SafeUser } from '$lib/types';
 import { untrack } from 'svelte';
-import { getUserById } from '../../routes/chat/chat.remote';
+import { getUserById } from './chat.remote';
 import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
 

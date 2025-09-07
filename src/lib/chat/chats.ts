@@ -14,7 +14,7 @@ import {
 	getPublicEncryptedChatKeys,
 	rotateChatKey,
 	saveEncryptedChatKey
-} from '../../routes/chat/chat.remote';
+} from './chat.remote';
 import { chatList } from './chatList';
 import { showMasterKeyImport } from './masterKey';
 import {

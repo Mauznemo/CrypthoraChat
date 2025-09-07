@@ -8,7 +8,7 @@
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { PageProps } from '../$types';
-	import { saveEncryptedChatKey } from '../../chat.remote';
+	import { saveEncryptedChatKey } from '$lib/chat/chat.remote';
 	import { createGroup } from '../chatCreation.remote';
 
 	let { data }: PageProps = $props();
