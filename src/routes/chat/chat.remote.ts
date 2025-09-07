@@ -1,7 +1,12 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { getIO } from '$lib/server/socket';
-import { chatWithoutMessagesFields, safeUserFields } from '$lib/types';
+import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
+import {
+	chatWithoutMessagesFields,
+	safeUserFields,
+	type ChatParticipant,
+	type SafeUser
+} from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -179,7 +184,8 @@ export const addUserToChat = command(
 							keyVersion: chat.currentKeyVersion
 						}))
 					}
-				}
+				},
+				include: { participants: { include: { user: { select: safeUserFields } } } }
 			});
 
 			newUsersCount.forEach((user) => {
@@ -187,6 +193,14 @@ export const addUserToChat = command(
 					chatId,
 					locals.user!.username + ' added @' + user.username + ' to the chat.'
 				);
+
+				sendEventToChat(chatId, 'chat-users-updated', {
+					chatParticipant: updatedChat.participants.find(
+						(p) => p.userId === user.id
+					) as ChatParticipant,
+					chatId,
+					action: 'add'
+				});
 			});
 		} catch (e) {
 			console.error('Failed to add users to chat:', e);
@@ -194,6 +208,156 @@ export const addUserToChat = command(
 		}
 	}
 );
+
+const removeUserFromChatSchema = v.object({
+	chatId: v.string(),
+	userId: v.string()
+});
+
+export const removeUserFromChat = command(removeUserFromChatSchema, async ({ chatId, userId }) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { ownerId: true, participants: { select: { userId: true } } }
+	});
+
+	if (!chat) {
+		error(404, 'Chat not found');
+	}
+
+	if (chat.ownerId !== locals.user!.id) {
+		error(403, 'You do not own this chat, please ask the owner to remove members.');
+	}
+
+	const user = await db.user.findUnique({
+		where: {
+			id: userId
+		}
+	});
+
+	if (!user) {
+		error(404, 'User not found');
+	}
+
+	if (!chat.participants.some((participant) => participant.userId === userId)) {
+		error(400, 'User is not in the chat.');
+	}
+
+	try {
+		await db.userChatKey.delete({
+			where: {
+				userId_chatId: {
+					userId,
+					chatId
+				}
+			}
+		});
+	} catch (e) {
+		// Ignore since the user might not have a key
+		console.log('Failed to delete user chat key, might not exist');
+	}
+
+	try {
+		await db.chatParticipant.delete({
+			where: {
+				chatId_userId: {
+					chatId,
+					userId
+				}
+			}
+		});
+
+		await db.publicUserChatKey.deleteMany({
+			where: {
+				chatId: chatId,
+				userId: userId
+			}
+		});
+
+		sendSystemMessage(
+			chatId,
+			locals.user!.username + ' removed @' + user.username + ' from the chat.'
+		);
+
+		sendEventToChat(chatId, 'chat-users-updated', {
+			user: user as SafeUser,
+			chatId,
+			action: 'remove'
+		});
+	} catch (e) {
+		console.error('Failed to remove user from chat:', e);
+		error(500, 'Failed to remove user from chat');
+	}
+});
+
+export const leaveChat = command(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { participants: { select: { userId: true } } }
+	});
+
+	if (!chat) {
+		error(404, 'Chat not found');
+	}
+
+	if (!chat.participants.some((participant) => participant.userId === locals.user!.id)) {
+		error(400, 'You are not in the chat.');
+	}
+
+	try {
+		await db.userChatKey.delete({
+			where: {
+				userId_chatId: {
+					userId: locals.user!.id,
+					chatId
+				}
+			}
+		});
+	} catch (e) {
+		// Ignore since the user might not have a key
+		console.log('Failed to delete user chat key, might not exist');
+	}
+
+	try {
+		await db.chatParticipant.delete({
+			where: {
+				chatId_userId: {
+					chatId,
+					userId: locals.user!.id
+				}
+			}
+		});
+
+		await db.publicUserChatKey.deleteMany({
+			where: {
+				chatId: chatId,
+				userId: locals.user!.id
+			}
+		});
+
+		sendSystemMessage(chatId, '@' + locals.user!.username + ' left the chat.');
+
+		sendEventToChat(chatId, 'chat-users-updated', {
+			user: locals.user! as SafeUser,
+			chatId,
+			action: 'remove'
+		});
+	} catch (e) {
+		console.error('Failed to leave chat:', e);
+		error(500, 'Failed to leave chat');
+	}
+});
 
 export const getChatById = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
@@ -211,30 +375,6 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 
 	return chat;
 });
-
-// TODO: Move this to separate file
-async function sendSystemMessage(chatId: string, content: string) {
-	const io = getIO();
-
-	const chat = await db.chat.findUnique({
-		where: { id: chatId },
-		select: { currentKeyVersion: true }
-	});
-
-	if (!chat) {
-		error(404, 'Chat not found');
-	}
-
-	const message = await db.systemMessage.create({
-		data: {
-			chatId,
-			content,
-			usedKeyVersion: chat.currentKeyVersion
-		}
-	});
-
-	io.to(chatId).emit('new-system-message', message);
-}
 
 const rotateChatKeySchema = v.object({
 	chatId: v.string(),

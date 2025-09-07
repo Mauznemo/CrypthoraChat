@@ -1,5 +1,10 @@
 // lib/stores/socket.svelte.ts
-import type { ChatWithoutMessages, MessageWithRelations } from '$lib/types';
+import type {
+	ChatParticipant,
+	ChatWithoutMessages,
+	MessageWithRelations,
+	SafeUser
+} from '$lib/types';
 import type { Prisma, SystemMessage } from '$prisma';
 import { Socket } from 'socket.io-client';
 import ioClient from 'socket.io-client';
@@ -59,6 +64,16 @@ class SocketStore {
 			this.typing = [];
 		}
 	}
+
+	onConnect(callback: () => void) {
+		this.socket?.on('connect', callback);
+	}
+
+	off(event: string, callback?: Function) {
+		this.socket?.off(event, callback);
+	}
+
+	// ---------- Chat selected specific (on only called if currently in that chat) ---------- //
 
 	joinChat(chatId: string) {
 		this.socket?.emit('join-chat', chatId);
@@ -139,34 +154,37 @@ class SocketStore {
 		this.socket?.on('new-system-message', callback);
 	}
 
-	off(event: string, callback?: Function) {
-		this.socket?.off(event, callback);
-	}
-
-	notifyNewChat(data: { userIds: string[]; type: 'dm' | 'group'; chatId: string }) {
-		console.log('Notifying about new chat:', data); // Debug log
-		this.socket?.emit('chat-created', data);
-	}
-
-	onNewChat(
-		callback: (data: { chatId: string; type: 'dm' | 'group'; forUsers?: string[] }) => void
-	) {
-		this.socket?.on('new-chat-created', (data: any) => {
-			console.log('new chat created', data);
-			// If forUsers is present, only call callback if current user is in the list
-			if (!data.forUsers /*|| data.forUsers.includes(this.socket.userId)*/) {
-				// TODO: Check if contains user id (cant access user id here at the moment)
-				callback(data);
-			}
-		});
-	}
-
+	//TODO: call from server
 	notifyKeyRotated(data: { chatId: string }) {
 		this.socket?.emit('key-rotated', data);
 	}
 
 	onKeyRotated(callback: () => void) {
 		this.socket?.on('key-rotated', callback);
+	}
+
+	onChatUsersUpdated(
+		callback: (data: {
+			chatId: string;
+			user?: SafeUser;
+			chatParticipant?: ChatParticipant;
+			action: 'add' | 'remove';
+		}) => void
+	) {
+		this.socket?.on('chat-users-updated', callback);
+	}
+
+	// ---------- Chat specific (only sent to users joined in the chat) ---------- //
+
+	// ---------- User specific ---------- //
+	//TODO: call from server
+	notifyNewChat(data: { userIds: string[]; type: 'dm' | 'group'; chatId: string }) {
+		console.log('Notifying about new chat:', data); // Debug log
+		this.socket?.emit('chat-created', data);
+	}
+
+	onNewChat(callback: (data: { chatId: string; type: 'dm' | 'group' }) => void) {
+		this.socket?.on('new-chat-created', callback);
 	}
 
 	requestUserVerify(data: { userId: string }) {
@@ -183,10 +201,6 @@ class SocketStore {
 		this.socket?.emit('subscribe-push', {
 			subscription: subscription.toJSON()
 		});
-	}
-
-	onConnect(callback: () => void) {
-		this.socket?.on('connect', callback);
 	}
 }
 

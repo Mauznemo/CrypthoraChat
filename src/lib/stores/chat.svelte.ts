@@ -37,6 +37,13 @@ class Chat {
 	resetChatKey(): void {
 		this.versionedChatKey = {};
 	}
+
+	resetMessages(): void {
+		this.messages = [];
+		this.systemMessages = [];
+	}
+
+	chats: ChatWithoutMessages[] = $state([]);
 }
 
 export const chatStore = new Chat();
