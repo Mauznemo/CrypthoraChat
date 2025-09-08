@@ -54,11 +54,12 @@ export async function sendEventToUsersInChat(chatId: string, event: string, data
 	}
 }
 
-/** Sends an event to all connected clients in the chat */
-export async function sendEventUser(userId: string, event: string, data: any) {
+/** Sends an event to a specific user if they are connected */
+export async function sendEventToUser(userId: string, event: string, data: any) {
 	const io = getIO();
 
 	const userSocket = getUserSocket(userId);
+	console.log('Sending event to user:', userSocket);
 	if (!userSocket) return;
 
 	io.to(userSocket).emit(event, data);

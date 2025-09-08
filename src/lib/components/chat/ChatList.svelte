@@ -10,6 +10,7 @@
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
 	import { chatList } from '$lib/chat/chatList';
+	import { chatOwner } from '$lib/chat/chatOwner';
 
 	let {
 		onChatSelected,
@@ -66,7 +67,7 @@
 				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
 				action: async () => {
 					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
-						chats.tryRotateChatKey(chat);
+						chatOwner.tryRotateChatKey(chat);
 					});
 				}
 			});
@@ -164,7 +165,7 @@
 				<button
 					onclick={(event) => handleShowContextMenu(event, chat)}
 					aria-label="Options"
-					class="absolute right-5"
+					class="absolute right-5 cursor-pointer"
 				>
 					<svg
 						class="h-6 w-6 text-white"
@@ -230,7 +231,7 @@
 				<button
 					onclick={(event) => handleShowContextMenu(event, chat)}
 					aria-label="Options"
-					class="absolute right-5"
+					class="absolute right-5 cursor-pointer"
 				>
 					<svg
 						class="h-6 w-6 text-white"

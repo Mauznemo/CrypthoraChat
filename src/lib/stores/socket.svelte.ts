@@ -187,6 +187,10 @@ class SocketStore {
 		this.socket?.on('new-chat-created', callback);
 	}
 
+	onRemovedFromChat(callback: (data: { chatId: string }) => void) {
+		this.socket?.on('removed-from-chat', callback);
+	}
+
 	requestUserVerify(data: { userId: string }) {
 		this.socket?.emit('request-user-verify', data);
 	}
