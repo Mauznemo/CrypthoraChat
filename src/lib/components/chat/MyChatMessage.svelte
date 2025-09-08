@@ -6,6 +6,7 @@
 	import { handleMessageUpdated } from '$lib/chat/messages';
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import ProfilePicture from './ProfilePicture.svelte';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));
@@ -90,11 +91,7 @@
 		class="absolute -top-5 -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
 	>
 		{#if showProfile}
-			<div
-				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
-			>
-				<p>{message.user.displayName.charAt(0).toUpperCase() || 'P'}</p>
-			</div>
+			<ProfilePicture user={message.user} size="2rem" />
 		{:else}
 			<!-- Spacer to maintain alignment -->
 			<div class="flex h-8 w-8"></div>
@@ -182,12 +179,19 @@
 			<div class="absolute right-2 -bottom-3 z-10 flex">
 				{#if readers && readers.length > 0}
 					{#each shownReaders as reader, readIndex}
-						<div
+						<!-- <div
 							class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-xs font-medium text-white shadow-lg"
 							style="margin-left: {readIndex > 0 ? '-8px' : '0'}"
 						>
 							{reader.username.charAt(0).toUpperCase()}
-						</div>
+						</div> -->
+						<ProfilePicture
+							class="border-2 border-white font-medium shadow-lg"
+							user={message.user}
+							background="bg-blue-500"
+							style="margin-left: {readIndex > 0 ? '-8px' : '0'};"
+							size="20px"
+						/>
 					{/each}
 					{#if readers.length > 3}
 						<div
