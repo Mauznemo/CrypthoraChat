@@ -6,6 +6,7 @@
 	import { handleDecryptedMessage } from '$lib/chat/messages';
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import ProfilePicture from './ProfilePicture.svelte';
 
 	const {
 		message,
@@ -82,11 +83,7 @@
 		class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:left-0"
 	>
 		{#if showProfile}
-			<div
-				class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-white shadow-xl"
-			>
-				<p>{message.user.displayName?.charAt(0).toUpperCase() || 'P'}</p>
-			</div>
+			<ProfilePicture user={message.user} size="2rem" />
 		{:else}
 			<!-- Spacer to maintain alignment -->
 			<div class="flex h-8 w-8"></div>

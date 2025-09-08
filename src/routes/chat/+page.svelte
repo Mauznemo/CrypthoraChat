@@ -22,6 +22,8 @@
 	import { checkPublicKey } from '$lib/crypto/keyPair';
 	import { chatList } from '$lib/chat/chatList';
 	import { chats } from '$lib/chat/chats';
+	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
+	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -255,15 +257,38 @@
 
 			<!-- Chat text //TODO: Replace with chat name and pic -->
 
-			<div>
+			<div class="flex items-center">
 				{#if socketStore.connected}
-					<p class="px-3 py-2 text-4xl font-extrabold text-white">Chat</p>
+					<p class="px-3 py-2 text-3xl font-extrabold text-white">Chat</p>
 				{:else}
-					<p class="px-3 pt-3 text-4xl font-extrabold text-white">Chat - Offline</p>
+					<p class="px-3 pt-3 text-3xl font-extrabold text-white">Chat - Offline</p>
 					<p class="font-semi px-3 pb-1 text-sm text-white/60">
 						You may not see all messages in this chat
 					</p>
 				{/if}
+				<button
+					aria-label="Info"
+					class="size-6 cursor-pointer rounded-full"
+					onclick={() => infoBarStore.openChatInfo()}
+				>
+					<svg
+						class="h-6 w-6 text-gray-300 hover:text-gray-100"
+						aria-hidden="true"
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+						/>
+					</svg>
+				</button>
 			</div>
 		</div>
 
@@ -300,4 +325,6 @@
 
 		<ChatInput bind:this={chatInput} bind:inputField></ChatInput>
 	</div>
+
+	<InfoSideBar />
 </div>
