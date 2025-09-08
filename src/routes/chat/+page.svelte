@@ -20,7 +20,6 @@
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { verifyUser } from '$lib/crypto/userVerification';
 	import { checkPublicKey } from '$lib/crypto/keyPair';
-	import { chatList } from '$lib/chat/chatList';
 	import { chats } from '$lib/chat/chats';
 	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
@@ -60,7 +59,8 @@
 		});
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
-		socketStore.onNewChat(handleCreateNewChat);
+		socketStore.onNewChat(chats.handleAddedToChatChat);
+		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
 		socketStore.onNewSystemMessage((m) => {
 			messages.handleNewSystemMessage(m);
 			scrollToBottom();
@@ -108,7 +108,8 @@
 		socketStore.off('message-updated');
 		socketStore.off('message-deleted');
 		socketStore.off('messages-read');
-		socketStore.off('new-chat', handleCreateNewChat);
+		socketStore.off('new-chat', chats.handleAddedToChatChat);
+		socketStore.off('removed-from-chat', chats.handleRemovedFromChat);
 		socketStore.off('reconnect', handleConnect);
 		socketStore.off('new-system-message');
 		socketStore.off('requested-user-verify');
@@ -141,7 +142,6 @@
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
-			localStorage.removeItem('lastChatId');
 			chatStore.loadingChat = false;
 			return;
 		}
@@ -160,16 +160,6 @@
 				{ text: 'New Group', variant: 'primary', onClick: () => goto('/chat/new/group') }
 			]
 		});
-	}
-
-	async function handleCreateNewChat(data: {
-		chatId: string;
-		type: 'dm' | 'group';
-		forUsers?: string[];
-	}): Promise<void> {
-		const chat = await getChatById(data.chatId);
-		if (!chat) return;
-		chatList.addChat(chat);
 	}
 
 	function handleScroll(): void {
@@ -258,14 +248,16 @@
 			<!-- Chat text //TODO: Replace with chat name and pic -->
 
 			<div class="flex items-center">
-				{#if socketStore.connected}
-					<p class="px-3 py-2 text-3xl font-extrabold text-white">Chat</p>
-				{:else}
-					<p class="px-3 pt-3 text-3xl font-extrabold text-white">Chat - Offline</p>
-					<p class="font-semi px-3 pb-1 text-sm text-white/60">
-						You may not see all messages in this chat
-					</p>
-				{/if}
+				<div>
+					{#if socketStore.connected}
+						<p class="px-3 py-2 text-3xl font-extrabold text-white">Chat</p>
+					{:else}
+						<p class="px-3 pt-3 text-3xl font-extrabold text-white">Chat - Offline</p>
+						<p class="font-semi px-3 pb-1 text-sm text-white/60">
+							You may not see all messages in this chat
+						</p>
+					{/if}
+				</div>
 				<button
 					aria-label="Info"
 					class="size-6 cursor-pointer rounded-full"
