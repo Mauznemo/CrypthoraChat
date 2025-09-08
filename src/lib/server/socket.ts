@@ -1,8 +1,7 @@
-// server/socket.ts or in your main server file
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
 import { db } from '../db';
-import { validateSession } from '$lib/auth';
+import { validateSession } from '../auth';
 import webpush from 'web-push';
 import 'dotenv/config';
 

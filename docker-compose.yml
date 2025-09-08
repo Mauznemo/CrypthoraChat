@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # SvelteKit 5 Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crypthora-chat
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PUBLIC_VAPID_KEY=${PUBLIC_VAPID_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_EMAIL=${VAPID_EMAIL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - UPLOAD_PATH=/uploads
+    volumes:
+      - app_uploads:/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-crypthora_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-crypthora_db}']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - app_network
+
+  # ntfy notification service
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: ntfy-server
+    restart: unless-stopped
+    environment:
+      - NTFY_BASE_URL=${NTFY_URL}
+      - NTFY_LISTEN_HTTP=:80
+      - NTFY_CACHE_FILE=/var/cache/ntfy/cache.db
+      - NTFY_ATTACHMENT_CACHE_DIR=/var/cache/ntfy/attachments
+    volumes:
+      - ntfy_data:/var/cache/ntfy
+      - ntfy_config:/etc/ntfy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider http://localhost:80/v1/health || exit 1'
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command:
+      - serve
+    networks:
+      - app_network
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+  app_uploads:
+    driver: local
+  ntfy_data:
+    driver: local
+  ntfy_config:
+    driver: local
+
+# Network for inter-service communication
+networks:
+  app_network:
+    driver: bridge
