@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import BackButton from '$lib/components/BackButton.svelte';
+	import ProfilePicture from '$lib/components/chat/ProfilePicture.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
+	import { onDestroy } from 'svelte';
 	import { changePassword, logout, updateDisplayName } from './data.remote';
+	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 
 	let { data } = $props();
 
@@ -14,7 +17,47 @@
 	let newPassword: string = $state('');
 	let confirmNewPassword: string = $state('');
 	let showPassword = $state(false);
+
+	let fileInput: HTMLInputElement;
+	let selectedFile: File | null = null;
+	let previewUrl: string | null = $state(null);
+
+	function openFileSelector(): void {
+		fileInput.click();
+	}
+
+	function handleFileSelect(event: Event): void {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			selectedFile = file;
+
+			if (file.type.startsWith('image/')) {
+				if (previewUrl) {
+					URL.revokeObjectURL(previewUrl);
+				}
+				// Create new preview URL
+				previewUrl = URL.createObjectURL(file);
+			} else {
+				previewUrl = null;
+			}
+		}
+	}
+
+	onDestroy(() => {
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+		}
+	});
 </script>
+
+<input
+	class="hidden"
+	type="file"
+	bind:this={fileInput}
+	onchange={handleFileSelect}
+	accept=".jpg,.jpeg,.png"
+/>
 
 <div class="flex flex-col items-center p-8">
 	<div
@@ -24,10 +67,24 @@
 			<BackButton />
 			<h1 class="pb-2 text-2xl font-bold">Profile</h1>
 		</div>
-		<div
-			class="mb-2 flex size-14 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-		>
-			<p>{data.user?.username?.[0].toUpperCase()}</p>
+		<div class="relative mb-2 size-16">
+			<ProfilePicture user={data.user} size="4rem" customUrl={previewUrl} />
+			<button
+				onclick={openFileSelector}
+				class="absolute -right-3 -bottom-2 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
+				title="Edit"
+				aria-label="Edit message"
+				type="button"
+			>
+				<svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+					></path>
+				</svg>
+			</button>
 		</div>
 		<p><strong>Display Name:</strong></p>
 		<input class="mb-2 rounded-full bg-gray-800 p-2 px-4" type="text" bind:value={displayName} />
@@ -141,8 +198,12 @@
 			onclick={async () => {
 				try {
 					await updateDisplayName(displayName);
+
+					if (selectedFile) {
+						await tryUploadProfilePicture(selectedFile);
+					}
 				} catch (error) {
-					modalStore.alert('Error', 'Failed to update display name: ' + error);
+					modalStore.alert('Error', 'Failed update profile: ' + error);
 					return;
 				}
 				await invalidateAll();

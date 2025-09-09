@@ -18,7 +18,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_EMAIL=${VAPID_EMAIL}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - UPLOAD_PATH=/uploads
+      - UPLOAD_PATH=${UPLOAD_PATH}
     volumes:
       - app_uploads:/uploads
     depends_on:
