@@ -3,12 +3,14 @@
 
 	let {
 		user,
+		customUrl,
 		class: className = '',
 		background = null,
 		style,
 		size = '3rem'
 	}: {
 		user: SafeUser | null;
+		customUrl?: string | null;
 		class?: string;
 		background?: string | null;
 		style?: string;
@@ -28,12 +30,21 @@
 	};
 </script>
 
-<div
-	class="{className} flex flex-shrink-0 items-center justify-center rounded-full {background !==
-	null
-		? background
-		: 'bg-gray-500'}  text-white select-none"
-	style="{style} width: {size}; height: {size}; font-size: {getFontSize(size)}"
->
-	<p>{user?.displayName.charAt(0).toUpperCase()}</p>
-</div>
+{#if customUrl}
+	<div
+		class="{className} flex flex-shrink-0 items-center justify-center rounded-full select-none"
+		style="{style} width: {size}; height: {size};"
+	>
+		<img class="rounded-full" src={customUrl} alt="Profile" />
+	</div>
+{:else}
+	<div
+		class="{className} flex flex-shrink-0 items-center justify-center rounded-full {background !==
+		null
+			? background
+			: 'bg-gray-500'}  text-white select-none"
+		style="{style} width: {size}; height: {size}; font-size: {getFontSize(size)}"
+	>
+		<p>{user?.displayName.charAt(0).toUpperCase()}</p>
+	</div>
+{/if}

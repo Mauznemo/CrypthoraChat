@@ -3,7 +3,7 @@ import { arrayBufferToBase64 } from './utils';
 
 export async function encryptFile(
 	file: File
-): Promise<{ encryptedDataBase64: string; encryptedFileNameBase64: string }> {
+): Promise<{ encryptedData: Blob; encryptedFileNameBase64: string }> {
 	const chatKey = chatStore.getNewestChatKey();
 	if (chatKey === null) throw new Error('Chat key not found');
 
@@ -18,7 +18,7 @@ export async function encryptFile(
 	const encryptedFileNameBase64 = await encryptFileName(file.name);
 
 	return {
-		encryptedDataBase64: arrayBufferToBase64(combined.buffer),
+		encryptedData: new Blob([combined]),
 		encryptedFileNameBase64: encryptedFileNameBase64
 	};
 }
