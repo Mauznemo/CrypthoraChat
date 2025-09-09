@@ -45,6 +45,7 @@ COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/server ./src/lib/serve
 COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/db.ts ./src/lib/db.ts
 COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/auth.ts ./src/lib/auth.ts
 COPY --from=builder --chown=sveltekit:nodejs /app/src/generated/prisma ./src/generated/prisma
+COPY --from=builder --chown=sveltekit:nodejs /app/prisma ./prisma
 
 # Create uploads directory with proper permissions
 RUN mkdir -p /app/uploads && chown -R sveltekit:nodejs /app/uploads
@@ -72,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
