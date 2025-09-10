@@ -19,6 +19,7 @@ services:
       - VAPID_EMAIL=${VAPID_EMAIL}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
+      - BODY_SIZE_LIMIT=1073741824
       - UPLOAD_PATH=./uploads
     volumes:
       # Change app_uploads to the path you want to use on your host
