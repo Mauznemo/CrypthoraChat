@@ -19,7 +19,7 @@ export async function tryUploadFile(
 
 	if (!res.ok) {
 		const text = await res.text();
-		modalStore.alert('Error', 'Failed to upload file: ' + text);
+		modalStore.error(JSON.parse(text), 'Failed to upload file:');
 		return { success: false, filePath: '' };
 	}
 
@@ -44,7 +44,7 @@ export async function tryUploadProfilePicture(
 
 	if (!res.ok) {
 		const text = await res.text();
-		modalStore.alert('Error', 'Failed to upload profile picture: ' + text);
+		modalStore.error(JSON.parse(text), 'Failed to upload profile picture:');
 		return { success: false, filePath: '' };
 	}
 

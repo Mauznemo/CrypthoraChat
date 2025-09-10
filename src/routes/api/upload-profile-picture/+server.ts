@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
-import { ensureUploadDir } from '$lib/server/fileUpload';
+import { ensureUploadDir, errorResponse } from '$lib/server/fileUpload';
 
 const UPLOAD_PATH = (process.env.UPLOAD_PATH || './uploads') + '/profiles';
 const TEMP_PATH = (process.env.UPLOAD_PATH || './uploads') + '/temp';
@@ -49,7 +49,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	// Check content type
 	const contentType = request.headers.get('content-type');
 	if (!contentType?.includes('multipart/form-data')) {
 		throw error(400, 'Content-Type must be multipart/form-data');
@@ -60,12 +59,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			await ensureUploadDir(UPLOAD_PATH);
 			await ensureUploadDir(TEMP_PATH);
 		} catch (err) {
-			reject(
-				error(
+			resolve(
+				errorResponse(
 					500,
 					`Failed to create upload directories: ${err instanceof Error ? err.message : err}`
 				)
 			);
+
 			return;
 		}
 
@@ -81,8 +81,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		let tempFilePath: string | null = null;
 		let finalFilePath: string | null = null;
 		let uploadPromise: Promise<void> | null = null;
+		let limitExceeded = false;
 
-		// Handle form fields
 		bb.on('field', (name: string, value: string) => {
 			if (name === 'fileExtension') {
 				fileExtension = value || 'png';
@@ -95,38 +95,47 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				return;
 			}
 
+			file.on('limit', () => {
+				limitExceeded = true;
+				file.resume();
+				resolve(errorResponse(413, 'File size limit exceeded'));
+			});
+
 			try {
-				// Create temporary file path
 				const tempFilename = `temp_${randomUUID()}`;
 				tempFilePath = path.join(TEMP_PATH, tempFilename);
 
-				// Create final encrypted file path
 				const finalFilename = `${randomUUID()}.${fileExtension}.enc`;
 				finalFilePath = path.join(UPLOAD_PATH, finalFilename);
 
-				// Stream file to temporary location first
 				const writeStream = createWriteStream(tempFilePath);
 				uploadPromise = pipeline(file, writeStream);
 			} catch (err) {
 				file.resume();
-				reject(
-					error(500, `Failed to setup file upload: ${err instanceof Error ? err.message : err}`)
+				resolve(
+					errorResponse(
+						500,
+						`Failed to setup file upload: ${err instanceof Error ? err.message : err}`
+					)
 				);
 			}
 		});
 
 		bb.on('error', (err: Error) => {
-			reject(error(400, `Upload parsing error: ${err.message}`));
+			resolve(errorResponse(400, `Upload parsing error: ${err.message}`));
 		});
 
 		bb.on('finish', async () => {
+			if (limitExceeded) {
+				return;
+			}
 			try {
 				if (uploadPromise) {
 					await uploadPromise;
 				}
 
 				if (!tempFilePath || !finalFilePath) {
-					reject(error(400, 'No file was uploaded'));
+					resolve(errorResponse(400, 'No file was uploaded'));
 					return;
 				}
 
@@ -156,7 +165,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					}
 				}
 
-				reject(error(500, `Failed to process file: ${err instanceof Error ? err.message : err}`));
+				resolve(
+					errorResponse(500, `Failed to process file:  ${err instanceof Error ? err.message : err}`)
+				);
 			}
 		});
 
@@ -201,7 +212,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			processStream();
 			nodeStream.pipe(bb);
 		} else {
-			reject(error(400, 'No request body'));
+			resolve(errorResponse(400, 'No request body'));
 		}
 	});
 };

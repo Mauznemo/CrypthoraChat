@@ -6,6 +6,7 @@
 	import { onDestroy } from 'svelte';
 	import { changePassword, logout, updateDisplayName, updateProfilePicture } from './data.remote';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
 	let { data } = $props();
 
@@ -21,6 +22,8 @@
 	let fileInput: HTMLInputElement;
 	let selectedFile: File | null = null;
 	let previewUrl: string | null = $state(null);
+
+	let loadingSave = $state(false);
 
 	function openFileSelector(): void {
 		fileInput.click();
@@ -179,7 +182,7 @@
 							try {
 								await changePassword({ currentPassword, newPassword, confirmNewPassword });
 							} catch (error: any) {
-								modalStore.error(error, 'Failed to change password: ');
+								modalStore.error(error, 'Failed to change password:');
 								return;
 							}
 							currentPassword = '';
@@ -196,25 +199,36 @@
 
 		<button
 			onclick={async () => {
+				loadingSave = true;
 				try {
 					await updateDisplayName(displayName);
 
 					if (selectedFile) {
 						const result = await tryUploadProfilePicture(selectedFile);
-						if (!result.success) return;
+						if (!result.success) {
+							loadingSave = false;
+							return;
+						}
 
 						await updateProfilePicture(result.filePath);
 					}
 				} catch (error) {
-					modalStore.alert('Error', 'Failed update profile: ' + error);
+					loadingSave = false;
+					modalStore.error(error, 'Failed update profile:');
 					return;
 				}
+				loadingSave = false;
 				await invalidateAll();
 				modalStore.alert('Success', 'Updated successfully!');
 			}}
 			class="frosted-glass mt-5 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 hover:bg-teal-500/40"
-			>Save</button
 		>
+			{#if loadingSave}
+				<LoadingSpinner size="1.5rem" />
+			{:else}
+				Save
+			{/if}
+		</button>
 
 		<button
 			onclick={async () => {
