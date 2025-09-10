@@ -1,5 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
+import { removeFile } from '$lib/server/fileUpload';
 import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
 import {
 	chatWithoutMessagesFields,
@@ -441,3 +442,94 @@ export const removePublicEncryptedChatKeys = command(v.string(), async (chatId: 
 		error(500, 'Failed to remove public encrypted chat keys');
 	}
 });
+
+const updateGroupNameSchema = v.object({
+	chatId: v.string(),
+	groupName: v.pipe(
+		v.string('Group name is required'),
+		v.minLength(3, 'Group name must be at least 3 characters')
+	)
+});
+
+export const updateGroupName = command(updateGroupNameSchema, async ({ chatId, groupName }) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { participants: { select: { userId: true } } }
+	});
+
+	const userInChat = chat?.participants.some(
+		(participant) => participant.userId === locals.user!.id
+	);
+
+	if (!userInChat) {
+		error(403, 'You are not a participant of this chat');
+	}
+
+	try {
+		await db.chat.update({
+			where: { id: chatId },
+			data: { name: groupName }
+		});
+
+		await sendSystemMessage(
+			chatId,
+			`@${locals.user!.username} updated the group name to ${groupName}.`
+		);
+		await sendEventToChat(chatId, 'chat-updated', { chatId, newName: groupName });
+	} catch (e) {
+		console.error('Failed to update group name:', e);
+		error(500, 'Failed to update group name');
+	}
+});
+
+export const updateGroupImage = command(
+	v.object({ chatId: v.string(), imagePath: v.string() }),
+	async ({ chatId, imagePath }) => {
+		const { locals } = getRequestEvent();
+
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
+		}
+
+		const chat = await db.chat.findUnique({
+			where: { id: chatId },
+			select: { image: true, participants: { select: { userId: true } } }
+		});
+
+		if (!chat) {
+			error(404, 'Chat not found');
+		}
+
+		const userInChat = chat?.participants.some(
+			(participant) => participant.userId === locals.user!.id
+		);
+
+		if (!userInChat) {
+			error(403, 'You are not a participant of this chat');
+		}
+
+		if (chat.image) {
+			await removeFile(chat.image);
+		}
+
+		try {
+			await db.chat.update({
+				where: { id: chatId },
+				data: { image: imagePath }
+			});
+
+			await sendSystemMessage(chatId, `@${locals.user!.username} updated the group image.`);
+
+			await sendEventToChat(chatId, 'chat-updated', { chatId, newImagePath: imagePath });
+		} catch (e) {
+			console.error('Failed to update group image:', e);
+			error(500, 'Failed to update group image');
+		}
+	}
+);

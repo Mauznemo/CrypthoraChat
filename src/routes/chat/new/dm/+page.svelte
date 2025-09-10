@@ -12,12 +12,16 @@
 	import { createDm } from '../chatCreation.remote';
 	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
 	let { data }: PageProps = $props();
 	let selectedUser: SafeUser | null = $state(null);
 
+	let loading = $state(false);
+
 	async function handleDmGroup() {
 		try {
+			loading = true;
 			const userUnverified = await isUserVerified(selectedUser!.id);
 
 			if (!userUnverified) {
@@ -37,6 +41,8 @@
 						}
 					]
 				});
+
+				loading = false;
 				return;
 			}
 
@@ -69,6 +75,7 @@
 				goto('/chat');
 			}
 		} catch (err: any) {
+			loading = false;
 			if (err?.body.message) {
 				modalStore.alert('Error', 'Failed to create chat: ' + err.body.message);
 			}
@@ -95,7 +102,12 @@
 			onclick={handleDmGroup}
 			disabled={!selectedUser}
 			class="frosted-glass m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
-			>Start Chat</button
 		>
+			{#if loading}
+				<LoadingSpinner size="1.5rem" />
+			{:else}
+				Start Chat
+			{/if}
+		</button>
 	</div>
 </div>
