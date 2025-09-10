@@ -21,7 +21,8 @@ services:
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
       - UPLOAD_PATH=./uploads
     volumes:
-      - ${APP_UPLOADS:-app_uploads}:/uploads
+      # Change app_uploads to the path you want to use on your host
+      - app_uploads:/uploads
     depends_on:
       postgres:
         condition: service_healthy
