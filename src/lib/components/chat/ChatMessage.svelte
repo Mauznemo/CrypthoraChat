@@ -83,7 +83,7 @@
 		class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:left-0"
 	>
 		{#if showProfile}
-			<ProfilePicture user={message.user} size="2rem" />
+			<ProfilePicture user={message.user} size="2rem" imageSize="64" />
 		{:else}
 			<!-- Spacer to maintain alignment -->
 			<div class="flex h-8 w-8"></div>

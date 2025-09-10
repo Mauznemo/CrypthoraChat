@@ -7,7 +7,8 @@
 		class: className = '',
 		background = null,
 		style,
-		size = '3rem'
+		size = '3rem',
+		imageSize
 	}: {
 		user: SafeUser | null;
 		customUrl?: string | null;
@@ -15,6 +16,7 @@
 		background?: string | null;
 		style?: string;
 		size?: string;
+		imageSize?: string;
 	} = $props();
 
 	const getFontSize = (containerSize: string) => {
@@ -35,7 +37,24 @@
 		class="{className} flex flex-shrink-0 items-center justify-center rounded-full select-none"
 		style="{style} width: {size}; height: {size};"
 	>
-		<img class="rounded-full" src={customUrl} alt="Profile" />
+		<img
+			class="h-full w-full rounded-full object-cover"
+			src={customUrl}
+			alt="Profile"
+			draggable="false"
+		/>
+	</div>
+{:else if user?.profilePic}
+	<div
+		class="{className} flex flex-shrink-0 items-center justify-center rounded-full select-none"
+		style="{style} width: {size}; height: {size};"
+	>
+		<img
+			class="h-full w-full rounded-full object-cover"
+			src={`/api/profile-picture?filePath=${encodeURIComponent(user.profilePic)}${imageSize ? `&size=${imageSize}` : ''}`}
+			alt="Profile"
+			draggable="false"
+		/>
 	</div>
 {:else}
 	<div

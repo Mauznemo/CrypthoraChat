@@ -91,7 +91,7 @@
 		class="absolute -top-5 -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
 	>
 		{#if showProfile}
-			<ProfilePicture user={message.user} size="2rem" />
+			<ProfilePicture user={message.user} size="2rem" imageSize="64" />
 		{:else}
 			<!-- Spacer to maintain alignment -->
 			<div class="flex h-8 w-8"></div>
@@ -187,10 +187,11 @@
 						</div> -->
 						<ProfilePicture
 							class="border-2 border-white font-medium shadow-lg"
-							user={message.user}
+							user={reader}
 							background="bg-blue-500"
 							style="margin-left: {readIndex > 0 ? '-8px' : '0'};"
 							size="20px"
+							imageSize="32"
 						/>
 					{/each}
 					{#if readers.length > 3}
