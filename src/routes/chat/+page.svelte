@@ -66,6 +66,7 @@
 			scrollToBottom();
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
+		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
 		socketStore.onConnect(handleConnect);
 		socketStore.onUserVerifyRequested((d) => {
 			console.log('User @' + d.requestorUsername + ' requested a verification');
@@ -114,6 +115,7 @@
 		socketStore.off('new-system-message');
 		socketStore.off('requested-user-verify');
 		socketStore.off('chat-users-updated');
+		socketStore.off('chat-updated');
 		socketStore.off('key-rotated', chats.handleKeyRotated);
 		socketStore.off('message-error');
 

@@ -15,12 +15,14 @@ const createGroupSchema = v.object({
 		v.minLength(1, 'You must select at least one user.')
 	),
 
-	encryptedUserChatKeys: v.record(v.string(), v.string())
+	encryptedUserChatKeys: v.record(v.string(), v.string()),
+
+	imagePath: v.optional(v.string())
 });
 
 export const createGroup = command(
 	createGroupSchema,
-	async ({ groupName, userIds, encryptedUserChatKeys }) => {
+	async ({ groupName, userIds, encryptedUserChatKeys, imagePath }) => {
 		const { locals } = getRequestEvent();
 
 		if (!locals.sessionId) {
@@ -46,6 +48,7 @@ export const createGroup = command(
 					currentKeyVersion: 0,
 					type: 'group',
 					ownerId: locals.user!.id,
+					image: imagePath,
 					participants: {
 						create: allParticipantIds.map((id) => ({
 							user: { connect: { id } },

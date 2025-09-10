@@ -11,6 +11,8 @@
 	import { chats } from '$lib/chat/chats';
 	import { chatList } from '$lib/chat/chatList';
 	import { chatOwner } from '$lib/chat/chatOwner';
+	import ProfilePicture from './ProfilePicture.svelte';
+	import GroupPicture from './GroupPicture.svelte';
 
 	let {
 		onChatSelected,
@@ -143,12 +145,7 @@
 		>
 			{#if chat.type === 'dm'}
 				{@const otherUser = chat.participants.find((p) => p.user.id !== chatStore.user?.id)}
-				<!-- Profile picture -->
-				<div
-					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-				>
-					<p>{chat.name?.charAt(0)}</p>
-				</div>
+				<ProfilePicture user={otherUser?.user || null} size="3rem" />
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
@@ -194,12 +191,8 @@
 					remainingCount > 0
 						? firstTwoParticipants.join(', ') + ` +${remainingCount} others`
 						: firstTwoParticipants.join(', ')}
-				<!-- Profile picture -->
-				<div
-					class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-				>
-					<p>{chat.name?.charAt(0)}</p>
-				</div>
+
+				<GroupPicture {chat} size="3rem" />
 
 				<!-- Chat text -->
 				<div title={allParticipants} class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">

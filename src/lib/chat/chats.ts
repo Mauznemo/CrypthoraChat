@@ -81,6 +81,17 @@ export const chats = {
 		chatList.updateChat(chatStore.activeChat);
 	},
 
+	handleChatUpdated(data: {
+		chatId: string;
+		newName: string | null;
+		newImagePath: string | null;
+	}): void {
+		if (data.chatId !== chatStore.activeChat?.id) return;
+		if (data.newName) chatStore.activeChat.name = data.newName;
+		if (data.newImagePath) chatStore.activeChat.image = data.newImagePath;
+		chatList.updateChat(chatStore.activeChat);
+	},
+
 	/** Tries to select a chat and get its messages, shows an error modal if it fails */
 	async trySelectChat(newChat: ChatWithoutMessages): Promise<{ success: boolean }> {
 		chatStore.loadingChat = true;

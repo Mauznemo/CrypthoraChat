@@ -179,7 +179,7 @@
 							try {
 								await changePassword({ currentPassword, newPassword, confirmNewPassword });
 							} catch (error: any) {
-								modalStore.alert('Failed', 'Failed to change password: ' + error.body.message);
+								modalStore.error(error, 'Failed to change password: ');
 								return;
 							}
 							currentPassword = '';

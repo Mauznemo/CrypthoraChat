@@ -174,6 +174,16 @@ class SocketStore {
 		this.socket?.on('chat-users-updated', callback);
 	}
 
+	onChatUpdated(
+		callback: (data: {
+			chatId: string;
+			newName: string | null;
+			newImagePath: string | null;
+		}) => void
+	) {
+		this.socket?.on('chat-updated', callback);
+	}
+
 	// ---------- Chat specific (only sent to users joined in the chat) ---------- //
 
 	// ---------- User specific ---------- //

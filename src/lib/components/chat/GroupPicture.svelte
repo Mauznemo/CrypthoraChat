@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { SafeUser } from '$lib/types';
+	import type { ChatWithoutMessages } from '$lib/types';
 
 	let {
-		user,
+		chat,
 		customUrl,
 		class: className = '',
 		background = null,
@@ -10,7 +10,7 @@
 		size = '3rem',
 		imageSize
 	}: {
-		user: SafeUser | null;
+		chat?: ChatWithoutMessages | null;
 		customUrl?: string | null;
 		class?: string;
 		background?: string | null;
@@ -44,14 +44,14 @@
 			draggable="false"
 		/>
 	</div>
-{:else if user?.profilePic}
+{:else if chat?.image}
 	<div
 		class="{className} flex flex-shrink-0 items-center justify-center rounded-full bg-gray-500 select-none"
 		style="{style} width: {size}; height: {size};"
 	>
 		<img
 			class="h-full w-full rounded-full object-cover"
-			src={`/api/profile-picture?filePath=${encodeURIComponent(user.profilePic)}${imageSize ? `&size=${imageSize}` : ''}`}
+			src={`/api/profile-picture?filePath=${encodeURIComponent(chat.image)}${imageSize ? `&size=${imageSize}` : ''}`}
 			alt="Profile"
 			draggable="false"
 		/>
@@ -64,6 +64,6 @@
 			: 'bg-gray-500'}  text-white select-none"
 		style="{style} width: {size}; height: {size}; font-size: {getFontSize(size)}"
 	>
-		<p>{user?.displayName.charAt(0).toUpperCase()}</p>
+		<p>{chat?.name?.charAt(0).toUpperCase()}</p>
 	</div>
 {/if}
