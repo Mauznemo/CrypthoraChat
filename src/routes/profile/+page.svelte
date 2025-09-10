@@ -4,7 +4,7 @@
 	import ProfilePicture from '$lib/components/chat/ProfilePicture.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { onDestroy } from 'svelte';
-	import { changePassword, logout, updateDisplayName } from './data.remote';
+	import { changePassword, logout, updateDisplayName, updateProfilePicture } from './data.remote';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 
 	let { data } = $props();
@@ -200,7 +200,10 @@
 					await updateDisplayName(displayName);
 
 					if (selectedFile) {
-						await tryUploadProfilePicture(selectedFile);
+						const result = await tryUploadProfilePicture(selectedFile);
+						if (!result.success) return;
+
+						await updateProfilePicture(result.filePath);
 					}
 				} catch (error) {
 					modalStore.alert('Error', 'Failed update profile: ' + error);

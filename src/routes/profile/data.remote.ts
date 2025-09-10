@@ -1,6 +1,7 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/auth';
 import { db } from '$lib/db';
+import { removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -25,6 +26,28 @@ export const updateDisplayName = command(v.string(), async (displayName: string)
 	await db.user.update({
 		where: { id: locals.user!.id },
 		data: { displayName }
+	});
+});
+
+export const updateProfilePicture = command(v.string(), async (filePath: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const user = await db.user.findUnique({
+		where: { id: locals.user!.id },
+		select: { profilePic: true }
+	});
+
+	if (user?.profilePic) {
+		await removeFile(user.profilePic);
+	}
+
+	await db.user.update({
+		where: { id: locals.user!.id },
+		data: { profilePic: filePath }
 	});
 });
 

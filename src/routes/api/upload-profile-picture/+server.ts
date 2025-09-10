@@ -4,16 +4,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
+import { ensureUploadDir } from '$lib/server/fileUpload';
 
 const UPLOAD_PATH = (process.env.UPLOAD_PATH || './uploads') + '/profiles';
-
-async function ensureUploadDir() {
-	try {
-		await fs.access(UPLOAD_PATH);
-	} catch {
-		await fs.mkdir(UPLOAD_PATH, { recursive: true });
-	}
-}
 
 let serverKeyPromise: Promise<CryptoKey> | null = null;
 async function getServerKey(): Promise<CryptoKey> {
@@ -33,7 +26,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
-		await ensureUploadDir();
+		await ensureUploadDir(UPLOAD_PATH);
 
 		const formData = await request.formData();
 		const file = formData.get('file');
@@ -62,8 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const filePath = path.join(UPLOAD_PATH, filename);
 		await fs.writeFile(filePath, combined);
 
-		const id = filename.replace('.enc', '');
-		return new Response(JSON.stringify({ success: true, id, path: `/uploads/${filename}` }), {
+		return new Response(JSON.stringify({ success: true, filePath }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (e: any) {

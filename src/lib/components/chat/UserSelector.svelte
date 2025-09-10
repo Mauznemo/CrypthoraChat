@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SafeUser } from '$lib/types';
+	import ProfilePicture from './ProfilePicture.svelte';
 	import { findUsers } from './userSelector.remote';
 
 	let {
@@ -73,11 +74,7 @@
 						role="button"
 						tabindex="0"
 					>
-						<div
-							class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-						>
-							<p>{user.username?.[0].toUpperCase()}</p>
-						</div>
+						<ProfilePicture {user} size="3rem" />
 						<div>
 							<p class="ml-4 text-xl font-bold">{user.displayName}</p>
 							<p class="ml-4 text-lg">@{user.username}</p>
@@ -112,11 +109,7 @@
 						role="button"
 						tabindex="0"
 					>
-						<div
-							class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-500 text-white"
-						>
-							<p>{user.username?.[0].toUpperCase()}</p>
-						</div>
+						<ProfilePicture {user} size="3rem" />
 						<div>
 							<p class="ml-4 text-xl font-bold">{user.displayName}</p>
 							<p class="ml-4 text-lg">@{user.username}</p>

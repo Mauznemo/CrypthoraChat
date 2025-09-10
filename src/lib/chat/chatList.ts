@@ -3,6 +3,7 @@ import type { ChatWithoutMessages } from '$lib/types';
 
 export const chatList = {
 	addChat(newChat: ChatWithoutMessages): void {
+		if (chatStore.chats.find((chat) => chat.id === newChat.id)) return;
 		chatStore.chats = [...chatStore.chats, newChat];
 	},
 
