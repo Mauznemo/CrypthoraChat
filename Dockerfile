@@ -13,10 +13,13 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# generate svelte-kit files
+RUN npx svelte-kit sync
+
 # Build the application
+RUN npx prisma generate
 RUN npm run build
 ENV DATABASE_URL="postgresql://placeholder"
-RUN npx prisma generate
 
 # Production stage
 FROM node:22-alpine AS runner
