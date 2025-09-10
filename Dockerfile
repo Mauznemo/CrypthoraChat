@@ -17,9 +17,9 @@ COPY . .
 RUN npx svelte-kit sync
 
 # Build the application
+ENV DATABASE_URL="postgresql://placeholder"
 RUN npx prisma generate
 RUN npm run build
-ENV DATABASE_URL="postgresql://placeholder"
 
 # Production stage
 FROM node:22-alpine AS runner
