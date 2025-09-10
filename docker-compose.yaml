@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # SvelteKit 5 Application
+  # CrypthoraChat
   app:
     build:
       context: .
@@ -21,7 +21,7 @@ services:
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
       - UPLOAD_PATH=./uploads
     volumes:
-      - app_uploads:/uploads
+      - ${APP_UPLOADS:-app_uploads}:/uploads
     depends_on:
       postgres:
         condition: service_healthy
