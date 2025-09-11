@@ -6,9 +6,9 @@ CrypthoraChat is meant for family and friends, if you want to chat with multiple
 >[!CAUTION]
 >**Disclaimer:** This project is currently in the development phase, so it my still contain some bugs and is not fully done yet.
 
-<div style="display: flex; gap: 10px;">
-  <img src="docs/images/screenshot_mobile.png" width="auto" height="500">
-  <img src="docs/images/screenshot_desktop.png" width="auto" height="500">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+  <img src="docs/images/screenshot_mobile.png" style="flex: 1; min-width: 0; height: 500px; object-fit: contain; max-width: 100%;">
+  <img src="docs/images/screenshot_desktop.png" style="flex: 1; min-width: 0; height: 500px; object-fit: contain; max-width: 100%;">
 </div>
 
 ## Features
