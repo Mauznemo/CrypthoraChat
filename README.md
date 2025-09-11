@@ -3,6 +3,8 @@ CrypthoraChat is an open-source, self-hostable, cross-platform E2EE chat app tha
 It can be used as an PWA (Progressive Web App) or on Android with a [wrapper app](https://github.com/Mauznemo/CrypthoraChatWrapper)
 CrypthoraChat is meant for family and friends, if you want to chat with multiple people on different servers, the Android wrapper will support easy switching.
 
+If you need help with anything you can join my [Discord Server](https://discord.gg/GshuXQjv9H)
+
 >[!CAUTION]
 >**Disclaimer:** This project is currently in the development phase, so it my still contain some bugs and is not fully done yet.
 
