@@ -17,13 +17,21 @@
 	} = $props();
 
 	export function replyToMessage(message: MessageWithRelations): void {
+		if (uploadingFile) return;
 		messageReplying = message;
 	}
 
 	export async function editMessage(message: MessageWithRelations): Promise<void> {
+		if (uploadingFile) return;
+		for (const url of Object.values(previewUrls)) {
+			URL.revokeObjectURL(url);
+		}
+
+		selectedFiles = [];
+		previewUrls = {};
+
 		messageEditing = message;
 		chatValue = await decryptMessage({ message });
-		//setTimeout(() => autoGrow(inputField), 100);
 	}
 
 	let messageReplying: MessageWithRelations | null = $state(null);
@@ -42,6 +50,7 @@
 	let containerWidth = $state(0);
 
 	function openFileSelector(): void {
+		if (uploadingFile) return;
 		fileInput.click();
 	}
 
@@ -100,6 +109,8 @@
 	});
 
 	async function sendMessage(): Promise<void> {
+		if (uploadingFile) return;
+
 		if (!chatStore.activeChat) {
 			modalStore.alert('Error', 'Failed to send message: No chat selected');
 			return;
@@ -130,6 +141,7 @@
 			}
 
 			selectedFiles = [];
+			uploadingFile = null;
 			previewUrls = {};
 		}
 
@@ -213,6 +225,7 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent): void {
+		if (uploadingFile) return;
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			sendMessage();
@@ -235,6 +248,7 @@
 	}
 
 	function handleAttachment(event: Event): void {
+		if (uploadingFile) return;
 		event.stopPropagation();
 		const items: ContextMenuItem[] = [
 			{
@@ -265,6 +279,8 @@
 	}
 
 	function handleRemoveFile(file: File): void {
+		if (uploadingFile) return;
+
 		if (previewUrls[file.name]) {
 			URL.revokeObjectURL(previewUrls[file.name]);
 			delete previewUrls[file.name];
@@ -419,15 +435,33 @@
 				<div title={file.name} class="mt-2 line-clamp-1 max-w-[120px] break-all text-gray-100">
 					{file.name}
 				</div>
-				<div
-					class="pointer-events-none absolute top-0 left-0 flex h-full w-full items-center justify-center"
-				>
-					{#if uploadingFile === file}
-						<LoadingSpinner />
-					{:else if uploadedFiles.includes(file)}
-						<p class="text-4xl">✅</p>
-					{/if}
-				</div>
+				{#if uploadingFile}
+					<div
+						class="absolute top-0 left-0 flex h-full w-full items-center justify-center rounded-xl bg-gray-600/50"
+					>
+						{#if uploadingFile === file}
+							<LoadingSpinner />
+						{:else if uploadedFiles.includes(file)}
+							<svg
+								class="size-12 text-green-500"
+								aria-hidden="true"
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								fill="none"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke="currentColor"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+								/>
+							</svg>
+						{/if}
+					</div>
+				{/if}
 			</div>
 		{/each}
 
@@ -453,6 +487,16 @@
 				<div class="text-center font-semibold text-gray-100">
 					+{remainingCount} File{remainingCount === 1 ? '' : 's'}
 				</div>
+				{#if uploadingFile && !visibleFiles.includes(uploadingFile)}
+					<div
+						class="absolute top-0 left-0 flex h-full w-full flex-col items-center justify-center rounded-xl bg-gray-600/50"
+					>
+						<LoadingSpinner />
+						<p class="mb-5 text-center text-sm font-semibold text-gray-100">
+							Remaining {uploadedFiles.length - visibleFiles.length}/{remainingCount}
+						</p>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
