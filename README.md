@@ -6,6 +6,11 @@ CrypthoraChat is meant for family and friends, if you want to chat with multiple
 >[!CAUTION]
 >**Disclaimer:** This project is currently in the development phase, so it my still contain some bugs and is not fully done yet.
 
+<div style="display: flex; gap: 10px;">
+  <img src="docs/images/screenshot_mobile.png" width="auto" height="500">
+  <img src="docs/images/screenshot_desktop.png" width="auto" height="500">
+</div>
+
 ## Features
 ### Current
 - User registration/login (with admin dashboard to add allowed usernames)
@@ -28,6 +33,8 @@ CrypthoraChat is meant for family and friends, if you want to chat with multiple
 - Automatic chat key rotation
 - More markdown support
 - Voice Messages
+- Session view to log out other devices
+- Some other small things
 
 
 ## About
