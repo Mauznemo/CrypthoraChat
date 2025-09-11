@@ -6,6 +6,9 @@
 	import { onDestroy } from 'svelte';
 	import CustomTextarea from './CustomTextarea.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
+	import { tryUploadFile } from '$lib/fileUpload/upload';
+	import LoadingSpinner from '../LoadingSpinner.svelte';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -31,6 +34,46 @@
 	let isTyping = $state(false);
 	let chatValue: string = $state('');
 
+	let selectedFiles: File[] = $state([]);
+	let fileInput: HTMLInputElement;
+	let previewUrls: Record<string, string> = $state({});
+	let uploadingFile: File | null = $state(null);
+	let uploadedFiles: File[] = $state([]);
+	let containerWidth = $state(0);
+
+	function openFileSelector(): void {
+		fileInput.click();
+	}
+
+	function handleFileSelect(event: Event): void {
+		const target = event.target as HTMLInputElement;
+		const files = target.files;
+		if (files) {
+			selectedFiles.push(...files);
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				if (file.type.startsWith('image/')) {
+					if (previewUrls[file.name]) {
+						URL.revokeObjectURL(previewUrls[file.name]);
+					}
+					previewUrls[file.name] = URL.createObjectURL(file);
+				}
+			}
+
+			// files.forEach((file) => {
+			// });
+
+			// if (file.type.startsWith('image/')) {
+			// 	if (previewUrl) {
+			// 		URL.revokeObjectURL(previewUrl);
+			// 	}
+			// 	// Create new preview URL
+
+			// 	previewUrl = URL.createObjectURL(file);
+			// }
+		}
+	}
+
 	// Function to get the current partial mention being typed
 	function getCurrentMention(text: string, cursorPosition: number): string | null {
 		const beforeCursor = text.slice(0, cursorPosition);
@@ -39,6 +82,10 @@
 	}
 
 	onDestroy(() => {
+		for (const url of Object.values(previewUrls)) {
+			URL.revokeObjectURL(url);
+		}
+
 		// Clean up typing timeout
 		if (typingTimeout) {
 			clearTimeout(typingTimeout);
@@ -58,13 +105,37 @@
 			return;
 		}
 
-		if (!chatValue.trim() || !chatStore.user?.id) return;
+		if ((!chatValue.trim() && selectedFiles.length === 0) || !chatStore.user?.id) return;
+
+		//TODO: Don't allow file uploads for edits
+		let filePaths: string[] = [];
+		if (selectedFiles.length > 0) {
+			for (const file of selectedFiles) {
+				uploadingFile = file;
+				const result = await tryUploadFile(file, chatStore.activeChat.id);
+
+				if (result.success) {
+					filePaths.push(result.filePath);
+					uploadedFiles.push(file);
+				} else {
+					uploadingFile = null;
+					uploadedFiles = [];
+					//TODO: Delete all files that were uploaded
+					return;
+				}
+			}
+
+			for (const url of Object.values(previewUrls)) {
+				URL.revokeObjectURL(url);
+			}
+
+			selectedFiles = [];
+			previewUrls = {};
+		}
 
 		const messageContent = chatValue.trim();
 		chatValue = '';
-		//inputField.style.height = '5px';
 
-		// Stop typing indicator
 		if (isTyping) {
 			socketStore.stopTyping({
 				chatId: chatStore.activeChat.id
@@ -93,7 +164,7 @@
 				senderId: chatStore.user.id,
 				encryptedContent: encryptedContent,
 				replyToId: messageReplying ? messageReplying.id : null,
-				attachments: []
+				attachments: filePaths
 			});
 		} catch (error) {
 			modalStore.alert('Error', 'Failed to send message: ' + error);
@@ -161,6 +232,44 @@
 
 	function handleCloseReply(): void {
 		messageReplying = null;
+	}
+
+	function handleAttachment(event: Event): void {
+		event.stopPropagation();
+		const items: ContextMenuItem[] = [
+			{
+				id: 'add-files',
+				label: 'Add Files',
+				iconSvg:
+					'M18 9V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h4M9 3v4a1 1 0 0 1-1 1H4m11 6v4m-2-2h4m3 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z',
+				action: () => {
+					openFileSelector();
+				}
+			},
+			{
+				id: 'gif',
+				label: 'Gif',
+				iconSvg:
+					'M19 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1Zm0 0-4 4m5 0H4m1 0 4-4m1 4 4-4m-4 7v6l4-3-4-3Z',
+				action: () => {}
+			},
+			{
+				id: 'sticker',
+				label: 'Sticker',
+				iconSvg:
+					'm3 16 5-7 6 6.5m6.5 2.5L16 13l-4.286 6M14 10h.01M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z',
+				action: () => {}
+			}
+		];
+		contextMenuStore.open(event.target as HTMLElement, items);
+	}
+
+	function handleRemoveFile(file: File): void {
+		if (previewUrls[file.name]) {
+			URL.revokeObjectURL(previewUrls[file.name]);
+			delete previewUrls[file.name];
+		}
+		selectedFiles = selectedFiles.filter((f) => f !== file);
 	}
 </script>
 
@@ -243,9 +352,116 @@
 	{/if}
 {/if}
 
+{#if selectedFiles.length > 0}
+	{@const filesPerRow = Math.floor((containerWidth || 400) / 130)}
+	{@const maxVisibleFiles = filesPerRow * 2 - 1}
+	{@const visibleFiles = selectedFiles.slice(0, maxVisibleFiles)}
+	{@const remainingCount = selectedFiles.length - maxVisibleFiles}
+
+	<div class="flex flex-wrap gap-2 p-2" bind:clientWidth={containerWidth}>
+		{#each visibleFiles as file}
+			<div
+				class="relative flex min-h-[140px] w-[120px] flex-col justify-between rounded-xl bg-gray-600/60 p-2"
+			>
+				<button
+					onclick={() => handleRemoveFile(file)}
+					class="absolute top-1 right-1 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-400 transition-colors hover:bg-gray-500/40 hover:text-gray-200"
+					aria-label="Close modal"
+				>
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						></path>
+					</svg>
+				</button>
+				<div class="flex flex-1 items-center justify-center">
+					{#if previewUrls[file.name]}
+						<img
+							class="max-h-[100px] max-w-[100px] rounded-lg"
+							src={previewUrls[file.name]}
+							alt={file.name}
+						/>
+					{:else}
+						<svg
+							class="size-20 text-gray-800 dark:text-white"
+							aria-hidden="true"
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke="currentColor"
+								stroke-linejoin="round"
+								stroke-width="1"
+								d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
+							/>
+							<text
+								class="select-none"
+								x="12"
+								y="15"
+								text-anchor="middle"
+								dominant-baseline="middle"
+								fill="currentColor"
+								font-size="5"
+								font-family="Arial, sans-serif"
+								font-weight="bold"
+							>
+								{file.name.split('.').pop()?.toUpperCase() || ''}
+							</text>
+						</svg>
+					{/if}
+				</div>
+				<div title={file.name} class="mt-2 line-clamp-1 max-w-[120px] break-all text-gray-100">
+					{file.name}
+				</div>
+				<div
+					class="pointer-events-none absolute top-0 left-0 flex h-full w-full items-center justify-center"
+				>
+					{#if uploadingFile === file}
+						<LoadingSpinner />
+					{:else if uploadedFiles.includes(file)}
+						<p class="text-4xl">✅</p>
+					{/if}
+				</div>
+			</div>
+		{/each}
+
+		{#if remainingCount > 0}
+			<div
+				class="relative flex min-h-[140px] w-[120px] flex-col items-center justify-center rounded-xl bg-gray-600/60 p-2"
+			>
+				<svg
+					class="mb-2 size-12 text-gray-400"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 4v16m8-8H4"
+					/>
+				</svg>
+				<div class="text-center font-semibold text-gray-100">
+					+{remainingCount} File{remainingCount === 1 ? '' : 's'}
+				</div>
+			</div>
+		{/if}
+	</div>
+{/if}
+
 <!-- Input Field -->
 <div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
 	<button
+		onclick={handleAttachment}
 		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 transition-colors hover:bg-teal-600/60"
 		aria-label="Add attachments"
 	>
@@ -278,7 +494,7 @@
 	/>
 
 	<button
-		disabled={!chatValue.trim() || !socketStore.connected}
+		disabled={(!chatValue.trim() && selectedFiles.length === 0) || !socketStore.connected}
 		onclick={sendMessage}
 		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-teal-600/60 transition-colors hover:bg-teal-600/80 disabled:bg-gray-600"
 		aria-label="Send Message"
@@ -299,3 +515,5 @@
 		</svg>
 	</button>
 </div>
+
+<input class="hidden" type="file" multiple bind:this={fileInput} onchange={handleFileSelect} />

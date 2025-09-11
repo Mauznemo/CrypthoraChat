@@ -8,9 +8,9 @@ export async function tryUploadFile(
 	const encrypted = await encryptFile(file);
 
 	const formData = new FormData();
-	formData.append('encryptedData', encrypted.encryptedData, 'encrypted-file.enc');
-	formData.append('encryptedFileNameBase64', encrypted.encryptedFileNameBase64);
 	formData.append('chatId', chatId);
+	formData.append('encryptedFileNameSafeBase64', encrypted.encryptedFileNameSafeBase64);
+	formData.append('encryptedData', encrypted.encryptedData, 'encrypted-file.enc');
 
 	const res = await fetch('/api/upload-encrypted-file', {
 		method: 'POST',
@@ -34,8 +34,8 @@ export async function tryUploadProfilePicture(
 	const formData = new FormData();
 
 	const ext = file.name.split('.').pop() ?? 'png';
-	formData.append('file', file, file.name);
 	formData.append('fileExtension', ext);
+	formData.append('file', file, file.name);
 
 	const res = await fetch('/api/upload-profile-picture', {
 		method: 'POST',
