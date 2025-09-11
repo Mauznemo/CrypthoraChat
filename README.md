@@ -7,8 +7,8 @@ CrypthoraChat is meant for family and friends, if you want to chat with multiple
 >**Disclaimer:** This project is currently in the development phase, so it my still contain some bugs and is not fully done yet.
 
 <div style="display: flex; gap: 10px;">
-  <img src="docs/images/screenshot_mobile.png" width="auto" height="450">
-  <img src="docs/images/screenshot_desktop.png" width="auto" height="450">
+  <img src="docs/images/screenshot_mobile.png" width="auto" height="400">
+  <img src="docs/images/screenshot_desktop.png" width="auto" height="400">
 </div>
 
 ## Features
