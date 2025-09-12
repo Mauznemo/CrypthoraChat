@@ -2,6 +2,7 @@
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import { decryptFile, decryptFileName } from '$lib/crypto/file';
 	import { tryGetFile } from '$lib/fileUpload/upload';
+	import { getFileSize } from '$lib/fileUpload/upload.remote';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
@@ -14,9 +15,13 @@
 		keyVersion: number;
 	} = $props();
 
+	const DOWNLOAD_LIMIT = 10 * 1024 * 1024;
+	let ignoreLimit = $state(false);
+
 	let fileType: 'image' | 'video' | 'audio' | 'other' = $state('other');
 
 	let previewUrl: string | null = $state(null);
+	let fileSizeBytes: number = $state(0);
 
 	let downloadingFile = $state(false);
 
@@ -29,6 +34,7 @@
 		if (fileUtils.isImageFile(name)) fileType = 'image';
 		if (fileUtils.isVideoFile(name)) fileType = 'video';
 		if (fileUtils.isAudioFile(name)) fileType = 'audio';
+		fileSizeBytes = await getFileSize(attachmentPath);
 		return name;
 	}
 
@@ -83,150 +89,168 @@
 </div>
 
 {#snippet imagePreview(name: string)}
-	{#await getMediaURL(attachmentPath, keyVersion)}
-		<div
-			class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
-		>
-			<LoadingSpinner />
-			<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
-				Loading image...
-			</p>
-		</div>
-	{:then previewUrl}
-		{#if previewUrl}
-			<div class="relative">
-				<img src={previewUrl} alt="Attachment" class="max-[400px] max-h-[600px] rounded-lg" />
-
-				<button
-					onclick={() => {
-						fileUtils.downloadFileFromUrl(previewUrl!, name);
-					}}
-					class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
-					aria-label="Download"
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+		{@render ignoreLimitButton(name, fileSizeBytes)}
+	{:else}
+		{#await getMediaURL(attachmentPath, keyVersion)}
+			<div
+				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+			>
+				<LoadingSpinner />
+				<p
+					class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400"
 				>
-					<svg
-						class="h-6 w-6"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-						/>
-					</svg>
-				</button>
+					Loading image ({fileUtils.formatFileSize(fileSizeBytes)})
+				</p>
 			</div>
-		{/if}
-	{:catch error}
-		{console.error(error)}
-		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt image</p>
-	{/await}
+		{:then previewUrl}
+			{#if previewUrl}
+				<div class="relative">
+					<img src={previewUrl} alt="Attachment" class="max-[400px] max-h-[600px] rounded-lg" />
+
+					<button
+						onclick={() => {
+							fileUtils.downloadFileFromUrl(previewUrl!, name);
+						}}
+						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+						aria-label="Download"
+					>
+						<svg
+							class="h-6 w-6"
+							aria-hidden="true"
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+							/>
+						</svg>
+					</button>
+				</div>
+			{/if}
+		{:catch error}
+			{console.error(error)}
+			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt image</p>
+		{/await}
+	{/if}
 {/snippet}
 
 {#snippet videoPreview(name: string)}
-	{#await getMediaURL(attachmentPath, keyVersion)}
-		<div
-			class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
-		>
-			<LoadingSpinner />
-			<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
-				Loading video...
-			</p>
-		</div>
-	{:then previewUrl}
-		{#if previewUrl}
-			<div class="relative">
-				<VideoPlayer src={previewUrl} />
-				<!-- <video src={previewUrl} controls class="max-h-[600px] max-w-[400px] rounded-lg">
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+		{@render ignoreLimitButton(name, fileSizeBytes)}
+	{:else}
+		{#await getMediaURL(attachmentPath, keyVersion)}
+			<div
+				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+			>
+				<LoadingSpinner />
+				<p
+					class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400"
+				>
+					Loading video ({fileUtils.formatFileSize(fileSizeBytes)})
+				</p>
+			</div>
+		{:then previewUrl}
+			{#if previewUrl}
+				<div class="relative">
+					<VideoPlayer src={previewUrl} />
+					<!-- <video src={previewUrl} controls class="max-h-[600px] max-w-[400px] rounded-lg">
 					<track kind="captions" src="" label="No captions available" />
 					Your browser does not support the video tag.
 				</video> -->
 
-				<button
-					onclick={() => {
-						fileUtils.downloadFileFromUrl(previewUrl!, name);
-					}}
-					class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
-					aria-label="Download"
-				>
-					<svg
-						class="h-6 w-6"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
+					<button
+						onclick={() => {
+							fileUtils.downloadFileFromUrl(previewUrl!, name);
+						}}
+						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+						aria-label="Download"
 					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-						/>
-					</svg>
-				</button>
-			</div>
-		{/if}
-	{:catch error}
-		{console.error(error)}
-		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt video</p>
-	{/await}
+						<svg
+							class="h-6 w-6"
+							aria-hidden="true"
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+							/>
+						</svg>
+					</button>
+				</div>
+			{/if}
+		{:catch error}
+			{console.error(error)}
+			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt video</p>
+		{/await}
+	{/if}
 {/snippet}
 
 {#snippet audioPreview(name: string)}
-	{#await getMediaURL(attachmentPath, keyVersion)}
-		<div
-			class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
-		>
-			<LoadingSpinner />
-			<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
-				Loading audio...
-			</p>
-		</div>
-	{:then previewUrl}
-		{#if previewUrl}
-			<div class="relative">
-				<AudioPlayer src={previewUrl} title={name} />
-				<button
-					onclick={() => {
-						fileUtils.downloadFileFromUrl(previewUrl!, name);
-					}}
-					class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
-					aria-label="Download"
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+		{@render ignoreLimitButton(name, fileSizeBytes)}
+	{:else}
+		{#await getMediaURL(attachmentPath, keyVersion)}
+			<div
+				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+			>
+				<LoadingSpinner />
+				<p
+					class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400"
 				>
-					<svg
-						class="h-6 w-6"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-						/>
-					</svg>
-				</button>
+					Loading audio ({fileUtils.formatFileSize(fileSizeBytes)})
+				</p>
 			</div>
-		{/if}
-	{:catch error}
-		{console.error(error)}
-		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt audio</p>
-	{/await}
+		{:then previewUrl}
+			{#if previewUrl}
+				<div class="relative">
+					<AudioPlayer src={previewUrl} title={name} />
+					<button
+						onclick={() => {
+							fileUtils.downloadFileFromUrl(previewUrl!, name);
+						}}
+						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+						aria-label="Download"
+					>
+						<svg
+							class="h-6 w-6"
+							aria-hidden="true"
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+							/>
+						</svg>
+					</button>
+				</div>
+			{/if}
+		{:catch error}
+			{console.error(error)}
+			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt audio</p>
+		{/await}
+	{/if}
 {/snippet}
 
 {#snippet otherPreview(name: string)}
@@ -260,7 +284,12 @@
 				{name.split('.').pop()?.toUpperCase() || ''}
 			</text>
 		</svg>
-		<p class="md:text-md line-clamp-1 pr-6 text-sm font-bold break-all text-gray-200">{name}</p>
+		<div>
+			<p class="md:text-md line-clamp-1 pr-6 text-sm font-bold break-all text-gray-200">{name}</p>
+			<p class="text-sm text-gray-300">
+				{fileUtils.formatFileSize(fileSizeBytes)}
+			</p>
+		</div>
 		<button
 			onclick={() => handleDownloadFile(name)}
 			class="absolute right-6 cursor-pointer text-gray-100 hover:text-gray-300"
@@ -288,5 +317,42 @@
 				</svg>
 			{/if}
 		</button>
+	</div>
+{/snippet}
+
+{#snippet ignoreLimitButton(name: string, fileSizeBytes: number)}
+	<div
+		class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+	>
+		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+			<button
+				onclick={() => {
+					ignoreLimit = true;
+				}}
+				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
+				aria-label="Play video"
+			>
+				<svg
+					class="h-6 w-6"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+					/>
+				</svg>
+			</button>
+		</div>
+		<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
+			{name} ({fileUtils.formatFileSize(fileSizeBytes)})
+		</p>
 	</div>
 {/snippet}

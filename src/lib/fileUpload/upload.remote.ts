@@ -1,5 +1,5 @@
-import { command, getRequestEvent } from '$app/server';
-import { db } from '$lib/db';
+import { command, getRequestEvent, query } from '$app/server';
+import { promises as fs } from 'node:fs';
 import { fileExists } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
 import path from 'path';
@@ -39,3 +39,24 @@ function parseFilename(filePath: string) {
 
 	return { uuid, userId };
 }
+
+export const getFileSize = query(v.string(), async (filePath: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	if (!fileExists(filePath)) {
+		error(404, 'File not found');
+	}
+
+	try {
+		const stats = await fs.stat(filePath);
+		const sizeBytes = stats.size;
+		return sizeBytes;
+	} catch (err) {
+		console.error('Failed to get file size:', err);
+		error(500, 'Failed to read file info');
+	}
+});
