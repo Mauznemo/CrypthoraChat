@@ -3,6 +3,7 @@
 	import { decryptFile, decryptFileName } from '$lib/crypto/file';
 	import { tryGetFile } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import VideoPlayer from './VideoPlayer.svelte';
 
 	const {
 		attachmentPath,
@@ -25,10 +26,19 @@
 		const encryptedFileNameSafeBase64 = filename.split('.')[0];
 		const name = await decryptFileName(encryptedFileNameSafeBase64, keyVersion);
 		if (fileUtils.isImageFile(name)) fileType = 'image';
+		if (fileUtils.isVideoFile(name)) fileType = 'video';
 		return name;
 	}
 
 	async function getImageURL(attachmentPath: string, keyVersion: number) {
+		const result = await tryGetFile(attachmentPath);
+		if (!result.success) return;
+		const blob = await decryptFile(result.encodedData!, keyVersion);
+		previewUrl = URL.createObjectURL(blob);
+		return previewUrl;
+	}
+
+	async function getVideoURL(attachmentPath: string, keyVersion: number) {
 		const result = await tryGetFile(attachmentPath);
 		if (!result.success) return;
 		const blob = await decryptFile(result.encodedData!, keyVersion);
@@ -50,7 +60,7 @@
 	}
 </script>
 
-<div class="max-w-[400px]">
+<div class="max-w-[600px]">
 	<svelte:boundary>
 		{#await decryptName(attachmentPath, keyVersion)}
 			<div class="mb-2">
@@ -60,6 +70,8 @@
 			<div class="mb-2">
 				{#if fileType === 'image'}
 					{@render imagePreview(name)}
+				{:else if fileType === 'video'}
+					{@render videoPreview(name)}
 				{:else if fileType === 'other'}
 					{@render otherPreview(name)}
 				{/if}
@@ -119,6 +131,58 @@
 	{:catch error}
 		{console.error(error)}
 		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt image</p>
+	{/await}
+{/snippet}
+
+{#snippet videoPreview(name: string)}
+	{#await getVideoURL(attachmentPath, keyVersion)}
+		<div
+			class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+		>
+			<LoadingSpinner />
+			<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
+				Loading video...
+			</p>
+		</div>
+	{:then previewUrl}
+		{#if previewUrl}
+			<div class="relative">
+				<VideoPlayer src={previewUrl} />
+				<!-- <video src={previewUrl} controls class="max-h-[600px] max-w-[400px] rounded-lg">
+					<track kind="captions" src="" label="No captions available" />
+					Your browser does not support the video tag.
+				</video> -->
+
+				<button
+					onclick={() => {
+						fileUtils.downloadFileFromUrl(previewUrl!, name);
+					}}
+					class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+					aria-label="Download"
+				>
+					<svg
+						class="h-6 w-6"
+						aria-hidden="true"
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+						/>
+					</svg>
+				</button>
+			</div>
+		{/if}
+	{:catch error}
+		{console.error(error)}
+		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt video</p>
 	{/await}
 {/snippet}
 
