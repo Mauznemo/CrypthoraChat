@@ -1,12 +1,13 @@
-version: '3.8'
+name: crypthora_chat
 
 services:
   # CrypthoraChat
-  app:
+  crypthora-chat:
+    # TODO: replace with own image (gh actions ghcr.io)
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: crypthora-chat
+    container_name: crypthora_chat_web
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -33,7 +34,7 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:17-alpine
-    container_name: postgres-db
+    container_name: crypthora_chat_postgres
     restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-crypthora_db}
@@ -57,7 +58,7 @@ services:
   # ntfy notification service
   ntfy:
     image: binwiederhier/ntfy:latest
-    container_name: ntfy-server
+    container_name: crypthora_chat_ntfy_server
     restart: unless-stopped
     environment:
       - NTFY_BASE_URL=${NTFY_URL}
