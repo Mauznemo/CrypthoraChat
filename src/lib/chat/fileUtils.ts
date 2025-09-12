@@ -4,7 +4,6 @@ const IMAGE_EXTENSIONS = new Set([
 	'png',
 	'gif',
 	'webp',
-	'svg',
 	'bmp',
 	'ico',
 	'tiff',
@@ -41,5 +40,23 @@ export const fileUtils = {
 		}
 
 		return filename.substring(lastDotIndex + 1).toLowerCase();
+	},
+
+	async downloadFile(blob: Blob, filename: string) {
+		const url = URL.createObjectURL(blob);
+
+		fileUtils.downloadFileFromUrl(url, filename);
+
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	},
+
+	async downloadFileFromUrl(url: string, filename: string) {
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = filename;
+
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
 	}
 };

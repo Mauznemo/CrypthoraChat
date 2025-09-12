@@ -16,6 +16,8 @@
 
 	let previewUrl: string | null = $state(null);
 
+	let downloadingFile = $state(false);
+
 	async function decryptName(attachmentPath: string, keyVersion: number) {
 		const normalized = attachmentPath.replace(/\\/g, '/');
 		const serverFilename = normalized.split('/').pop() || '';
@@ -33,6 +35,19 @@
 		previewUrl = URL.createObjectURL(blob);
 		return previewUrl;
 	}
+
+	async function handleDownloadFile(name: string) {
+		if (downloadingFile) return;
+		downloadingFile = true;
+		const result = await tryGetFile(attachmentPath);
+		if (!result.success) {
+			downloadingFile = false;
+			return;
+		}
+		const blob = await decryptFile(result.encodedData!, keyVersion);
+		fileUtils.downloadFile(blob, name);
+		downloadingFile = false;
+	}
 </script>
 
 <div class="max-w-[400px]">
@@ -44,7 +59,7 @@
 		{:then name}
 			<div class="mb-2">
 				{#if fileType === 'image'}
-					{@render imagePreview()}
+					{@render imagePreview(name)}
 				{:else if fileType === 'other'}
 					{@render otherPreview(name)}
 				{/if}
@@ -59,7 +74,7 @@
 	</svelte:boundary>
 </div>
 
-{#snippet imagePreview()}
+{#snippet imagePreview(name: string)}
 	{#await getImageURL(attachmentPath, keyVersion)}
 		<div
 			class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
@@ -70,7 +85,37 @@
 			</p>
 		</div>
 	{:then previewUrl}
-		<img src={previewUrl} alt="Attachment" class="max-[400px] max-h-[600px] rounded-lg" />
+		{#if previewUrl}
+			<div class="relative">
+				<img src={previewUrl} alt="Attachment" class="max-[400px] max-h-[600px] rounded-lg" />
+
+				<button
+					onclick={() => {
+						fileUtils.downloadFileFromUrl(previewUrl!, name);
+					}}
+					class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+					aria-label="Download"
+				>
+					<svg
+						class="h-6 w-6"
+						aria-hidden="true"
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+						/>
+					</svg>
+				</button>
+			</div>
+		{/if}
 	{:catch error}
 		{console.error(error)}
 		<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt image</p>
@@ -110,26 +155,31 @@
 		</svg>
 		<p class="md:text-md line-clamp-1 pr-6 text-sm font-bold break-all text-gray-200">{name}</p>
 		<button
+			onclick={() => handleDownloadFile(name)}
 			class="absolute right-6 cursor-pointer text-gray-100 hover:text-gray-300"
 			aria-label="Download"
 		>
-			<svg
-				class="h-6 w-6"
-				aria-hidden="true"
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				fill="none"
-				viewBox="0 0 24 24"
-			>
-				<path
-					stroke="currentColor"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-				/>
-			</svg>
+			{#if downloadingFile}
+				<LoadingSpinner size="1.5rem" />
+			{:else}
+				<svg
+					class="h-6 w-6"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+					/>
+				</svg>
+			{/if}
 		</button>
 	</div>
 {/snippet}

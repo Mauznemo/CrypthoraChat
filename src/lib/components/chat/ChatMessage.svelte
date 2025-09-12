@@ -117,7 +117,7 @@
 
 			{#if message.attachments.length > 0}
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
-				<div class="mt-2 flex flex-col">
+				<div class="mt-2 flex flex-col items-end">
 					{#each message.attachments as attachment}
 						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
