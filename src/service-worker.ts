@@ -35,6 +35,12 @@ self.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
 	// console.log('Fetch event for:', event.request.url);
 
+	// skip file downloads (example: anything hitting /api/get-encrypted-file-stream)
+	if (event.request.url.includes('/api/get-encrypted-file-stream')) {
+		// Just let the browser handle it directly
+		return;
+	}
+
 	async function respond() {
 		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE_NAME);

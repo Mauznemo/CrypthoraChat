@@ -1,5 +1,6 @@
 import { decryptKeyWithRSA, getPrivateKey } from '$lib/crypto/keyPair';
 import { decryptKeyFromStorage, encryptKeyForStorage } from '$lib/crypto/utils';
+import { cancelAllDownloads } from '$lib/fileUpload/upload';
 import { chatStore } from '$lib/stores/chat.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
@@ -95,6 +96,7 @@ export const chats = {
 	/** Tries to select a chat and get its messages, shows an error modal if it fails */
 	async trySelectChat(newChat: ChatWithoutMessages): Promise<{ success: boolean }> {
 		chatStore.loadingChat = true;
+		cancelAllDownloads();
 		console.log('Chat selected (leaving previous):', chatStore.activeChat?.id);
 		socketStore.tryLeaveChat(chatStore.activeChat);
 		localStorage.setItem('lastChatId', newChat.id);

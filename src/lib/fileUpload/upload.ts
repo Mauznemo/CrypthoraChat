@@ -28,11 +28,19 @@ export async function tryUploadFile(
 	return { success: true, filePath: response.filePath };
 }
 
+let activeControllers: AbortController[] = [];
+
 export async function tryGetFile(
 	filePath: string
 ): Promise<{ success: boolean; encodedData: ArrayBuffer | null }> {
+	const controller = new AbortController();
+	activeControllers.push(controller);
+
+	activeControllers = activeControllers.filter((c) => !c.signal.aborted);
+
 	const res = await fetch(
-		`/api/get-encrypted-file-stream?filePath=${encodeURIComponent(filePath)}`
+		`/api/get-encrypted-file-stream?filePath=${encodeURIComponent(filePath)}`,
+		{ signal: controller.signal }
 	);
 
 	if (!res.ok) {
@@ -45,6 +53,14 @@ export async function tryGetFile(
 
 	const arrayBuffer = await res.arrayBuffer();
 	return { success: true, encodedData: arrayBuffer };
+}
+
+export function cancelAllDownloads() {
+	console.log('Cancelling', activeControllers.length, 'active downloads');
+	for (const controller of activeControllers) {
+		controller.abort();
+	}
+	activeControllers = [];
 }
 
 export async function tryUploadProfilePicture(
