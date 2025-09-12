@@ -7,6 +7,7 @@
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
+	import Attachment from './Attachment.svelte';
 
 	const {
 		message,
@@ -113,6 +114,15 @@
 				: ''}"
 		>
 			<Reply replyToMessage={message} />
+
+			{#if message.attachments.length > 0}
+				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
+				<div class="mt-2 flex flex-col">
+					{#each message.attachments as attachment}
+						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
+					{/each}
+				</div>
+			{/if}
 
 			<svelte:boundary>
 				{#await decryptMessage({ message })}

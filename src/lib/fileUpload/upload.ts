@@ -28,6 +28,25 @@ export async function tryUploadFile(
 	return { success: true, filePath: response.filePath };
 }
 
+export async function tryGetFile(
+	filePath: string
+): Promise<{ success: boolean; encodedData: ArrayBuffer | null }> {
+	const res = await fetch(
+		`/api/get-encrypted-file-stream?filePath=${encodeURIComponent(filePath)}`
+	);
+
+	if (!res.ok) {
+		const text = await res.text();
+		const error = JSON.parse(text);
+		if (error.message === 'File not found') return { success: false, encodedData: null };
+		modalStore.error(error, 'Failed to get file:');
+		return { success: false, encodedData: null };
+	}
+
+	const arrayBuffer = await res.arrayBuffer();
+	return { success: true, encodedData: arrayBuffer };
+}
+
 export async function tryUploadProfilePicture(
 	file: File
 ): Promise<{ success: boolean; filePath: string }> {

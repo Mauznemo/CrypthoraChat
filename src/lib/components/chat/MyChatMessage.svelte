@@ -7,6 +7,7 @@
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
+	import Attachment from './Attachment.svelte';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));
@@ -115,11 +116,11 @@
 
 			{#if message.attachments.length > 0}
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
-				<!-- <div class="mt-2 grid grid-cols-2 gap-2">
+				<div class="mt-2 flex flex-col">
 					{#each message.attachments as attachment}
-						<p class="pr-9 text-sm whitespace-pre-line text-gray-300">{attachment}</p>
+						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
-				</div> -->
+				</div>
 			{/if}
 
 			<svelte:boundary>

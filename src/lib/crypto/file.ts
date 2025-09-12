@@ -1,5 +1,5 @@
 import { chatStore } from '$lib/stores/chat.svelte';
-import { arrayBufferToBase64 } from './utils';
+import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 
 export async function encryptFile(
 	file: File
@@ -24,6 +24,22 @@ export async function encryptFile(
 	};
 }
 
+export async function decryptFile(encryptedData: ArrayBuffer, keyVersion: number): Promise<Blob> {
+	const chatKey = chatStore.versionedChatKey[keyVersion];
+	if (chatKey === null) throw new Error('Chat key not found');
+
+	const iv = encryptedData.slice(0, 12);
+	const encryptedBuffer = encryptedData.slice(12);
+
+	const decryptedBuffer = await crypto.subtle.decrypt(
+		{ name: 'AES-GCM', iv },
+		chatKey,
+		encryptedBuffer
+	);
+
+	return new Blob([decryptedBuffer]);
+}
+
 async function encryptFileName(fileName: string): Promise<string> {
 	const chatKey = chatStore.getNewestChatKey();
 	if (chatKey === null) throw new Error('Chat key not found');
@@ -38,12 +54,37 @@ async function encryptFileName(fileName: string): Promise<string> {
 	return arrayBufferToBase64(combined.buffer);
 }
 
+export async function decryptFileName(
+	encryptedFileNameSafeBase64: string,
+	keyVersion: number
+): Promise<string> {
+	const chatKey = chatStore.versionedChatKey[keyVersion];
+	if (chatKey === null) throw new Error('Chat key not found');
+
+	const encryptedBase64 = await base64UrlDecode(encryptedFileNameSafeBase64);
+	try {
+		const combined = new Uint8Array(base64ToArrayBuffer(encryptedBase64));
+		const iv = combined.slice(0, 12);
+		const encryptedData = combined.slice(12);
+		const decrypted = await crypto.subtle.decrypt(
+			{ name: 'AES-GCM', iv },
+			chatKey,
+			encryptedData.buffer
+		);
+		const decoder = new TextDecoder();
+		return decoder.decode(decrypted);
+	} catch (error) {
+		console.error('Error decrypting file name:', error);
+		throw error;
+	}
+}
+
 function base64UrlEncode(base64: string): string {
 	return base64.replace(/\+/g, '-').replace(/\//g, '~').replace(/=+$/, '');
 }
 
-function base64UrlDecode(base64url: string): Uint8Array {
+function base64UrlDecode(base64url: string): string {
 	let base64 = base64url.replace(/-/g, '+').replace(/~/g, '/');
 	while (base64.length % 4) base64 += '=';
-	return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+	return base64;
 }
