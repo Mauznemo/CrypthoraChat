@@ -64,12 +64,19 @@
 		const messageRect = messageEl.getBoundingClientRect();
 		const containerRect = messageContainer.getBoundingClientRect();
 
-		// Calculate position relative to container including scroll offset
 		const relativeY = messageRect.top - containerRect.top + messageContainer.scrollTop - 30;
+
+		const visibleTop = messageContainer.scrollTop;
+		const visibleBottom = messageContainer.scrollTop + containerRect.height;
+
+		const clampedY = Math.max(relativeY, visibleTop + 10);
+
+		const toolbarHeight = 40;
+		const finalY = Math.min(clampedY, visibleBottom - toolbarHeight);
 
 		return {
 			x: 20,
-			y: relativeY
+			y: finalY
 		};
 	}
 
