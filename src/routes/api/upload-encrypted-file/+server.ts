@@ -65,7 +65,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				const relativePath = `/${chatId}`;
 				await ensureUploadDir(UPLOAD_BASE_PATH + relativePath);
 
-				const filename = `${randomUUID()}_${encryptedFileNameSafeBase64}.enc`;
+				const filename = `${randomUUID()}_${locals.user!.id}_${encryptedFileNameSafeBase64}.enc`;
 				filePath = path.join(UPLOAD_BASE_PATH + relativePath, filename);
 
 				const writeStream = createWriteStream(filePath);

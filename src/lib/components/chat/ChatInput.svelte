@@ -9,6 +9,7 @@
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { tryUploadFile } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import { removeFile } from '$lib/fileUpload/upload.remote';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -68,18 +69,6 @@
 					previewUrls[file.name] = URL.createObjectURL(file);
 				}
 			}
-
-			// files.forEach((file) => {
-			// });
-
-			// if (file.type.startsWith('image/')) {
-			// 	if (previewUrl) {
-			// 		URL.revokeObjectURL(previewUrl);
-			// 	}
-			// 	// Create new preview URL
-
-			// 	previewUrl = URL.createObjectURL(file);
-			// }
 		}
 	}
 
@@ -95,12 +84,10 @@
 			URL.revokeObjectURL(url);
 		}
 
-		// Clean up typing timeout
 		if (typingTimeout) {
 			clearTimeout(typingTimeout);
 		}
 
-		// Stop typing indicator if active
 		if (chatStore.activeChat && isTyping && chatStore.user?.id) {
 			socketStore.stopTyping({
 				chatId: chatStore.activeChat.id
@@ -118,9 +105,8 @@
 
 		if ((!chatValue.trim() && selectedFiles.length === 0) || !chatStore.user?.id) return;
 
-		//TODO: Don't allow file uploads for edits
 		let filePaths: string[] = [];
-		if (selectedFiles.length > 0) {
+		if (selectedFiles.length > 0 && !messageEditing) {
 			for (const file of selectedFiles) {
 				uploadingFile = file;
 				const result = await tryUploadFile(file, chatStore.activeChat.id);
@@ -129,9 +115,15 @@
 					filePaths.push(result.filePath);
 					uploadedFiles.push(file);
 				} else {
+					filePaths.forEach(async (f) => {
+						try {
+							await removeFile(f);
+						} catch (error) {
+							console.log('Error deleting file:', error);
+						}
+					});
 					uploadingFile = null;
 					uploadedFiles = [];
-					//TODO: Delete all files that were uploaded
 					return;
 				}
 			}
@@ -248,7 +240,7 @@
 	}
 
 	function handleAttachment(event: Event): void {
-		if (uploadingFile) return;
+		if (uploadingFile || messageEditing) return;
 		event.stopPropagation();
 		const items: ContextMenuItem[] = [
 			{

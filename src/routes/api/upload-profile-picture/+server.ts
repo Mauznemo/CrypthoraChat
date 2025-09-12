@@ -95,9 +95,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				return;
 			}
 
-			file.on('limit', () => {
+			file.on('limit', async () => {
 				limitExceeded = true;
 				file.resume();
+				await cleanupTempFile(tempFilePath);
 				resolve(errorResponse(413, 'File size limit exceeded'));
 			});
 
@@ -141,11 +142,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 				await encryptFileStream(tempFilePath, finalFilePath);
 
-				try {
-					await fs.unlink(tempFilePath);
-				} catch (err) {
-					console.warn('Failed to clean up temporary file:', err);
-				}
+				await cleanupTempFile(tempFilePath);
 
 				resolve(
 					new Response(JSON.stringify({ success: true, filePath: finalFilePath }), {
@@ -156,14 +153,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			} catch (err) {
 				console.error('Profile upload error:', err);
 
-				// Clean up temporary file on error
-				if (tempFilePath) {
-					try {
-						await fs.unlink(tempFilePath);
-					} catch (cleanupErr) {
-						console.warn('Failed to clean up temporary file on error:', cleanupErr);
-					}
-				}
+				await cleanupTempFile(tempFilePath);
 
 				resolve(
 					errorResponse(500, `Failed to process file:  ${err instanceof Error ? err.message : err}`)
@@ -216,3 +206,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 	});
 };
+
+async function cleanupTempFile(filePath: string | null): Promise<void> {
+	if (filePath) {
+		try {
+			await fs.unlink(filePath);
+		} catch (cleanupErr) {
+			console.warn('Failed to clean up temporary file on error:', cleanupErr);
+		}
+	}
+}

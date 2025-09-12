@@ -39,11 +39,11 @@ async function encryptFileName(fileName: string): Promise<string> {
 }
 
 function base64UrlEncode(base64: string): string {
-	return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+	return base64.replace(/\+/g, '-').replace(/\//g, '~').replace(/=+$/, '');
 }
 
 function base64UrlDecode(base64url: string): Uint8Array {
-	let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+	let base64 = base64url.replace(/-/g, '+').replace(/~/g, '/');
 	while (base64.length % 4) base64 += '=';
 	return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 }
