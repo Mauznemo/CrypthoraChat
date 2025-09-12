@@ -14,6 +14,8 @@ const IMAGE_EXTENSIONS = new Set([
 
 const VIDEO_EXTENSIONS = new Set(['mp4', 'mkv', 'mov', 'webm', 'ogv', 'avi', 'mpeg', 'mpg']);
 
+const AUDIO_EXTENSIONS = new Set(['mp3', 'ogg', 'wav', 'flac']);
+
 export const fileUtils = {
 	/** Check if a filename has an image extension */
 	isImageFile(filename: string): boolean {
@@ -43,6 +45,21 @@ export const fileUtils = {
 
 		const extension = filename.substring(lastDotIndex + 1).toLowerCase();
 		return VIDEO_EXTENSIONS.has(extension);
+	},
+
+	/** Check if a filename has an audio extension */
+	isAudioFile(filename: string): boolean {
+		if (!filename || typeof filename !== 'string') {
+			return false;
+		}
+
+		const lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex === -1) {
+			return false;
+		}
+
+		const extension = filename.substring(lastDotIndex + 1).toLowerCase();
+		return AUDIO_EXTENSIONS.has(extension);
 	},
 
 	/** Get the file extension from a filename */
