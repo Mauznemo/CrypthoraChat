@@ -140,6 +140,8 @@
 					});
 					uploadingFile = null;
 					uploadedFiles = [];
+					compressFiles = [];
+					fileSizes = [];
 					return;
 				}
 			}
@@ -150,6 +152,8 @@
 
 			selectedFiles = [];
 			uploadingFile = null;
+			compressFiles = [];
+			fileSizes = [];
 			previewUrls = {};
 		}
 
@@ -291,7 +295,7 @@
 			delete previewUrls[file.name];
 		}
 		const index = selectedFiles.indexOf(file);
-		selectedFiles = selectedFiles.splice(index, 1);
+		selectedFiles.splice(index, 1);
 		fileSizes.splice(index, 1);
 		compressFiles.splice(index, 1);
 	}
@@ -389,11 +393,26 @@
 			>
 				<button
 					onclick={() => handleRemoveFile(file)}
-					class="absolute top-1 right-1 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-400 transition-colors hover:bg-gray-500/40 hover:text-gray-200"
+					class="absolute top-1 right-1 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-200 transition-colors hover:bg-gray-500/70 hover:text-white"
 					aria-label="Close modal"
 				>
 					<Icon icon="mdi:close" class="size-6" />
 				</button>
+				{#if isCompressible(file)}
+					<button
+						title={compressFiles[index] ? 'Disable compression' : 'Enable compression'}
+						onclick={() => (compressFiles[index] = !compressFiles[index])}
+						class="absolute top-10 right-1 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-200 transition-colors hover:bg-gray-500/70 hover:text-white"
+						aria-label="Close modal"
+					>
+						<div class="relative">
+							<Icon icon="mdi:shimmer-outline" class="size-6" />
+							{#if !compressFiles[index]}
+								<Icon icon="fa-solid:slash" class="absolute inset-0 size-6 text-red-400" />
+							{/if}
+						</div>
+					</button>
+				{/if}
 				<div class="flex flex-1 items-center justify-center">
 					{#if previewUrls[file.name]}
 						<img
