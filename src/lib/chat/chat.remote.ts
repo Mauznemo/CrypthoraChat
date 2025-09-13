@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { removeFile } from '$lib/utils/fileUpload';
+import { removeFile } from '$lib/server/fileUpload';
 import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
 import {
 	chatWithoutMessagesFields,

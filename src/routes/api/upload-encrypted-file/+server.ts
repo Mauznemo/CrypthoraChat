@@ -5,7 +5,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
-import { ensureUploadDir, errorResponse } from '$lib/utils/fileUpload';
+import { ensureUploadDir, errorResponse, removeFile } from '$lib/server/fileUpload';
 
 const UPLOAD_BASE_PATH = (process.env.UPLOAD_PATH || './uploads') + '/media';
 
@@ -33,6 +33,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		let filePath: string | null = null;
 		let uploadPromise: Promise<void> | null = null;
 		let limitExceeded = false;
+		let isAborted = false;
+
+		const cleanup = async () => {
+			if (filePath && !limitExceeded) {
+				try {
+					await removeFile(filePath);
+				} catch (err) {
+					console.warn('Could not clean up file:', filePath, err);
+				}
+			}
+		};
+
+		const handleAbort = () => {
+			if (isAborted) return;
+			isAborted = true;
+			console.log('Upload aborted by client');
+			cleanup().finally(() => {
+				resolve(errorResponse(400, 'Upload aborted'));
+			});
+		};
 
 		bb.on('field', (name: string, value: string) => {
 			if (name === 'chatId') {
@@ -47,6 +67,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				file.resume();
 				return;
 			}
+
+			file.on('error', (err: Error) => {
+				if (err.message.includes('aborted') || (err as any).code === 'ECONNRESET') {
+					handleAbort();
+				} else {
+					console.error('File stream error:', err);
+					resolve(errorResponse(500, 'Upload stream error'));
+				}
+			});
 
 			file.on('limit', () => {
 				limitExceeded = true;
@@ -70,8 +99,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 				const writeStream = createWriteStream(filePath);
 
+				writeStream.on('error', (err: Error) => {
+					console.error('Write stream error:', err);
+					if (!isAborted) {
+						resolve(errorResponse(500, 'Failed to write file'));
+					}
+				});
+
 				// Stream the file directly to disk
-				uploadPromise = pipeline(file, writeStream);
+				uploadPromise = pipeline(file, writeStream).catch((err: Error) => {
+					if (err.message.includes('aborted') || (err as any).code === 'ECONNRESET') {
+						handleAbort();
+					} else {
+						throw err;
+					}
+				});
 			} catch (err) {
 				file.resume();
 				reject(
@@ -85,9 +127,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		bb.on('finish', async () => {
-			if (limitExceeded) {
+			if (limitExceeded || isAborted) {
 				return;
 			}
+
 			try {
 				if (uploadPromise) {
 					await uploadPromise;
@@ -132,6 +175,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 			const nodeStream = new (await import('stream')).Readable({
 				read() {}
+			});
+
+			nodeStream.on('error', (err: Error) => {
+				if (err.message.includes('aborted') || (err as any).code === 'ECONNRESET') {
+					handleAbort();
+				} else {
+					console.error('Node stream error:', err);
+					if (!isAborted) {
+						resolve(errorResponse(500, 'Stream processing error'));
+					}
+				}
 			});
 
 			const streamReader = stream.getReader();

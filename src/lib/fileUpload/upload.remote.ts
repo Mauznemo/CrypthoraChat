@@ -1,9 +1,9 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { promises as fs } from 'node:fs';
-import { fileExists } from '$lib/utils/fileUpload';
+import { fileExists } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
 import path from 'path';
-import { removeFile as removeFileFromServer } from '$lib/utils/fileUpload';
+import { removeFile as removeFileFromServer } from '$lib/server/fileUpload';
 import * as v from 'valibot';
 
 export const removeFile = command(v.string(), async (filePath: string) => {
