@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
-import { ensureUploadDir, errorResponse } from '$lib/server/fileUpload';
+import { ensureUploadDir, errorResponse } from '$lib/utils/fileUpload';
 
 const UPLOAD_PATH = (process.env.UPLOAD_PATH || './uploads') + '/profiles';
 const TEMP_PATH = (process.env.UPLOAD_PATH || './uploads') + '/temp';

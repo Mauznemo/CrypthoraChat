@@ -5,7 +5,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
-import { ensureUploadDir, errorResponse } from '$lib/server/fileUpload';
+import { ensureUploadDir, errorResponse } from '$lib/utils/fileUpload';
 
 const UPLOAD_BASE_PATH = (process.env.UPLOAD_PATH || './uploads') + '/media';
 

@@ -1,4 +1,4 @@
-import { errorResponse } from '$lib/server/fileUpload';
+import { errorResponse } from '$lib/utils/fileUpload';
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { createReadStream, promises as fs } from 'node:fs';

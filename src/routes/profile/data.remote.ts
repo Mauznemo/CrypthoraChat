@@ -1,7 +1,7 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/auth';
 import { db } from '$lib/db';
-import { removeFile } from '$lib/server/fileUpload';
+import { removeFile } from '$lib/utils/fileUpload';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
