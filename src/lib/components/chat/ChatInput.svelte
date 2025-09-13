@@ -12,6 +12,7 @@
 	import { removeFile } from '$lib/fileUpload/upload.remote';
 	import { compressImage, isCompressible } from '$lib/utils/imageConverter';
 	import { fileUtils } from '$lib/chat/fileUtils';
+	import Icon from '@iconify/svelte';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -261,8 +262,7 @@
 			{
 				id: 'add-files',
 				label: 'Add Files',
-				iconSvg:
-					'M18 9V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h4M9 3v4a1 1 0 0 1-1 1H4m11 6v4m-2-2h4m3 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z',
+				icon: 'mdi:attach-file',
 				action: () => {
 					openFileSelector();
 				}
@@ -270,15 +270,13 @@
 			{
 				id: 'gif',
 				label: 'Gif',
-				iconSvg:
-					'M19 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1Zm0 0-4 4m5 0H4m1 0 4-4m1 4 4-4m-4 7v6l4-3-4-3Z',
+				icon: 'mdi:file-gif-box',
 				action: () => {}
 			},
 			{
 				id: 'sticker',
 				label: 'Sticker',
-				iconSvg:
-					'm3 16 5-7 6 6.5m6.5 2.5L16 13l-4.286 6M14 10h.01M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z',
+				icon: 'mdi:sticker-emoji',
 				action: () => {}
 			}
 		];
@@ -394,14 +392,7 @@
 					class="absolute top-1 right-1 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-400 transition-colors hover:bg-gray-500/40 hover:text-gray-200"
 					aria-label="Close modal"
 				>
-					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M6 18L18 6M6 6l12 12"
-						></path>
-					</svg>
+					<Icon icon="mdi:close" class="size-6" />
 				</button>
 				<div class="flex flex-1 items-center justify-center">
 					{#if previewUrls[file.name]}
@@ -455,23 +446,7 @@
 						{#if uploadingFile === file}
 							<LoadingSpinner />
 						{:else if uploadedFiles.includes(file)}
-							<svg
-								class="size-12 text-green-500"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-								/>
-							</svg>
+							<Icon icon="mdi:check-circle-outline" class="size-12 text-green-500" />
 						{/if}
 					</div>
 				{/if}
@@ -482,21 +457,8 @@
 			<div
 				class="relative flex min-h-[140px] w-[120px] flex-col items-center justify-center rounded-xl bg-gray-600/60 p-2"
 			>
-				<svg
-					class="mb-2 size-12 text-gray-400"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 4v16m8-8H4"
-					/>
-				</svg>
+				<Icon icon="mdi:check-circle-outline" class="mb-2 size-12 text-gray-400" />
+
 				<div class="text-center font-semibold text-gray-100">
 					+{remainingCount} File{remainingCount === 1 ? '' : 's'}
 				</div>
@@ -522,23 +484,7 @@
 		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 transition-colors hover:bg-teal-600/60"
 		aria-label="Add attachments"
 	>
-		<svg
-			class="h-6 w-6 text-white"
-			aria-hidden="true"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-		>
-			<path
-				stroke="currentColor"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
-				d="M5 12h14m-7 7V5"
-			/>
-		</svg>
+		<Icon icon="mdi:plus-thick" class="size-6" />
 	</button>
 
 	<CustomTextarea
@@ -556,20 +502,7 @@
 		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-teal-600/60 transition-colors hover:bg-teal-600/80 disabled:bg-gray-600"
 		aria-label="Send Message"
 	>
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			fill="none"
-			viewBox="0 0 24 24"
-			stroke-width="2"
-			stroke="currentColor"
-			class="ml-0.5 size-6"
-		>
-			<path
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
-			/>
-		</svg>
+		<Icon icon="ic:round-send" class="ml-0.5 size-6" />
 	</button>
 </div>
 

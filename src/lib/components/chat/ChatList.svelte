@@ -14,6 +14,7 @@
 	import ProfilePicture from './ProfilePicture.svelte';
 	import GroupPicture from './GroupPicture.svelte';
 	import { deleteFilesNotContaining, deleteFilesThatContain } from '$lib/idb';
+	import Icon from '@iconify/svelte';
 
 	let {
 		onChatSelected,
@@ -67,7 +68,7 @@
 			items.push({
 				id: 'rotate-key',
 				label: 'Rotate Key',
-				iconSvg: 'M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+				icon: 'mdi:rotate-clockwise',
 				action: async () => {
 					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
 						chatOwner.tryRotateChatKey(chat);
@@ -79,8 +80,7 @@
 				items.push({
 					id: 'add-user',
 					label: 'Add User',
-					iconSvg:
-						'M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+					icon: 'mdi:account-multiple-add-outline',
 					action: () => {
 						addUserToChatStore.open(chat);
 					}
@@ -92,8 +92,7 @@
 			items.push({
 				id: 'edit',
 				label: 'Edit Group',
-				iconSvg:
-					'M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z',
+				icon: 'mdi:edit-outline',
 				action: () => {}
 			});
 		}
@@ -101,7 +100,7 @@
 		items.push({
 			id: 'leave',
 			label: chat.type === 'group' ? 'Leave Group' : 'Delete Chat',
-			iconSvg: 'M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2',
+			icon: 'mdi:account-arrow-left-outline',
 			action: async () => {
 				try {
 					await leaveChat(chat.id);
@@ -168,22 +167,7 @@
 					aria-label="Options"
 					class="absolute right-5 cursor-pointer"
 				>
-					<svg
-						class="h-6 w-6 text-white"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-width="2"
-							d="M12 6h.01M12 12h.01M12 18h.01"
-						/>
-					</svg>
+					<Icon icon="mdi:more-vert" class="size-6" />
 				</button>
 			{:else}
 				{@const allParticipants = chat.participants.map((p) => '@' + p.user.username).join(', ')}
@@ -201,21 +185,8 @@
 				<!-- Chat text -->
 				<div title={allParticipants} class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
 					<div title={chat.name} class="flex items-center space-x-2">
-						<svg
-							class="mt-1 h-5 w-5 text-white"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							fill="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M12 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-1.5 8a4 4 0 0 0-4 4 2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-3Zm6.82-3.096a5.51 5.51 0 0 0-2.797-6.293 3.5 3.5 0 1 1 2.796 6.292ZM19.5 18h.5a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-1.1a5.503 5.503 0 0 1-.471.762A5.998 5.998 0 0 1 19.5 18ZM4 7.5a3.5 3.5 0 0 1 5.477-2.889 5.5 5.5 0 0 0-2.796 6.293A3.501 3.501 0 0 1 4 7.5ZM7.1 12H6a4 4 0 0 0-4 4 2 2 0 0 0 2 2h.5a5.998 5.998 0 0 1 3.071-5.238A5.505 5.505 0 0 1 7.1 12Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
+						<Icon icon="mdi:account-group" class="size-5" />
+
 						<p class="line-clamp-1 max-w-[150px] break-all text-white">
 							{chat.name}
 						</p>
@@ -230,22 +201,7 @@
 					aria-label="Options"
 					class="absolute right-5 cursor-pointer"
 				>
-					<svg
-						class="h-6 w-6 text-white"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-width="2"
-							d="M12 6h.01M12 12h.01M12 18h.01"
-						/>
-					</svg>
+					<Icon icon="mdi:more-vert" class="size-6 text-gray-300 hover:text-white" />
 				</button>
 			{/if}
 		</div>

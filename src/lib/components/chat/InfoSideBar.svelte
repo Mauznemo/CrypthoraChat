@@ -11,6 +11,7 @@
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import { chatList } from '$lib/chat/chatList';
+	import Icon from '@iconify/svelte';
 
 	let groupName: string = $state('');
 
@@ -64,7 +65,7 @@
 			{
 				id: 'remove-user',
 				label: 'Remove from group',
-				iconSvg: 'M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+				icon: 'mdi:user-remove-outline',
 				action: async () => {
 					modalStore.confirm(
 						'Are you sure?',
@@ -91,14 +92,7 @@
 			class="absolute right-5 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 			aria-label="Close modal"
 		>
-			<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M6 18L18 6M6 6l12 12"
-				></path>
-			</svg>
+			<Icon icon="mdi:close" class="size-6" />
 		</button>
 		{#if infoBarStore.userToShow}
 			<div>
@@ -135,14 +129,7 @@
 								aria-label="Edit message"
 								type="button"
 							>
-								<svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-									></path>
-								</svg>
+								<Icon icon="mdi:image-edit-outline" class="size-6" />
 							</button>
 						</div>
 
@@ -213,22 +200,7 @@
 								aria-label="Options"
 								class="absolute right-5 cursor-pointer"
 							>
-								<svg
-									class="h-6 w-6 text-white"
-									aria-hidden="true"
-									xmlns="http://www.w3.org/2000/svg"
-									width="24"
-									height="24"
-									fill="none"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke="currentColor"
-										stroke-linecap="round"
-										stroke-width="2"
-										d="M12 6h.01M12 12h.01M12 18h.01"
-									/>
-								</svg>
+								<Icon icon="mdi:more-vert" class="size-6 text-gray-300 hover:text-white" />
 							</button>
 						{/if}
 					</div>

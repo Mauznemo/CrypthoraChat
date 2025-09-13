@@ -10,6 +10,7 @@
 	import { addUserToChat, getCurrentChatKeyVersion } from '$lib/chat/chat.remote';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
+	import Icon from '@iconify/svelte';
 
 	let selectedUsers: SafeUser[] = $state([]);
 
@@ -116,14 +117,7 @@
 				class="absolute top-3 right-3 p-1 text-gray-400 transition-colors hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					></path>
-				</svg>
+				<Icon icon="mdi:close" class="size-6" />
 			</button>
 
 			<UserSelector

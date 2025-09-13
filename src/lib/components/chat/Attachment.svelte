@@ -4,6 +4,7 @@
 	import { tryGetFile } from '$lib/fileUpload/upload';
 	import { getFileSize } from '$lib/fileUpload/upload.remote';
 	import { fileExistsInIDB, getFileFromIDB, saveFileToIDB } from '$lib/idb';
+	import Icon from '@iconify/svelte';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
@@ -127,23 +128,7 @@
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
-						<svg
-							class="h-6 w-6"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke="currentColor"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-							/>
-						</svg>
+						<Icon icon="mdi:tray-download" class="size-6" />
 					</button>
 				</div>
 			{/if}
@@ -185,23 +170,7 @@
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
-						<svg
-							class="h-6 w-6"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke="currentColor"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-							/>
-						</svg>
+						<Icon icon="mdi:tray-download" class="size-6" />
 					</button>
 				</div>
 			{/if}
@@ -238,23 +207,7 @@
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
-						<svg
-							class="h-6 w-6"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							fill="none"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke="currentColor"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-							/>
-						</svg>
+						<Icon icon="mdi:tray-download" class="size-6" />
 					</button>
 				</div>
 			{/if}
@@ -310,23 +263,7 @@
 			{#if downloadingFile}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				<svg
-					class="h-6 w-6"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-					/>
-				</svg>
+				<Icon icon="mdi:tray-download" class="size-6" />
 			{/if}
 		</button>
 	</div>
@@ -344,23 +281,7 @@
 				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
-				<svg
-					class="h-6 w-6"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-					/>
-				</svg>
+				<Icon icon="mdi:tray-download" class="size-6" />
 			</button>
 		</div>
 		<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
@@ -377,23 +298,7 @@
 			{#if downloadingFile}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				<svg
-					class="h-6 w-6"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
-					/>
-				</svg>
+				<Icon icon="mdi:tray-download" class="size-6" />
 			{/if}
 		</button>
 	</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { contextMenuStore } from '$lib/stores/contextMenu.svelte';
+	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { fly, scale } from 'svelte/transition';
@@ -56,23 +57,7 @@
 				disabled={item.disabled}
 				class="flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-gray-100 transition-colors first:rounded-t-md last:rounded-b-md hover:bg-gray-600/20 active:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 			>
-				<svg
-					class="size-5 text-gray-100"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="1.8"
-						d={item.iconSvg}
-					/>
-				</svg>
+				<Icon icon={item.icon} class="size-5 text-gray-100" />
 
 				<span class="text-sm font-medium">{item.label}</span>
 			</button>
@@ -101,23 +86,8 @@
 					disabled={item.disabled}
 					class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-gray-100 transition-colors hover:bg-gray-800 active:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					<svg
-						class="size-6 text-gray-100"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d={item.iconSvg}
-						/>
-					</svg>
+					<Icon icon={item.icon} class="size-6 text-gray-100" />
+
 					<span class="font-medium">{item.label}</span>
 				</button>
 			{/each}

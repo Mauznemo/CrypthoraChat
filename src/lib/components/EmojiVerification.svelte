@@ -4,6 +4,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
 	import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
+	import Icon from '@iconify/svelte';
 
 	let base64: string;
 
@@ -167,17 +168,10 @@
 		>
 			<button
 				onclick={() => emojiVerificationStore.close()}
-				class="absolute right-5 p-1 text-gray-400 transition-colors hover:text-gray-200"
+				class="absolute right-5 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					></path>
-				</svg>
+				<Icon icon="mdi:close" class="size-6" />
 			</button>
 			<h3 class="mt-2 mb-5 max-w-[80%] text-lg font-semibold text-white">
 				{emojiVerificationStore.title}

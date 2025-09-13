@@ -1,7 +1,7 @@
 export interface ContextMenuItem {
 	id: string;
 	label: string;
-	iconSvg: string;
+	icon: string;
 	action: () => void;
 	disabled?: boolean;
 }

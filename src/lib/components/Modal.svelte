@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { modalStore } from '$lib/stores/modal.svelte.js';
+	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
@@ -74,17 +75,10 @@
 				{#if modalStore.config.showCloseButton}
 					<button
 						onclick={() => modalStore.close()}
-						class="p-1 text-gray-400 transition-colors hover:text-gray-200"
+						class="cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 						aria-label="Close modal"
 					>
-						<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							></path>
-						</svg>
+						<Icon icon="mdi:close" class="size-6" />
 					</button>
 				{/if}
 			</div>
