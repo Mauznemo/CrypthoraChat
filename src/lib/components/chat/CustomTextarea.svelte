@@ -10,16 +10,18 @@
 		disabled = false,
 		maxHeight = '15rem',
 		minHeight = '3rem',
-		oninput,
-		onkeydown
+		onInput,
+		onKeydown,
+		onFileSelected
 	}: {
 		value: string;
 		placeholder: string;
 		disabled: boolean;
 		maxHeight?: string;
 		minHeight?: string;
-		oninput: ((event: Event) => void) | undefined;
-		onkeydown: ((event: KeyboardEvent) => void) | undefined;
+		onInput: ((event: Event) => void) | undefined;
+		onKeydown: ((event: KeyboardEvent) => void) | undefined;
+		onFileSelected: ((file: File) => void) | undefined;
 	} = $props();
 
 	let contentEditableDiv: HTMLDivElement;
@@ -152,7 +154,7 @@
 
 		if (newText !== value) {
 			value = newText;
-			oninput?.(event);
+			onInput?.(event);
 		}
 	}
 
@@ -198,14 +200,14 @@
 				const newText = htmlToText(contentEditableDiv);
 				if (newText !== value) {
 					value = newText;
-					oninput?.(new Event('input', { bubbles: true }));
+					onInput?.(new Event('input', { bubbles: true }));
 				}
 
 				return;
 			}
 			// ... rest of your code
 		}
-		onkeydown?.(event);
+		onKeydown?.(event);
 	}
 
 	function handleCompositionStart() {
@@ -222,11 +224,53 @@
 		});
 	}
 
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	function handleDragEnter(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		const files = Array.from(event.dataTransfer?.files || []);
+
+		files.forEach((file) => {
+			onFileSelected?.(file);
+		});
+	}
+
 	function handlePaste(event: ClipboardEvent) {
+		const clipboardData = event.clipboardData;
+
+		if (clipboardData) {
+			const items = Array.from(clipboardData.items);
+			const imageItem = items.find((item) => item.type.startsWith('image/'));
+
+			if (imageItem) {
+				event.preventDefault();
+
+				const imageFile = imageItem.getAsFile();
+				if (imageFile) {
+					onFileSelected?.(imageFile);
+					return;
+				}
+			}
+		}
+
 		event.preventDefault();
 		const text = event.clipboardData?.getData('text/plain') || '';
 
-		// Insert plain text at cursor position
 		const selection = window.getSelection();
 		if (selection?.rangeCount) {
 			const range = selection.getRangeAt(0);
@@ -237,9 +281,8 @@
 			selection.addRange(range);
 		}
 
-		// Update value
 		value = htmlToText(contentEditableDiv);
-		oninput?.(new Event('input', { bubbles: true }));
+		onInput?.(new Event('input', { bubbles: true }));
 	}
 
 	// Focus method for external access
@@ -261,6 +304,7 @@
 
 <div
 	bind:this={contentEditableDiv}
+	tabindex="0"
 	contenteditable={!disabled}
 	role="textbox"
 	aria-multiline="true"
@@ -277,21 +321,22 @@
 	oncompositionstart={handleCompositionStart}
 	oncompositionend={handleCompositionEnd}
 	onpaste={handlePaste}
+	ondragover={handleDragOver}
+	ondragenter={handleDragEnter}
+	ondragleave={handleDragLeave}
+	ondrop={handleDrop}
 ></div>
 
 <style>
-	/* Ensure the contenteditable div behaves like a textarea */
 	[contenteditable] {
 		white-space: pre-wrap;
 		word-wrap: break-word;
 	}
 
-	/* Hide the default focus outline since we're using Tailwind's focus styles */
 	[contenteditable]:focus {
 		outline: none;
 	}
 
-	/* Ensure proper line height and text rendering */
 	[contenteditable] {
 		line-height: 1.5;
 		font-family: inherit;

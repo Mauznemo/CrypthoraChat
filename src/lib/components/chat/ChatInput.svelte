@@ -60,22 +60,25 @@
 		fileInput.click();
 	}
 
-	function handleFileSelect(event: Event, compress: boolean): void {
+	function handleFilesSelect(event: Event, compress: boolean): void {
 		const target = event.target as HTMLInputElement;
 		const files = target.files;
 		if (files) {
-			selectedFiles.push(...files);
 			for (let i = 0; i < files.length; i++) {
-				fileSizes.push(files[i].size);
-				compressFiles.push(compress);
-				const file = files[i];
-				if (file.type.startsWith('image/')) {
-					if (previewUrls[file.name]) {
-						URL.revokeObjectURL(previewUrls[file.name]);
-					}
-					previewUrls[file.name] = URL.createObjectURL(file);
-				}
+				handleFileSelect(files[i], compress);
 			}
+		}
+	}
+
+	function handleFileSelect(file: File, compress: boolean): void {
+		selectedFiles.push(file);
+		fileSizes.push(file.size);
+		compressFiles.push(compress);
+		if (file.type.startsWith('image/')) {
+			if (previewUrls[file.name]) {
+				URL.revokeObjectURL(previewUrls[file.name]);
+			}
+			previewUrls[file.name] = URL.createObjectURL(file);
 		}
 	}
 
@@ -509,8 +512,9 @@
 	<CustomTextarea
 		bind:value={chatValue}
 		bind:this={inputField}
-		oninput={handleInput}
-		onkeydown={handleKeydown}
+		onInput={handleInput}
+		onKeydown={handleKeydown}
+		onFileSelected={(file) => handleFileSelect(file, true)}
 		placeholder="Type your message here..."
 		disabled={false}
 	/>
@@ -530,5 +534,5 @@
 	type="file"
 	multiple
 	bind:this={fileInput}
-	onchange={(e) => handleFileSelect(e, true)}
+	onchange={(e) => handleFilesSelect(e, true)}
 />
