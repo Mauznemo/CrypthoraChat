@@ -154,7 +154,7 @@
 		<button
 			onclick={togglePlayPause}
 			disabled={isLoading}
-			class="frosted-glass-shadow mt-10 shrink-0 rounded-full bg-teal-600/40 p-2 text-white transition-all duration-200 hover:scale-110 hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
+			class="frosted-glass-shadow mt-10 shrink-0 cursor-pointer rounded-full bg-teal-600/40 p-2 text-white transition-all duration-200 hover:scale-110 hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
 			aria-label={isPlaying ? 'Pause' : 'Play'}
 		>
 			{#if isLoading}
@@ -212,17 +212,17 @@
 	<div class="flex items-center justify-center space-x-3">
 		<button
 			onclick={toggleMute}
-			class="p-1 text-slate-400 transition-colors hover:text-white"
+			class="cursor-pointer p-1 text-slate-400 transition-colors hover:text-white"
 			aria-label={isMuted ? 'Unmute' : 'Mute'}
 		>
 			{#if isMuted || volume === 0}
 				<Icon icon="mdi:volume-mute" class="size-6" />
 			{:else if volume > 0.6}
-				<Icon icon="mdi:volume-low" class="size-6" />
+				<Icon icon="mdi:volume-high" class="size-6" />
 			{:else if volume > 0.3}
 				<Icon icon="mdi:volume-medium" class="size-6" />
 			{:else}
-				<Icon icon="mdi:volume-high" class="size-6" />
+				<Icon icon="mdi:volume-low" class="size-6" />
 			{/if}
 		</button>
 

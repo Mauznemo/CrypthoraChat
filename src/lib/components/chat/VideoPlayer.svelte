@@ -200,7 +200,7 @@
 				<!-- Play/Pause Button -->
 				<button
 					onclick={togglePlayPause}
-					class="p-1 text-gray-300 transition-colors hover:text-white"
+					class="cursor-pointer p-1 text-gray-300 transition-colors hover:text-white"
 					aria-label={isPlaying ? 'Pause' : 'Play'}
 				>
 					{#if isPlaying}
@@ -214,17 +214,17 @@
 				<div class="flex items-center space-x-2">
 					<button
 						onclick={toggleMute}
-						class="p-1 text-gray-300 transition-colors hover:text-white"
+						class="cursor-pointer p-1 text-gray-300 transition-colors hover:text-white"
 						aria-label={isMuted ? 'Unmute' : 'Mute'}
 					>
 						{#if isMuted || volume === 0}
 							<Icon icon="mdi:volume-mute" class="size-6" />
 						{:else if volume > 0.6}
-							<Icon icon="mdi:volume-low" class="size-6" />
+							<Icon icon="mdi:volume-high" class="size-6" />
 						{:else if volume > 0.3}
 							<Icon icon="mdi:volume-medium" class="size-6" />
 						{:else}
-							<Icon icon="mdi:volume-high" class="size-6" />
+							<Icon icon="mdi:volume-low" class="size-6" />
 						{/if}
 					</button>
 
@@ -256,7 +256,7 @@
 				<!-- Fullscreen Button -->
 				<button
 					onclick={toggleFullscreen}
-					class="p-1 text-white transition-colors hover:text-white"
+					class="cursor-pointer p-1 text-white transition-colors hover:text-white"
 					aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
 				>
 					{#if isFullscreen}
@@ -274,7 +274,7 @@
 		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
 			<button
 				onclick={togglePlayPause}
-				class="pointer-events-auto rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
+				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
 				<Icon icon="mdi:play" class="size-12" />
