@@ -10,6 +10,8 @@
 	import { tryUploadFile } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { removeFile } from '$lib/fileUpload/upload.remote';
+	import { compressImage, isCompressible } from '$lib/utils/imageConverter';
+	import { fileUtils } from '$lib/chat/fileUtils';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -49,18 +51,22 @@
 	let uploadingFile: File | null = $state(null);
 	let uploadedFiles: File[] = $state([]);
 	let containerWidth = $state(0);
+	let fileSizes: number[] = $state([]);
+	let compressFiles: boolean[] = $state([]);
 
 	function openFileSelector(): void {
 		if (uploadingFile) return;
 		fileInput.click();
 	}
 
-	function handleFileSelect(event: Event): void {
+	function handleFileSelect(event: Event, compress: boolean): void {
 		const target = event.target as HTMLInputElement;
 		const files = target.files;
 		if (files) {
 			selectedFiles.push(...files);
 			for (let i = 0; i < files.length; i++) {
+				fileSizes.push(files[i].size);
+				compressFiles.push(compress);
 				const file = files[i];
 				if (file.type.startsWith('image/')) {
 					if (previewUrls[file.name]) {
@@ -107,9 +113,18 @@
 
 		let filePaths: string[] = [];
 		if (selectedFiles.length > 0 && !messageEditing) {
-			for (const file of selectedFiles) {
+			for (let i = 0; i < selectedFiles.length; i++) {
+				const file = selectedFiles[i];
 				uploadingFile = file;
-				const result = await tryUploadFile(file, chatStore.activeChat.id);
+
+				//TODO: Add option to disable compression
+				let fileToUpload = file;
+				if (file.type.startsWith('image/') && compressFiles[i]) {
+					fileToUpload = await compressImage(file);
+					fileSizes[i] = fileToUpload.size;
+				}
+
+				const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id);
 
 				if (result.success) {
 					filePaths.push(result.filePath);
@@ -277,7 +292,10 @@
 			URL.revokeObjectURL(previewUrls[file.name]);
 			delete previewUrls[file.name];
 		}
-		selectedFiles = selectedFiles.filter((f) => f !== file);
+		const index = selectedFiles.indexOf(file);
+		selectedFiles = selectedFiles.splice(index, 1);
+		fileSizes.splice(index, 1);
+		compressFiles.splice(index, 1);
 	}
 </script>
 
@@ -367,7 +385,7 @@
 	{@const remainingCount = selectedFiles.length - maxVisibleFiles}
 
 	<div class="flex flex-wrap gap-2 p-2" bind:clientWidth={containerWidth}>
-		{#each visibleFiles as file}
+		{#each visibleFiles as file, index}
 			<div
 				class="relative flex min-h-[140px] w-[120px] flex-col justify-between rounded-xl bg-gray-600/60 p-2"
 			>
@@ -424,9 +442,12 @@
 						</svg>
 					{/if}
 				</div>
-				<div title={file.name} class="mt-2 line-clamp-1 max-w-[120px] break-all text-gray-100">
+				<div title={file.name} class="mt-2 mb-4 line-clamp-1 max-w-[120px] break-all text-gray-100">
 					{file.name}
 				</div>
+				<p class="absolute right-2 bottom-2 text-xs font-semibold text-gray-300">
+					{fileUtils.formatFileSize(fileSizes[index])}
+				</p>
 				{#if uploadingFile}
 					<div
 						class="absolute top-0 left-0 flex h-full w-full items-center justify-center rounded-xl bg-gray-600/50"
@@ -552,4 +573,10 @@
 	</button>
 </div>
 
-<input class="hidden" type="file" multiple bind:this={fileInput} onchange={handleFileSelect} />
+<input
+	class="hidden"
+	type="file"
+	multiple
+	bind:this={fileInput}
+	onchange={(e) => handleFileSelect(e, true)}
+/>
