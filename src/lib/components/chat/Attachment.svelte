@@ -3,6 +3,7 @@
 	import { decryptFile, decryptFileName } from '$lib/crypto/file';
 	import { tryGetFile } from '$lib/fileUpload/upload';
 	import { getFileSize } from '$lib/fileUpload/upload.remote';
+	import { fileExistsInIDB, getFileFromIDB, saveFileToIDB } from '$lib/idb';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
@@ -17,6 +18,7 @@
 
 	const DOWNLOAD_LIMIT = 10 * 1024 * 1024;
 	let ignoreLimit = $state(false);
+	let fileInIDB = $state(false);
 
 	let fileType: 'image' | 'video' | 'audio' | 'other' = $state('other');
 
@@ -35,14 +37,24 @@
 		if (fileUtils.isVideoFile(name)) fileType = 'video';
 		if (fileUtils.isAudioFile(name)) fileType = 'audio';
 		fileSizeBytes = await getFileSize(attachmentPath);
+		fileInIDB = await fileExistsInIDB(attachmentPath);
 		return name;
 	}
 
-	async function getMediaURL(attachmentPath: string, keyVersion: number) {
+	async function getMediaUrl(attachmentPath: string, keyVersion: number, name: string) {
+		const retrievedBlob = await getFileFromIDB(attachmentPath);
+		if (retrievedBlob) {
+			previewUrl = URL.createObjectURL(retrievedBlob);
+			return previewUrl;
+		}
+
 		const result = await tryGetFile(attachmentPath);
 		if (!result.success) return;
 		const blob = await decryptFile(result.encodedData!, keyVersion);
 		previewUrl = URL.createObjectURL(blob);
+
+		await saveFileToIDB(attachmentPath, blob, name);
+
 		return previewUrl;
 	}
 
@@ -89,10 +101,10 @@
 </div>
 
 {#snippet imagePreview(name: string)}
-	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaURL(attachmentPath, keyVersion)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
 				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>
@@ -143,10 +155,10 @@
 {/snippet}
 
 {#snippet videoPreview(name: string)}
-	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaURL(attachmentPath, keyVersion)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
 				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>
@@ -201,10 +213,10 @@
 {/snippet}
 
 {#snippet audioPreview(name: string)}
-	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit}
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaURL(attachmentPath, keyVersion)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
 				class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>
@@ -354,5 +366,35 @@
 		<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
 			{name} ({fileUtils.formatFileSize(fileSizeBytes)})
 		</p>
+		<button
+			title="Download to your computer"
+			onclick={() => {
+				handleDownloadFile(name);
+			}}
+			class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+			aria-label="Download"
+		>
+			{#if downloadingFile}
+				<LoadingSpinner size="1.5rem" />
+			{:else}
+				<svg
+					class="h-6 w-6"
+					aria-hidden="true"
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+					/>
+				</svg>
+			{/if}
+		</button>
 	</div>
 {/snippet}

@@ -13,6 +13,7 @@
 	import { chatOwner } from '$lib/chat/chatOwner';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import GroupPicture from './GroupPicture.svelte';
+	import { deleteFilesNotContaining, deleteFilesThatContain } from '$lib/idb';
 
 	let {
 		onChatSelected,
@@ -104,6 +105,7 @@
 			action: async () => {
 				try {
 					await leaveChat(chat.id);
+					await deleteFilesThatContain(chat.id);
 					chats.tryDeselectChat(chat);
 					chatList.removeChat(chat.id);
 				} catch (error) {
@@ -119,6 +121,8 @@
 		loadingChats = true;
 		chatStore.chats = await getUserChats();
 		loadingChats = false;
+		const currentChatIds = chatStore.chats.map((c) => c.id);
+		await deleteFilesNotContaining(currentChatIds);
 	});
 </script>
 
