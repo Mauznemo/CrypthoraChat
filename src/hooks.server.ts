@@ -1,6 +1,6 @@
 import type { Handle, HandleValidationError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
-import { validateSession } from '$lib/auth.js';
+import { validateSession } from '$lib/utils/auth';
 import * as v from 'valibot';
 
 // Routes that don't require authentication

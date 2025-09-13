@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import type { Server as HTTPServer } from 'http';
 import { db } from '../db';
-import { validateSession } from '../auth';
+import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
 
