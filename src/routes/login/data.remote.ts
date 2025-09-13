@@ -1,5 +1,5 @@
 import { form, getRequestEvent } from '$app/server';
-import { createSession, validateUser } from '$lib/auth';
+import { createSession, validateUser } from '$lib/utils/auth';
 import { collectErrorMessagesString, LoginSchema } from '$lib/utils/validation';
 import { error, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';

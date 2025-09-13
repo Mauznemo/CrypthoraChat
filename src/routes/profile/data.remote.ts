@@ -1,5 +1,5 @@
 import { command, getRequestEvent } from '$app/server';
-import { deleteSession, hashPassword, verifyPassword } from '$lib/auth';
+import { deleteSession, hashPassword, verifyPassword } from '$lib/utils/auth';
 import { db } from '$lib/db';
 import { removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
