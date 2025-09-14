@@ -6,6 +6,12 @@
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { isClientMessage } from '$lib/chat/messages';
 	import Icon from '@iconify/svelte';
+	import { chats } from '$lib/chat/chats';
+	import LoadingSpinner from '../LoadingSpinner.svelte';
+	import ScrollView from './ScrollView.svelte';
+	import { cursorStore } from '$lib/stores/cursor.svelte';
+	import { scale } from 'svelte/transition';
+	import { expoInOut } from 'svelte/easing';
 
 	interface ToolbarPosition {
 		x: number;
@@ -13,8 +19,7 @@
 	}
 
 	let {
-		messageContainer = $bindable<HTMLDivElement | null>(),
-		handleScroll,
+		scrollView = $bindable<ScrollView>(),
 		onEdit,
 		onReply,
 		onDelete,
@@ -23,8 +28,7 @@
 		onUpdateReaction,
 		onDecryptError
 	}: {
-		messageContainer: HTMLDivElement | null;
-		handleScroll: () => void;
+		scrollView: ScrollView;
 		onEdit: (message: MessageWithRelations) => void;
 		onReply: (message: MessageWithRelations) => void;
 		onDelete: (message: MessageWithRelations) => void;
@@ -45,19 +49,12 @@
 	let toolbarElement = $state<HTMLDivElement | null>(null);
 	let longPressTimer = $state<ReturnType<typeof setTimeout> | null>(null);
 	let hideTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
+	let messageContainer = $state<HTMLDivElement | null>(null);
 
-	const isTouchDevice = $state(() => {
-		if (typeof window === 'undefined') return false;
-		// Check for fine pointer (mouse) as primary input method
-		const hasFinePrimaryPointer = window.matchMedia('(pointer: fine)').matches;
-		// Check if touch is available as a secondary input
-		const hasTouchCapability = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-		// Consider it a touch device only if fine pointer is not primary or touch points > 1
-		return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
-	});
+	let isLoadingOlder = $state(false);
+
+	let isTouchDevice: boolean = $state(false);
 	let isHovering = false;
-
-	console.log('Mobile device:', isTouchDevice());
 
 	function calculateToolbarPosition(messageEl: HTMLElement): ToolbarPosition {
 		if (!messageContainer) return { x: 8, y: 0 };
@@ -65,15 +62,14 @@
 		const messageRect = messageEl.getBoundingClientRect();
 		const containerRect = messageContainer.getBoundingClientRect();
 
-		const relativeY = messageRect.top - containerRect.top + messageContainer.scrollTop - 30;
+		// Use viewport coordinates since toolbar is now outside the scrollview
+		const viewportY = messageRect.top - 30;
 
-		const visibleTop = messageContainer.scrollTop;
-		const visibleBottom = messageContainer.scrollTop + containerRect.height;
-
-		const clampedY = Math.max(relativeY, visibleTop + 10);
+		// Clamp to visible container bounds in viewport coordinates
+		const clampedY = Math.max(viewportY, containerRect.top + 10);
 
 		const toolbarHeight = 40;
-		const finalY = Math.min(clampedY, visibleBottom - toolbarHeight);
+		const finalY = Math.min(clampedY, containerRect.bottom - toolbarHeight);
 
 		return {
 			x: 20,
@@ -81,12 +77,48 @@
 		};
 	}
 
+	function observeTopElement(node: HTMLDivElement) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const entry = entries[0];
+				// When the top message becomes visible and we're not already loading
+				if (entry.isIntersecting && !isLoadingOlder && chats.hasMoreOlder) {
+					console.log('Loading older messages');
+					loadOlderMessages();
+				}
+			},
+			{
+				// Trigger when element is 100px before coming into view
+				rootMargin: '100px 0px 0px 0px',
+				threshold: 0
+			}
+		);
+
+		observer.observe(node);
+
+		return {
+			destroy() {
+				observer.disconnect();
+			}
+		};
+	}
+
+	async function loadOlderMessages() {
+		//if (isLoadingOlder || !chatStore.messageContainer) return;
+
+		isLoadingOlder = true;
+
+		await chats.loadOlderMessages(chatStore.activeChat);
+
+		isLoadingOlder = false;
+	}
+
 	function handleMessageBubbleHover(
 		event: MouseEvent,
 		message: MessageWithRelations,
 		isFromMe: boolean
 	): void {
-		if (isTouchDevice()) return;
+		if (isTouchDevice) return;
 
 		isHovering = true;
 
@@ -98,7 +130,6 @@
 		const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
 		if (messageEl) {
 			const position = calculateToolbarPosition(messageEl);
-
 			activeMessage = message;
 			activeMessageFromMe = isFromMe;
 			toolbarPosition = position;
@@ -158,11 +189,6 @@
 		}
 	}
 
-	function handleToolbarMouseLeave(): void {
-		activeMessage = null;
-	}
-
-	// Hide toolbar when clicking outside
 	function handleClickOutside(event: MouseEvent | TouchEvent): void {
 		const target = event.target as HTMLElement;
 		if (activeMessage && !toolbarElement?.contains(target)) {
@@ -170,18 +196,58 @@
 		}
 	}
 
-	// Update toolbar position when scrolling
-	function handleScrollUpdate(): void {
-		handleScroll(); // Call the original scroll handler
+	function handleWheel(event: WheelEvent): void {
+		event.preventDefault();
+		event.stopPropagation();
+		activeMessage = null;
+	}
 
-		// Update toolbar position if it's active
-		if (activeMessage) {
-			const messageEl = document.querySelector(
-				`[data-message-id="${activeMessage.id}"]`
-			) as HTMLElement;
-			if (messageEl) {
-				const position = calculateToolbarPosition(messageEl);
-				toolbarPosition = position;
+	let scrollTimeout: NodeJS.Timeout | null = null;
+
+	function handleScrollUpdate(): void {
+		activeMessage = null;
+
+		if (scrollTimeout) {
+			clearTimeout(scrollTimeout);
+		}
+
+		scrollTimeout = setTimeout(() => {
+			checkMessageUnderCursor();
+		}, 200);
+	}
+
+	function checkMessageUnderCursor(): void {
+		const mousePosition = cursorStore.position;
+
+		if (!mousePosition || isTouchDevice) return;
+
+		const elementUnderCursor = document.elementFromPoint(mousePosition.x, mousePosition.y);
+
+		if (
+			elementUnderCursor?.className.includes('message-container') ||
+			elementUnderCursor?.className.includes('message-wrapper')
+		)
+			return;
+
+		const messageEl = elementUnderCursor?.closest('[data-message-id]') as HTMLElement;
+
+		if (messageEl) {
+			const messageId = messageEl.dataset.messageId;
+
+			if (!messageId) return;
+
+			const message = chatStore.messages.find((m) => m.id === messageId);
+
+			if (!message) return;
+
+			const isFromMe = message.senderId === chatStore.user!.id;
+
+			if (!activeMessage || activeMessage.id !== messageId) {
+				handleMessageBubbleHover(
+					new MouseEvent('mouseenter'), // Create a fake mouse event
+					message,
+					isFromMe
+				);
 			}
 		}
 	}
@@ -221,7 +287,20 @@
 		}
 	}
 
+	function checkIfTouchDevice(): boolean {
+		if (typeof window === 'undefined') return false;
+		// Check for fine pointer (mouse) as primary input method
+		const hasFinePrimaryPointer = window.matchMedia('(pointer: fine)').matches;
+		// Check if touch is available as a secondary input
+		const hasTouchCapability = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		// Consider it a touch device only if fine pointer is not primary or touch points > 1
+		return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
+	}
+
 	onMount(() => {
+		isTouchDevice = checkIfTouchDevice();
+
+		console.log('Mobile device:', isTouchDevice);
 		// Listen for clicks outside
 		document.addEventListener('click', handleClickOutside);
 		document.addEventListener('touchstart', handleClickOutside);
@@ -241,30 +320,33 @@
 		};
 	});
 
-	// Reactive effect for toolbar event listeners
 	$effect(() => {
-		console.log('Effect Messages, UserId:', chatStore.user?.id);
 		if (toolbarElement) {
 			const handleMouseEnter = () => handleToolbarMouseEnter();
-			const handleMouseLeave = () => handleToolbarMouseLeave();
 
 			toolbarElement.addEventListener('mouseenter', handleMouseEnter);
-			toolbarElement.addEventListener('mouseleave', handleMouseLeave);
 
 			return () => {
 				toolbarElement?.removeEventListener('mouseenter', handleMouseEnter);
-				toolbarElement?.removeEventListener('mouseleave', handleMouseLeave);
 			};
 		}
 	});
 </script>
 
 <!-- Message container with toolbar -->
-<div
-	bind:this={messageContainer}
-	onscroll={handleScrollUpdate}
-	class="relative no-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pt-6"
+<ScrollView
+	bind:this={scrollView}
+	bind:container={messageContainer}
+	handleScroll={handleScrollUpdate}
+	class="min-h-0 p-2 pt-6"
 >
+	<div use:observeTopElement class="flex h-10 flex-col items-center justify-center">
+		{#if isLoadingOlder}
+			<LoadingSpinner />
+			<div class="py-2 text-center text-sm text-gray-500">Loading older messages...</div>
+		{/if}
+	</div>
+
 	{#each chatStore.combinedMessages as message, index (message.id + (isClientMessage(message) ? message.encryptedContent : '') + index)}
 		{#if isClientMessage(message)}
 			{console.log('Key:', message.id + message.encryptedContent + index)}
@@ -314,8 +396,6 @@
 				{/if}
 			</div>
 		{:else}
-			{console.log('SystemMessage:', message.id)}
-			<!-- SystemMessage specific code -->
 			<div class="text-center text-xs text-gray-400">
 				<p>{message.content}</p>
 			</div>
@@ -323,68 +403,71 @@
 	{/each}
 
 	<div class="h-4"></div>
+</ScrollView>
 
-	<!-- Single floating toolbar -->
-	{#if activeMessage}
-		<div
-			bind:this={toolbarElement}
-			class="pointer-events-auto frosted-glass-shadow absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 transition-all duration-200"
-			style="top: {toolbarPosition.y}px; {activeMessageFromMe
-				? `right: ${toolbarPosition.x}px`
-				: `left: ${toolbarPosition.x}px`};"
+<!-- Single floating toolbar -->
+{#if activeMessage}
+	<div
+		bind:this={toolbarElement}
+		in:scale={{ duration: 200, easing: expoInOut }}
+		out:scale={{ duration: 200, easing: expoInOut }}
+		onwheel={handleWheel}
+		class="pointer-events-auto frosted-glass-shadow absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 transition-all duration-200"
+		style="top: {toolbarPosition.y}px; {activeMessageFromMe
+			? `right: ${toolbarPosition.x}px`
+			: `left: ${toolbarPosition.x}px`};"
+	>
+		<!-- Reply Button -->
+		<button
+			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
+			onclick={handleReply}
+			title="Reply"
+			aria-label="Reply to message"
+			type="button"
 		>
-			<!-- Reply Button -->
+			<Icon icon="material-symbols:reply-rounded" class="size-5" />
+		</button>
+
+		<button
+			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
+			onclick={handleReaction}
+			title="Add Reaction"
+			aria-label="Add Reaction"
+			type="button"
+		>
+			<Icon icon="proicons:emoji" class="size-5" />
+		</button>
+
+		{#if activeMessageFromMe}
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
-				onclick={handleReply}
-				title="Reply"
-				aria-label="Reply to message"
+				onclick={handleEdit}
+				title="Edit"
+				aria-label="Edit message"
 				type="button"
 			>
-				<Icon icon="material-symbols:reply-rounded" class="size-5" />
+				<Icon icon="material-symbols:edit-outline-rounded" class="size-5" />
 			</button>
 
+			<!-- Delete Button -->
 			<button
-				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
-				onclick={handleReaction}
-				title="Add Reaction"
-				aria-label="Add Reaction"
+				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
+				onclick={handleDelete}
+				title="Delete"
+				aria-label="Delete message"
 				type="button"
 			>
-				<Icon icon="proicons:emoji" class="size-5" />
+				<Icon icon="material-symbols:delete-outline-rounded" class="size-5" />
 			</button>
-
-			{#if activeMessageFromMe}
-				<button
-					class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
-					onclick={handleEdit}
-					title="Edit"
-					aria-label="Edit message"
-					type="button"
-				>
-					<Icon icon="material-symbols:edit-outline-rounded" class="size-5" />
-				</button>
-
-				<!-- Delete Button -->
-				<button
-					class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
-					onclick={handleDelete}
-					title="Delete"
-					aria-label="Delete message"
-					type="button"
-				>
-					<Icon icon="material-symbols:delete-outline-rounded" class="size-5" />
-				</button>
-			{/if}
-			<button
-				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
-				onclick={handleInfo}
-				title="Show info"
-				aria-label="Show info"
-				type="button"
-			>
-				<Icon icon="material-symbols:info-outline-rounded" class="size-5" />
-			</button>
-		</div>
-	{/if}
-</div>
+		{/if}
+		<button
+			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
+			onclick={handleInfo}
+			title="Show info"
+			aria-label="Show info"
+			type="button"
+		>
+			<Icon icon="material-symbols:info-outline-rounded" class="size-5" />
+		</button>
+	</div>
+{/if}

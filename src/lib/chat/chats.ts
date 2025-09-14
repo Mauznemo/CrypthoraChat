@@ -33,6 +33,11 @@ type KeyVersions = {
 }[];
 
 export const chats = {
+	hasMoreOlder: false,
+	hasMoreNewer: false,
+	oldestCursor: null as string | null,
+	newestCursor: null as string | null,
+
 	async handleAddedToChatChat(data: {
 		chatId: string;
 		type: 'dm' | 'group';
@@ -101,6 +106,8 @@ export const chats = {
 		socketStore.tryLeaveChat(chatStore.activeChat);
 		localStorage.setItem('lastChatId', newChat.id);
 
+		chatStore.resetMessages();
+
 		const currentNewChat = await getChatById(newChat.id);
 
 		if (!currentNewChat) {
@@ -135,7 +142,7 @@ export const chats = {
 			return { success: false };
 		}
 
-		const success = await chats.tryGetMessages(currentNewChat);
+		const success = await chats.tryGetMessages(currentNewChat, { limit: 15, loadMore: 'older' });
 
 		if (success) {
 			chatStore.activeChat = currentNewChat;
@@ -289,17 +296,56 @@ export const chats = {
 		return { success: true, keyVersions: encryptedChatKeys.keyVersions };
 	},
 
-	/** Tries to get all messages for the chat and shows an error modal if it fails */
-	async tryGetMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
+	async tryGetMessages(
+		chat: ChatWithoutMessages | null,
+		options?: {
+			limit?: number;
+			loadMore?: 'newer' | 'older';
+			cursor?: string;
+		}
+	): Promise<boolean> {
 		if (!chat) {
 			console.log('No chat selected');
 			return false;
 		}
+
+		const { limit = 5, loadMore, cursor } = options || {};
+
 		try {
-			await getMessagesByChatId(chat.id).refresh();
-			const messages = await getMessagesByChatId(chat.id);
-			setSystemMessages(messages.systemMessages);
-			setMessages(messages.messages);
+			// await getMessagesByChatId({
+			// 	chatId: chat.id,
+			// 	limit,
+			// 	cursor,
+			// 	direction: loadMore || 'newer'
+			// }).refresh();
+
+			const result = await getMessagesByChatId({
+				chatId: chat.id,
+				limit,
+				cursor,
+				direction: loadMore || 'newer'
+			});
+
+			const { messages, systemMessages, hasMore, nextCursor, prevCursor } = result;
+
+			if (loadMore === 'older') {
+				//chatStore.scrollView?.prepareTopLoad();
+				// Prepend older messages to the beginning
+				setMessages([...messages, ...chatStore.messages]);
+			} else if (loadMore === 'newer') {
+				// Append newer messages to the end
+				setMessages([...chatStore.messages, ...messages]);
+			} else {
+				// Initial load - replace all messages
+				setMessages(messages);
+				setSystemMessages(systemMessages);
+			}
+
+			// Store pagination info for scroll handlers
+			chats.hasMoreOlder = hasMore && loadMore !== 'newer';
+			chats.hasMoreNewer = hasMore && loadMore !== 'older';
+			chats.oldestCursor = loadMore === 'older' ? prevCursor : chats.oldestCursor || prevCursor;
+			chats.newestCursor = loadMore === 'newer' ? nextCursor : chats.newestCursor || nextCursor;
 
 			return true;
 		} catch (error: any) {
@@ -309,5 +355,26 @@ export const chats = {
 		}
 
 		return false;
+	},
+
+	// Add methods for loading more messages
+	async loadOlderMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
+		if (!chats.hasMoreOlder || !chats.oldestCursor) return false;
+
+		return this.tryGetMessages(chat, {
+			loadMore: 'older',
+			cursor: chats.oldestCursor,
+			limit: 5
+		});
+	},
+
+	async loadNewerMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
+		if (!chats.hasMoreNewer || !chats.newestCursor) return false;
+
+		return this.tryGetMessages(chat, {
+			loadMore: 'newer',
+			cursor: chats.newestCursor,
+			limit: 5
+		});
 	}
 };

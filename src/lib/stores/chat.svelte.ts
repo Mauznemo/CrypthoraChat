@@ -1,9 +1,11 @@
+import type ScrollView from '$lib/components/chat/ScrollView.svelte';
 import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
 import type { SystemMessage, User } from '$prisma';
 
 class Chat {
 	user: User | null = $state(null);
 	activeChat: ChatWithoutMessages | null = $state(null);
+	scrollView: ScrollView | null = $state(null);
 	versionedChatKey: Record<number, CryptoKey> = $state({});
 	// newestChatKey: CryptoKey | null = $derived.by(() => {
 

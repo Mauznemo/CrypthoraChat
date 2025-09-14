@@ -44,58 +44,94 @@ export const getUserById = query(v.string(), async (userId) => {
 	return user;
 });
 
-export const getMessagesByChatId = query(v.string(), async (chatId) => {
-	const { locals } = getRequestEvent();
+export const getMessagesByChatId = query(
+	v.object({
+		chatId: v.string(),
+		limit: v.optional(v.number()),
+		cursor: v.optional(v.string()), // message ID to start from
+		direction: v.optional(v.union([v.literal('newer'), v.literal('older')]))
+	}),
+	async ({ chatId, limit = 50, cursor, direction = 'newer' }) => {
+		const { locals } = getRequestEvent();
 
-	if (!locals.sessionId) {
-		error(401, 'Unauthorized');
-	}
-
-	const participant = await db.chatParticipant.findUnique({
-		where: {
-			chatId_userId: { chatId, userId: locals.user!.id }
-		},
-		select: { joinKeyVersion: true }
-	});
-
-	if (!participant) {
-		error(403, 'You are not a participant of this chat');
-	}
-
-	const messages = await db.message.findMany({
-		where: {
-			chatId,
-			usedKeyVersion: { gte: participant.joinKeyVersion }
-		},
-		orderBy: { timestamp: 'asc' },
-		include: {
-			user: { select: safeUserFields },
-			chat: true,
-			readBy: { select: safeUserFields },
-			replyTo: { include: { user: { select: safeUserFields } } }
+		if (!locals.sessionId) {
+			error(401, 'Unauthorized');
 		}
-	});
 
-	if (messages.length === 0) {
-		const chatExists = await db.chat.findUnique({
-			where: { id: chatId },
-			select: { id: true }
+		const participant = await db.chatParticipant.findUnique({
+			where: {
+				chatId_userId: { chatId, userId: locals.user!.id }
+			},
+			select: { joinKeyVersion: true }
 		});
 
-		if (!chatExists) {
-			error(404, 'Chat "' + chatId + '" not found');
+		if (!participant) {
+			error(403, 'You are not a participant of this chat');
 		}
+
+		console.log(
+			'Fetching',
+			limit,
+			'messages from chat',
+			chatId,
+			'with cursor',
+			cursor,
+			'and direction',
+			direction
+		);
+
+		// Build where clause for pagination
+		let whereClause: any = {
+			chatId,
+			usedKeyVersion: { gte: participant.joinKeyVersion }
+		};
+
+		if (cursor) {
+			const cursorMessage = await db.message.findUnique({
+				where: { id: cursor },
+				select: { timestamp: true }
+			});
+
+			if (cursorMessage) {
+				whereClause.timestamp =
+					direction === 'newer' ? { gt: cursorMessage.timestamp } : { lt: cursorMessage.timestamp };
+			}
+		}
+
+		const messages = await db.message.findMany({
+			where: whereClause,
+			orderBy: { timestamp: direction === 'newer' ? 'asc' : 'desc' },
+			take: limit,
+			include: {
+				user: { select: safeUserFields },
+				chat: true,
+				readBy: { select: safeUserFields },
+				replyTo: { include: { user: { select: safeUserFields } } }
+			}
+		});
+
+		// If fetching older messages, reverse to maintain chronological order
+		if (direction === 'older') {
+			messages.reverse();
+		}
+
+		// Get system messages (you might want to paginate these too)
+		const systemMessages = await db.systemMessage.findMany({
+			where: { chatId, usedKeyVersion: { gte: participant.joinKeyVersion } },
+			orderBy: { timestamp: 'asc' }
+		});
+
+		console.log('Queried messages: ', messages.length);
+
+		return {
+			messages,
+			systemMessages,
+			hasMore: messages.length === limit,
+			nextCursor: messages.length > 0 ? messages[messages.length - 1].id : null,
+			prevCursor: messages.length > 0 ? messages[0].id : null
+		};
 	}
-
-	const systemMessages = await db.systemMessage.findMany({
-		where: { chatId, usedKeyVersion: { gte: participant.joinKeyVersion } },
-		orderBy: { timestamp: 'asc' }
-	});
-
-	console.log('Queried messages: ', messages.length);
-
-	return { messages, systemMessages };
-});
+);
 
 export const getUserChats = query(async () => {
 	const { locals } = getRequestEvent();

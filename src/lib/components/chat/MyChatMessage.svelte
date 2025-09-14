@@ -87,7 +87,7 @@
 	});
 </script>
 
-<div class="m-2 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
+<div class="message-container m-1 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
 	<!-- Profile picture and username (only shown for first message in group) -->
 	<div
 		class="absolute -top-5 -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
@@ -226,5 +226,5 @@
 	</div>
 </div>
 {#if message.encryptedReactions.length > 0}
-	<div class="h-2"></div>
+	<div class="h-4"></div>
 {/if}

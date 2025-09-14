@@ -28,7 +28,6 @@
 	let { data }: PageProps = $props();
 
 	let inputField: HTMLTextAreaElement;
-	let messageContainer: HTMLDivElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
 
@@ -52,7 +51,8 @@
 
 		socketStore.onNewMessage((m) => {
 			messages.handleNewMessage(m);
-			scrollToBottom();
+			//TODO: Check if near bottom first
+			chatStore.scrollView?.scrollToBottom();
 		});
 		socketStore.onMessageUpdated((m) => {
 			messages.handleMessageUpdated(m, { invalidateDecryptionCache: true });
@@ -64,7 +64,8 @@
 		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
 		socketStore.onNewSystemMessage((m) => {
 			messages.handleNewSystemMessage(m);
-			scrollToBottom();
+			//TODO: Check if near bottom first
+			chatStore.scrollView?.scrollToBottom();
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
@@ -97,7 +98,7 @@
 			console.error('Socket error:', error);
 		});
 
-		scrollToBottom();
+		chatStore.scrollView?.scrollToBottom();
 	});
 
 	onDestroy(() => {
@@ -165,28 +166,14 @@
 		});
 	}
 
-	function handleScroll(): void {
-		if (messageContainer) {
-			const { scrollTop, scrollHeight, clientHeight } = messageContainer;
-			chatStore.shouldAutoScroll = scrollTop + clientHeight >= scrollHeight - 100;
-		}
-	}
-
-	function scrollToBottom(): void {
-		setTimeout(() => {
-			if (chatStore.shouldAutoScroll && messageContainer) {
-				messageContainer.scrollTop = messageContainer.scrollHeight;
-			}
-		}, 100);
-	}
-
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
 		chatStore.shouldAutoScroll = true;
+		chatStore.scrollView?.scrollToBottomImmediate();
 
 		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
-			scrollToBottom();
+			chatStore.scrollView?.scrollToBottom(500);
 		}
 	}
 
@@ -283,8 +270,7 @@
 			</div>
 		{:else}
 			<ChatMessages
-				bind:messageContainer
-				{handleScroll}
+				bind:scrollView={chatStore.scrollView!}
 				onEdit={(message) => {
 					chatInput.editMessage(message);
 					inputField.focus();
