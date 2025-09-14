@@ -340,7 +340,7 @@
 	handleScroll={handleScrollUpdate}
 	class="min-h-0 p-2 pt-6"
 >
-	<div use:observeTopElement class="flex h-10 flex-col items-center justify-center">
+	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}
 			<LoadingSpinner />
 			<div class="py-2 text-center text-sm text-gray-500">Loading older messages...</div>
@@ -361,7 +361,7 @@
 
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="message-wrapper relative"
+				class="message-wrapper relative max-w-full"
 				data-message-id={message.id}
 				onmouseleave={handleMessageLeave}
 				ontouchend={handleTouchEnd}

@@ -268,7 +268,10 @@ export function initializeSocket(server: HTTPServer) {
 					});
 
 					// Emit to all users in the chat
-					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+					io.to(updatedMessage.chatId).emit('message-updated', {
+						message: updatedMessage,
+						type: 'edit'
+					});
 				} catch (error) {
 					console.error('Error editing message:', error);
 					socket.emit('message-error', { error: 'Failed to edit message' });
@@ -330,7 +333,10 @@ export function initializeSocket(server: HTTPServer) {
 					});
 
 					// Emit updated message
-					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+					io.to(updatedMessage.chatId).emit('message-updated', {
+						message: updatedMessage,
+						type: 'reaction'
+					});
 				} catch (error) {
 					console.error('Error updating reaction:', error);
 				}
@@ -379,7 +385,10 @@ export function initializeSocket(server: HTTPServer) {
 
 					console.log('Updated reactions, current:', updatedMessage.encryptedReactions.length);
 
-					io.to(updatedMessage.chatId).emit('message-updated', updatedMessage);
+					io.to(updatedMessage.chatId).emit('message-updated', {
+						message: updatedMessage,
+						type: 'reaction'
+					});
 				} catch (error) {
 					console.error('Error updating reaction:', error);
 				}

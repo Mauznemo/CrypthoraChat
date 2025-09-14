@@ -83,11 +83,19 @@ export async function handleUpdateReaction(
 /** Updates a message from messages array */
 export function handleMessageUpdated(
 	updatedMessage: ClientMessage,
-	options?: { triggerRerender?: boolean; invalidateDecryptionCache?: boolean }
+	options?: {
+		triggerRerender?: boolean;
+		invalidateDecryptionCache?: boolean;
+		keepAttachmentMetadata?: boolean;
+	}
 ): void {
 	const index = messages.findIndex((m) => m.id === updatedMessage.id);
 	if (options?.invalidateDecryptionCache === true) {
 		updatedMessage.decryptedContent = undefined;
+	}
+
+	if (options?.keepAttachmentMetadata === true) {
+		updatedMessage.decryptedAttachmentMetadata = messages[index].decryptedAttachmentMetadata;
 	}
 
 	if (index !== -1) {

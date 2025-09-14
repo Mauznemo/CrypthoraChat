@@ -20,6 +20,17 @@ export type MessageWithRelations = Prisma.MessageGetPayload<{
 export type ClientMessage = MessageWithRelations & {
 	decryptedContent?: string;
 	decryptionFailed?: boolean;
+	decryptedAttachmentMetadata?: Record<
+		string,
+		{
+			name: string;
+			size: number;
+			inIdb: boolean;
+			fileType: 'image' | 'video' | 'audio' | 'other';
+			previewHeight: number;
+			previewWidth: number;
+		}
+	>;
 };
 
 export type SafeUser = Prisma.UserGetPayload<{

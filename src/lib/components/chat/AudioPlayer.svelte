@@ -130,7 +130,7 @@
 	});
 </script>
 
-<div class="rounded-xl bg-gray-800/40 p-4 md:p-6 {className}">
+<div class="h-[180px] max-w-[400px] rounded-xl bg-gray-800/40 p-4 md:p-6 {className}">
 	<audio
 		bind:this={audioElement}
 		{src}

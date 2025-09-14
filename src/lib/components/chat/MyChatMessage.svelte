@@ -119,7 +119,7 @@
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
 				<div class="mt-2 flex flex-col items-end">
 					{#each message.attachments as attachment}
-						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
+						<Attachment {message} attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
 				</div>
 			{/if}

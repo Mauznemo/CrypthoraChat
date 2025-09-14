@@ -54,9 +54,12 @@
 			//TODO: Check if near bottom first
 			chatStore.scrollView?.scrollToBottom();
 		});
-		socketStore.onMessageUpdated((m) => {
-			messages.handleMessageUpdated(m, { invalidateDecryptionCache: true });
-			messages.markReadIfVisible(m);
+		socketStore.onMessageUpdated((d) => {
+			messages.handleMessageUpdated(d.message, {
+				invalidateDecryptionCache: d.type === 'edit',
+				keepAttachmentMetadata: true
+			});
+			messages.markReadIfVisible(d.message);
 		});
 		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
 		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));

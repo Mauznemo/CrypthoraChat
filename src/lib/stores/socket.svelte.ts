@@ -134,7 +134,9 @@ class SocketStore {
 		this.socket?.on('new-message', callback);
 	}
 
-	onMessageUpdated(callback: (message: MessageWithRelations) => void) {
+	onMessageUpdated(
+		callback: (data: { message: MessageWithRelations; type: 'edit' | 'reaction' }) => void
+	) {
 		this.socket?.on('message-updated', callback);
 	}
 
