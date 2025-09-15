@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
 	import type { ClientMessage, SafeUser } from '$lib/types';
-	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
-	import { handleMessageUpdated } from '$lib/chat/messages';
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
@@ -31,13 +29,6 @@
 	} = $props();
 
 	let readers = $state<SafeUser[]>([]);
-
-	function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
-		untrack(() => {
-			message.decryptedContent = decryptedContent;
-			handleMessageUpdated(message, { triggerRerender: false });
-		});
-	}
 
 	let reactionData = $state({});
 	let lastProcessed: any = $state(null);
@@ -119,7 +110,7 @@
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
 				<div class="mt-2 flex flex-col items-end">
 					{#each message.attachments as attachment}
-						<Attachment {message} attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
+						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
 				</div>
 			{/if}
@@ -128,7 +119,6 @@
 				{#await decryptMessage({ message })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{:then decryptedContent}
-					{handleDecryptedMessage(message, decryptedContent)}
 					<p class="pr-9 whitespace-pre-line text-white">
 						{@html processMessageText(decryptedContent)}
 					</p>

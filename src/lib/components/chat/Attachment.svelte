@@ -9,15 +9,11 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
 	import type { ClientMessage } from '$lib/types';
-	import { onMount, untrack } from 'svelte';
-	import { handleMessageUpdated } from '$lib/chat/messages';
 
 	const {
-		message,
 		attachmentPath,
 		keyVersion
 	}: {
-		message: ClientMessage;
 		attachmentPath: string;
 		keyVersion: number;
 	} = $props();
@@ -33,68 +29,24 @@
 
 	let downloadingFile = $state(false);
 
-	let decryptedName: string | null = $state(null);
-	let isLoading: boolean = $state(true);
-	let error: string | null = $state(null);
-
 	async function decryptName(attachmentPath: string, keyVersion: number): Promise<string> {
-		if (
-			message.decryptedAttachmentMetadata &&
-			message.decryptedAttachmentMetadata[attachmentPath]
-		) {
-			const name = message.decryptedAttachmentMetadata[attachmentPath].name;
-			fileSizeBytes = message.decryptedAttachmentMetadata[attachmentPath].size;
-			fileInIDB = message.decryptedAttachmentMetadata[attachmentPath].inIdb;
-			fileType = message.decryptedAttachmentMetadata[attachmentPath].fileType;
-			console.log(
-				'Using cached attachment metadata:',
-				message.decryptedAttachmentMetadata[attachmentPath]
-			);
-			return name;
-		} else {
-			const normalized = attachmentPath.replace(/\\/g, '/');
-			const serverFilename = normalized.split('/').pop() || '';
-			const filename = serverFilename.split('_')[2]; //uuid_userId_filename
-			const encryptedFileNameSafeBase64 = filename.split('.')[0];
-			const name = await decryptFileName(encryptedFileNameSafeBase64, keyVersion);
+		const normalized = attachmentPath.replace(/\\/g, '/');
+		const serverFilename = normalized.split('/').pop() || '';
+		const filename = serverFilename.split('_')[2]; //uuid_userId_filename
+		const encryptedFileNameSafeBase64 = filename.split('.')[0];
+		const name = await decryptFileName(encryptedFileNameSafeBase64, keyVersion);
 
-			if (fileUtils.isImageFile(name)) fileType = 'image';
-			if (fileUtils.isVideoFile(name)) fileType = 'video';
-			if (fileUtils.isAudioFile(name)) fileType = 'audio';
-			fileSizeBytes = await getFileSize(attachmentPath);
-			fileInIDB = await fileExistsInIDB(attachmentPath);
+		if (fileUtils.isImageFile(name)) fileType = 'image';
+		if (fileUtils.isVideoFile(name)) fileType = 'video';
+		if (fileUtils.isAudioFile(name)) fileType = 'audio';
+		fileSizeBytes = await getFileSize(attachmentPath);
+		fileInIDB = await fileExistsInIDB(attachmentPath);
 
-			untrack(() => {
-				if (!message.decryptedAttachmentMetadata) message.decryptedAttachmentMetadata = {};
-				message.decryptedAttachmentMetadata[attachmentPath] = {
-					name,
-					size: fileSizeBytes,
-					inIdb: fileInIDB,
-					fileType,
-					previewHeight: 0,
-					previewWidth: 0
-				};
-				handleMessageUpdated(message, { triggerRerender: false });
-			});
-
-			console.log('Attachment name:', name, fileSizeBytes, fileInIDB);
-			return name;
-		}
+		console.log('Attachment name:', name, fileSizeBytes, fileInIDB);
+		return name;
 	}
 
-	function setPreviewSize(height: number, width: number) {
-		if (!message.decryptedAttachmentMetadata?.[attachmentPath]) return;
-		message.decryptedAttachmentMetadata[attachmentPath].previewHeight = height;
-		message.decryptedAttachmentMetadata[attachmentPath].previewWidth = width;
-		handleMessageUpdated(message, { triggerRerender: false });
-	}
-
-	async function getMediaUrl(
-		attachmentPath: string,
-		keyVersion: number,
-		name: string,
-		savePreviewSize: boolean
-	) {
+	async function getMediaUrl(attachmentPath: string, keyVersion: number, name: string) {
 		// await new Promise((resolve) => setTimeout(resolve, 500));
 		const retrievedBlob = await getFileFromIDB(attachmentPath);
 
@@ -111,73 +63,7 @@
 			await saveFileToIDB(attachmentPath, blob, name);
 		}
 
-		if (
-			savePreviewSize &&
-			previewUrl &&
-			message.decryptedAttachmentMetadata?.[attachmentPath].previewHeight === 0
-		) {
-			await capturePreviewSize(previewUrl, name);
-		}
-
 		return previewUrl;
-	}
-
-	async function capturePreviewSize(url: string, name: string) {
-		return new Promise<void>((resolve) => {
-			if (fileUtils.isImageFile(name)) {
-				const img = new Image();
-				img.onload = () => {
-					// Calculate display size with CSS constraints: max-w-[400px] h-[300px]
-					const maxWidth = 400;
-					const maxHeight = 300;
-
-					let displayWidth = img.naturalWidth;
-					let displayHeight = img.naturalHeight;
-
-					if (displayHeight > maxHeight) {
-						const ratio = maxHeight / displayHeight;
-						displayHeight = maxHeight;
-						displayWidth = displayWidth * ratio;
-					}
-
-					if (displayWidth > maxWidth) {
-						const ratio = maxWidth / displayWidth;
-						displayWidth = maxWidth;
-						displayHeight = displayHeight * ratio;
-					}
-
-					setPreviewSize(Math.round(displayHeight), Math.round(displayWidth));
-					resolve();
-				};
-				img.onerror = () => resolve();
-				img.src = url;
-			} else if (fileUtils.isVideoFile(name)) {
-				const video = document.createElement('video');
-				video.onloadedmetadata = () => {
-					// Calculate display size with CSS constraints: max-w-[400px] max-h-[600px]
-					const maxWidth = 400;
-					const maxHeight = 600;
-
-					let displayWidth = video.videoWidth;
-					let displayHeight = video.videoHeight;
-
-					// Scale down to fit within max constraints while maintaining aspect ratio
-					const widthRatio = maxWidth / displayWidth;
-					const heightRatio = maxHeight / displayHeight;
-					const scale = Math.min(widthRatio, heightRatio, 1);
-
-					displayWidth = displayWidth * scale;
-					displayHeight = displayHeight * scale;
-
-					setPreviewSize(Math.round(displayHeight), Math.round(displayWidth));
-					resolve();
-				};
-				video.onerror = () => resolve();
-				video.src = url;
-			} else {
-				resolve();
-			}
-		});
 	}
 
 	async function handleDownloadFile(name: string) {
@@ -192,39 +78,15 @@
 		fileUtils.downloadFile(blob, name);
 		downloadingFile = false;
 	}
-
-	onMount(async () => {
-		try {
-			decryptedName = await decryptName(attachmentPath, keyVersion);
-		} catch (err: any) {
-			error = err;
-		} finally {
-			isLoading = false;
-		}
-	});
-
-	function getPreviewSkeletonSize(defaultHeight: number, defaultWidth: number): string {
-		if (
-			message.decryptedAttachmentMetadata &&
-			message.decryptedAttachmentMetadata[attachmentPath].previewHeight !== 0
-		) {
-			const width = message.decryptedAttachmentMetadata?.[attachmentPath].previewWidth;
-			return `height: ${message.decryptedAttachmentMetadata?.[attachmentPath].previewHeight}px; width: ${width}px; max-width: 100%;`;
-		} else {
-			return `height: ${defaultHeight}px; width: ${defaultWidth}px; max-width: 100%;`;
-		}
-	}
 </script>
 
 <div class="max-w-full self-stretch">
 	<svelte:boundary>
-		{#if isLoading}
+		{#await decryptName(attachmentPath, keyVersion)}
 			<div class="mb-2">
 				<p class="text-md pr-9 font-bold whitespace-pre-line text-gray-400">Loading...</p>
 			</div>
-		{:else if error}
-			{console.error(error)}
-		{:else if decryptedName}
+		{:then decryptedName}
 			<div class="mb-2 max-w-full">
 				{#if fileType === 'image'}
 					{@render imagePreview(decryptedName)}
@@ -236,7 +98,7 @@
 					{@render otherPreview(decryptedName)}
 				{/if}
 			</div>
-		{/if}
+		{/await}
 	</svelte:boundary>
 </div>
 
@@ -244,11 +106,10 @@
 	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaUrl(attachmentPath, keyVersion, name, true)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div class="relative flex max-w-full items-end justify-end">
 				<div
-					class="relative flex flex-col items-center justify-center rounded-xl bg-gray-500/20"
-					style={getPreviewSkeletonSize(300, 400)}
+					class="relative flex h-[300px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 				>
 					<LoadingSpinner />
 					<p
@@ -285,10 +146,9 @@
 	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaUrl(attachmentPath, keyVersion, name, true)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
-				class="relative flex flex-col items-center justify-center rounded-xl bg-gray-500/20"
-				style={getPreviewSkeletonSize(300, 400)}
+				class="relative flex h-[300px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>
 				<LoadingSpinner />
 				<p
@@ -328,7 +188,7 @@
 	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
 		{@render ignoreLimitButton(name, fileSizeBytes)}
 	{:else}
-		{#await getMediaUrl(attachmentPath, keyVersion, name, false)}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
 				class="relative flex h-[180px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>

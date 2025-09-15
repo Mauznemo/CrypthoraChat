@@ -48,10 +48,11 @@ export const getMessagesByChatId = query(
 	v.object({
 		chatId: v.string(),
 		limit: v.optional(v.number()),
-		cursor: v.optional(v.string()), // message ID to start from
+		cursor: v.optional(v.string()),
+		systemCursor: v.optional(v.string()),
 		direction: v.optional(v.union([v.literal('newer'), v.literal('older')]))
 	}),
-	async ({ chatId, limit = 50, cursor, direction = 'newer' }) => {
+	async ({ chatId, limit = 50, cursor, systemCursor, direction = 'newer' }) => {
 		const { locals } = getRequestEvent();
 
 		if (!locals.sessionId) {
@@ -69,19 +70,8 @@ export const getMessagesByChatId = query(
 			error(403, 'You are not a participant of this chat');
 		}
 
-		console.log(
-			'Fetching',
-			limit,
-			'messages from chat',
-			chatId,
-			'with cursor',
-			cursor,
-			'and direction',
-			direction
-		);
-
-		// Build where clause for pagination
-		let whereClause: any = {
+		// Build where clause for regular messages
+		let messageWhereClause: any = {
 			chatId,
 			usedKeyVersion: { gte: participant.joinKeyVersion }
 		};
@@ -93,13 +83,33 @@ export const getMessagesByChatId = query(
 			});
 
 			if (cursorMessage) {
-				whereClause.timestamp =
+				messageWhereClause.timestamp =
 					direction === 'newer' ? { gt: cursorMessage.timestamp } : { lt: cursorMessage.timestamp };
 			}
 		}
 
+		// Build where clause for system messages
+		let systemWhereClause: any = {
+			chatId,
+			usedKeyVersion: { gte: participant.joinKeyVersion }
+		};
+
+		if (systemCursor) {
+			const cursorSystemMessage = await db.systemMessage.findUnique({
+				where: { id: systemCursor },
+				select: { timestamp: true }
+			});
+
+			if (cursorSystemMessage) {
+				systemWhereClause.timestamp =
+					direction === 'newer'
+						? { gt: cursorSystemMessage.timestamp }
+						: { lt: cursorSystemMessage.timestamp };
+			}
+		}
+
 		const messages = await db.message.findMany({
-			where: whereClause,
+			where: messageWhereClause,
 			orderBy: { timestamp: direction === 'newer' ? 'asc' : 'desc' },
 			take: limit,
 			include: {
@@ -110,25 +120,30 @@ export const getMessagesByChatId = query(
 			}
 		});
 
-		// If fetching older messages, reverse to maintain chronological order
-		if (direction === 'older') {
-			messages.reverse();
-		}
-
-		// Get system messages (you might want to paginate these too)
 		const systemMessages = await db.systemMessage.findMany({
-			where: { chatId, usedKeyVersion: { gte: participant.joinKeyVersion } },
-			orderBy: { timestamp: 'asc' }
+			where: systemWhereClause,
+			orderBy: { timestamp: direction === 'newer' ? 'asc' : 'desc' },
+			take: limit
 		});
 
+		if (direction === 'older') {
+			messages.reverse();
+			systemMessages.reverse();
+		}
+
 		console.log('Queried messages: ', messages.length);
+		console.log('Queried system messages: ', systemMessages.length);
 
 		return {
 			messages,
 			systemMessages,
 			hasMore: messages.length === limit,
+			hasMoreSystemMessages: systemMessages.length === limit,
 			nextCursor: messages.length > 0 ? messages[messages.length - 1].id : null,
-			prevCursor: messages.length > 0 ? messages[0].id : null
+			prevCursor: messages.length > 0 ? messages[0].id : null,
+			nextSystemCursor:
+				systemMessages.length > 0 ? systemMessages[systemMessages.length - 1].id : null,
+			prevSystemCursor: systemMessages.length > 0 ? systemMessages[0].id : null
 		};
 	}
 );

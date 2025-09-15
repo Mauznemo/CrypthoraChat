@@ -142,14 +142,6 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 	}
 }
 
-/** Updates the decrypted content of a message */
-export function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
-	// untrack(() => {
-	// 	message.decryptedContent = decryptedContent;
-	// 	handleMessageUpdated(message, { });
-	// });
-}
-
 /** Shows appropriate error message */
 export function handleDecryptError(
 	error: any,
@@ -241,12 +233,6 @@ export function setSystemMessages(newMessages: SystemMessage[]): void {
 /** Checks if the message is a client message or a system message */
 export function isClientMessage(message: ClientMessage | SystemMessage): message is ClientMessage {
 	return 'encryptedContent' in message;
-}
-
-/** Resets the decryptionFailed Record */
-/** @deprecated */
-export function resetDecryptionFailed(): void {
-	// messages = messages.map((m) => ({ ...m, decryptionFailed: undefined }));
 }
 
 /** Marks a message as read if the page is visible */

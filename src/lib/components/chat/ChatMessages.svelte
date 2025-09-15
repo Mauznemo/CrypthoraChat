@@ -349,7 +349,7 @@
 
 	{#each chatStore.combinedMessages as message, index (message.id)}
 		{#if isClientMessage(message)}
-			{console.log('Key:', message.id + message.encryptedContent + index)}
+			{console.log('Key[', index, ']:', message.id)}
 			{console.log('ClientMessage:', message.id, 'by:', message.senderId)}
 			<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
 			{@const isFromMe = message.senderId === chatStore.user?.id}

@@ -19,7 +19,6 @@ import {
 	addMessages,
 	addMessagesAtBeginning,
 	markReadAfterDelay,
-	resetDecryptionFailed,
 	setMessages,
 	setSystemMessages
 } from './messages';
@@ -36,9 +35,13 @@ type KeyVersions = {
 
 export const chats = {
 	hasMoreOlder: false,
+	hasMoreOlderSystem: false,
 	hasMoreNewer: false,
+	hasMoreNewerSystem: false,
 	oldestCursor: null as string | null,
+	oldestSystemCursor: null as string | null,
 	newestCursor: null as string | null,
+	newestSystemCursor: null as string | null,
 
 	async handleAddedToChatChat(data: {
 		chatId: string;
@@ -121,8 +124,6 @@ export const chats = {
 		}
 
 		chatList.updateChat(currentNewChat);
-
-		resetDecryptionFailed();
 
 		const chatKeyResult = await chats.tryGetEncryptedChatKeys(currentNewChat);
 
@@ -304,6 +305,7 @@ export const chats = {
 			limit?: number;
 			loadMore?: 'newer' | 'older';
 			cursor?: string;
+			systemCursor?: string;
 		}
 	): Promise<boolean> {
 		if (!chat) {
@@ -311,41 +313,59 @@ export const chats = {
 			return false;
 		}
 
-		const { limit = 5, loadMore, cursor } = options || {};
+		const { limit = 5, loadMore, cursor, systemCursor } = options || {};
 
 		try {
-			// await getMessagesByChatId({
-			// 	chatId: chat.id,
-			// 	limit,
-			// 	cursor,
-			// 	direction: loadMore || 'newer'
-			// }).refresh();
-
 			const result = await getMessagesByChatId({
 				chatId: chat.id,
 				limit,
 				cursor,
+				systemCursor,
 				direction: loadMore || 'newer'
 			});
 
-			const { messages, systemMessages, hasMore, nextCursor, prevCursor } = result;
+			const {
+				messages,
+				systemMessages,
+				hasMore,
+				hasMoreSystemMessages,
+				nextCursor,
+				prevCursor,
+				nextSystemCursor,
+				prevSystemCursor
+			} = result;
 
 			if (loadMore === 'older') {
 				addMessagesAtBeginning(messages);
-				setSystemMessages([...systemMessages, ...chatStore.systemMessages]);
+				console.log('got older system messages', systemMessages);
+				if (systemMessages.length > 0) {
+					setSystemMessages([...systemMessages, ...chatStore.systemMessages]);
+				}
 			} else if (loadMore === 'newer') {
 				addMessages(messages);
-				setSystemMessages([...chatStore.systemMessages, ...systemMessages]);
+				console.log('got newer system messages', systemMessages);
+				if (systemMessages.length > 0) {
+					setSystemMessages([...chatStore.systemMessages, ...systemMessages]);
+				}
 			} else {
 				// Initial load
 				setMessages(messages);
+				console.log('got system messages', systemMessages);
 				setSystemMessages(systemMessages);
 			}
 
+			// Update cursors separately for each message type
 			chats.hasMoreOlder = hasMore && loadMore !== 'newer';
 			chats.hasMoreNewer = hasMore && loadMore !== 'older';
+			chats.hasMoreOlderSystem = hasMoreSystemMessages && loadMore !== 'newer';
+			chats.hasMoreNewerSystem = hasMoreSystemMessages && loadMore !== 'older';
+
 			chats.oldestCursor = loadMore === 'older' ? prevCursor : chats.oldestCursor || prevCursor;
 			chats.newestCursor = loadMore === 'newer' ? nextCursor : chats.newestCursor || nextCursor;
+			chats.oldestSystemCursor =
+				loadMore === 'older' ? prevSystemCursor : chats.oldestSystemCursor || prevSystemCursor;
+			chats.newestSystemCursor =
+				loadMore === 'newer' ? nextSystemCursor : chats.newestSystemCursor || nextSystemCursor;
 
 			return true;
 		} catch (error: any) {
@@ -363,6 +383,7 @@ export const chats = {
 		return this.tryGetMessages(chat, {
 			loadMore: 'older',
 			cursor: chats.oldestCursor,
+			systemCursor: chats.oldestSystemCursor || undefined,
 			limit: 5
 		});
 	},
@@ -373,6 +394,7 @@ export const chats = {
 		return this.tryGetMessages(chat, {
 			loadMore: 'newer',
 			cursor: chats.newestCursor,
+			systemCursor: chats.newestSystemCursor || undefined,
 			limit: 5
 		});
 	}
