@@ -16,6 +16,8 @@ import {
 import { chatList } from './chatList';
 import { showMasterKeyImport } from './masterKey';
 import {
+	addMessages,
+	addMessagesAtBeginning,
 	markReadAfterDelay,
 	resetDecryptionFailed,
 	setMessages,
@@ -329,19 +331,17 @@ export const chats = {
 			const { messages, systemMessages, hasMore, nextCursor, prevCursor } = result;
 
 			if (loadMore === 'older') {
-				//chatStore.scrollView?.prepareTopLoad();
-				// Prepend older messages to the beginning
-				setMessages([...messages, ...chatStore.messages]);
+				addMessagesAtBeginning(messages);
+				setSystemMessages([...systemMessages, ...chatStore.systemMessages]);
 			} else if (loadMore === 'newer') {
-				// Append newer messages to the end
-				setMessages([...chatStore.messages, ...messages]);
+				addMessages(messages);
+				setSystemMessages([...chatStore.systemMessages, ...systemMessages]);
 			} else {
-				// Initial load - replace all messages
+				// Initial load
 				setMessages(messages);
 				setSystemMessages(systemMessages);
 			}
 
-			// Store pagination info for scroll handlers
 			chats.hasMoreOlder = hasMore && loadMore !== 'newer';
 			chats.hasMoreNewer = hasMore && loadMore !== 'older';
 			chats.oldestCursor = loadMore === 'older' ? prevCursor : chats.oldestCursor || prevCursor;
@@ -357,7 +357,6 @@ export const chats = {
 		return false;
 	},
 
-	// Add methods for loading more messages
 	async loadOlderMessages(chat: ChatWithoutMessages | null): Promise<boolean> {
 		if (!chats.hasMoreOlder || !chats.oldestCursor) return false;
 

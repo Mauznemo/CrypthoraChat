@@ -56,8 +56,8 @@
 		});
 		socketStore.onMessageUpdated((d) => {
 			messages.handleMessageUpdated(d.message, {
-				invalidateDecryptionCache: d.type === 'edit',
-				keepAttachmentMetadata: true
+				content: d.type === 'edit',
+				reactions: d.type === 'reaction'
 			});
 			messages.markReadIfVisible(d.message);
 		});

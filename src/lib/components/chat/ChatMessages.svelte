@@ -347,7 +347,7 @@
 		{/if}
 	</div>
 
-	{#each chatStore.combinedMessages as message, index (message.id + (isClientMessage(message) ? message.encryptedContent : '') + index)}
+	{#each chatStore.combinedMessages as message, index (message.id)}
 		{#if isClientMessage(message)}
 			{console.log('Key:', message.id + message.encryptedContent + index)}
 			{console.log('ClientMessage:', message.id, 'by:', message.senderId)}

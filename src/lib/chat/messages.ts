@@ -9,10 +9,10 @@ import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
 
 function updateMessages() {
-	chatStore.messages = messages;
+	//chatStore.messages = chatStore.messages;
 }
 
-let messages: ClientMessage[] = [];
+// let messages: ClientMessage[] = [];
 
 let unreadMessages: ClientMessage[] = [];
 
@@ -83,23 +83,29 @@ export async function handleUpdateReaction(
 /** Updates a message from messages array */
 export function handleMessageUpdated(
 	updatedMessage: ClientMessage,
+	update: { viewed?: boolean; content?: boolean; reactions?: boolean; decryptionFailed?: boolean },
 	options?: {
 		triggerRerender?: boolean;
-		invalidateDecryptionCache?: boolean;
-		keepAttachmentMetadata?: boolean;
 	}
 ): void {
-	const index = messages.findIndex((m) => m.id === updatedMessage.id);
-	if (options?.invalidateDecryptionCache === true) {
-		updatedMessage.decryptedContent = undefined;
+	const index = chatStore.messages.findIndex((m) => m.id === updatedMessage.id);
+
+	if (index === -1) return;
+
+	if (update.viewed === true) {
+		chatStore.messages[index].readBy = [...updatedMessage.readBy];
 	}
 
-	if (options?.keepAttachmentMetadata === true) {
-		updatedMessage.decryptedAttachmentMetadata = messages[index].decryptedAttachmentMetadata;
+	if (update.content === true) {
+		chatStore.messages[index].encryptedContent = updatedMessage.encryptedContent;
 	}
 
-	if (index !== -1) {
-		messages[index] = updatedMessage;
+	if (update.reactions === true) {
+		chatStore.messages[index].encryptedReactions = updatedMessage.encryptedReactions;
+	}
+
+	if (update.decryptionFailed === true) {
+		chatStore.messages[index].decryptionFailed = updatedMessage.decryptionFailed;
 	}
 
 	if (!options || options.triggerRerender === true || options.triggerRerender === undefined) {
@@ -110,8 +116,11 @@ export function handleMessageUpdated(
 /** Removes a message from messages array */
 export function handleMessageDeleted(messageId: string): void {
 	console.log('Message deleted:', messageId);
-	messages = messages.filter((m) => m.id !== messageId);
-	updateMessages();
+	const idx = chatStore.messages.findIndex((m) => m.id === messageId);
+	if (idx !== -1) {
+		chatStore.messages.splice(idx, 1);
+		updateMessages();
+	}
 }
 
 /** Updates a messages array to display new read status on messages */
@@ -119,22 +128,14 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 	console.log('Messages read by user:', userId, messageIds);
 
 	try {
-		// Get user from cache/db using the remote function
 		const user = await getUserById(userId);
 
-		messages = messages.map((message) => {
-			if (messageIds.includes(message.id)) {
-				const isAlreadyRead = message.readBy.some((u) => u.id === userId);
+		for (const messageId of messageIds) {
+			const index = chatStore.messages.findIndex((m) => m.id === messageId);
+			if (index === -1) return;
 
-				if (!isAlreadyRead) {
-					return {
-						...message,
-						readBy: [...message.readBy, user]
-					};
-				}
-			}
-			return message;
-		});
+			chatStore.messages[index].readBy = [...chatStore.messages[index].readBy, user];
+		}
 		updateMessages();
 	} catch (err) {
 		console.error('Failed to get user for read status update:', err);
@@ -143,10 +144,10 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 
 /** Updates the decrypted content of a message */
 export function handleDecryptedMessage(message: ClientMessage, decryptedContent: string): void {
-	untrack(() => {
-		message.decryptedContent = decryptedContent;
-		handleMessageUpdated(message, { triggerRerender: false });
-	});
+	// untrack(() => {
+	// 	message.decryptedContent = decryptedContent;
+	// 	handleMessageUpdated(message, { });
+	// });
 }
 
 /** Shows appropriate error message */
@@ -157,7 +158,7 @@ export function handleDecryptError(
 ): void {
 	console.log('Decrypt error:', error);
 
-	messages = messages.map((m) => (m.id === message.id ? { ...m, decryptionFailed: true } : m));
+	handleMessageUpdated(message, { decryptionFailed: true }, { triggerRerender: false });
 
 	// Check if the user's own key is wrong (chat owner always has correct key)
 	const myKeyWrong = message.chat.ownerId === message.user.id;
@@ -218,7 +219,17 @@ export function handleDecryptError(
 
 /** Sets the messages array */
 export function setMessages(newMessages: ClientMessage[]): void {
-	messages = newMessages;
+	chatStore.messages = [...newMessages];
+	updateMessages();
+}
+
+export function addMessages(newMessages: ClientMessage[]): void {
+	chatStore.messages.push(...newMessages);
+	updateMessages();
+}
+
+export function addMessagesAtBeginning(newMessages: ClientMessage[]): void {
+	chatStore.messages.unshift(...newMessages);
 	updateMessages();
 }
 
@@ -233,8 +244,9 @@ export function isClientMessage(message: ClientMessage | SystemMessage): message
 }
 
 /** Resets the decryptionFailed Record */
+/** @deprecated */
 export function resetDecryptionFailed(): void {
-	messages = messages.map((m) => ({ ...m, decryptionFailed: undefined }));
+	// messages = messages.map((m) => ({ ...m, decryptionFailed: undefined }));
 }
 
 /** Marks a message as read if the page is visible */
@@ -274,7 +286,7 @@ export function markRead(messages: ClientMessage[]): void {
 
 /** Adds a new message to messages array */
 export function handleNewMessage(message: ClientMessage): void {
-	messages = [...messages, message];
+	chatStore.messages.push(message);
 	updateMessages();
 	//scrollToBottom();
 
@@ -306,5 +318,5 @@ export function handleVisible(): void {
 
 /** Finds a message from the messages array by id */
 export function findMessageById(id: string): ClientMessage | undefined {
-	return messages.find((message) => message.id === id);
+	return chatStore.messages.find((message) => message.id === id);
 }
