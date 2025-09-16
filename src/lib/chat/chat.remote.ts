@@ -76,6 +76,15 @@ export const getMessagesByChatId = query(
 			usedKeyVersion: { gte: participant.joinKeyVersion }
 		};
 
+		console.log(
+			'querying',
+			limit,
+			'system messages with cursor',
+			systemCursor,
+			'and direction',
+			direction
+		);
+
 		if (cursor) {
 			const cursorMessage = await db.message.findUnique({
 				where: { id: cursor },
@@ -139,11 +148,13 @@ export const getMessagesByChatId = query(
 			systemMessages,
 			hasMore: messages.length === limit,
 			hasMoreSystemMessages: systemMessages.length === limit,
-			nextCursor: messages.length > 0 ? messages[messages.length - 1].id : null,
-			prevCursor: messages.length > 0 ? messages[0].id : null,
+			nextCursor: messages.length > 0 ? messages[messages.length - 1].id : cursor || null,
+			prevCursor: messages.length > 0 ? messages[0].id : cursor || null,
 			nextSystemCursor:
-				systemMessages.length > 0 ? systemMessages[systemMessages.length - 1].id : null,
-			prevSystemCursor: systemMessages.length > 0 ? systemMessages[0].id : null
+				systemMessages.length > 0
+					? systemMessages[systemMessages.length - 1].id
+					: systemCursor || null,
+			prevSystemCursor: systemMessages.length > 0 ? systemMessages[0].id : systemCursor || null
 		};
 	}
 );

@@ -354,6 +354,8 @@ export const chats = {
 				setSystemMessages(systemMessages);
 			}
 
+			console.log('result', result);
+
 			// Update cursors separately for each message type
 			chats.hasMoreOlder = hasMore && loadMore !== 'newer';
 			chats.hasMoreNewer = hasMore && loadMore !== 'older';
