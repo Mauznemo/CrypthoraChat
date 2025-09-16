@@ -47,7 +47,7 @@
 	}
 
 	async function getMediaUrl(attachmentPath: string, keyVersion: number, name: string) {
-		// await new Promise((resolve) => setTimeout(resolve, 500));
+		// await new Promise((resolve) => setTimeout(resolve, 50000));
 		const retrievedBlob = await getFileFromIDB(attachmentPath);
 
 		let blob: Blob;
@@ -121,13 +121,14 @@
 			</div>
 		{:then previewUrl}
 			{#if previewUrl}
-				<div class="relative flex max-w-full items-end justify-end">
-					<img src={previewUrl} alt="Attachment" class="max-h-[300px] max-w-[400px] rounded-lg" />
+				<div class="max-w-[min(100%, 400px)] relative flex items-end justify-end">
+					<img src={previewUrl} alt="Attachment" class="max-h-[300px] rounded-lg" />
 
 					<button
 						onclick={() => {
 							fileUtils.downloadFileFromUrl(previewUrl!, name);
 						}}
+						data-tooltip="Download"
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
@@ -170,6 +171,7 @@
 						onclick={() => {
 							fileUtils.downloadFileFromUrl(previewUrl!, name);
 						}}
+						data-tooltip="Download"
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
@@ -201,12 +203,13 @@
 			</div>
 		{:then previewUrl}
 			{#if previewUrl}
-				<div class="relative">
+				<div class="relative w-[400px] max-w-full">
 					<AudioPlayer src={previewUrl} title={name} />
 					<button
 						onclick={() => {
 							fileUtils.downloadFileFromUrl(previewUrl!, name);
 						}}
+						data-tooltip="Download"
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
@@ -260,6 +263,7 @@
 		</div>
 		<button
 			onclick={() => handleDownloadFile(name)}
+			data-tooltip="Download"
 			class="absolute right-6 cursor-pointer text-gray-100 hover:text-gray-300"
 			aria-label="Download"
 		>
@@ -274,13 +278,14 @@
 
 {#snippet ignoreLimitButton(name: string, fileSizeBytes: number)}
 	<div
-		class="relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl bg-gray-500/20"
+		class="relative flex h-[300px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 	>
 		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
 			<button
 				onclick={() => {
 					ignoreLimit = true;
 				}}
+				data-tooltip="Download and load preview"
 				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
@@ -291,7 +296,7 @@
 			{name} ({fileUtils.formatFileSize(fileSizeBytes)})
 		</p>
 		<button
-			title="Download to your computer"
+			data-tooltip="Download"
 			onclick={() => {
 				handleDownloadFile(name);
 			}}

@@ -65,7 +65,7 @@
 
 <div class="flex flex-col items-center p-8">
 	<div
-		class="frosted-glass flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl bg-gray-800/60 p-4"
+		class="flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl bg-gray-800/60 p-4 frosted-glass"
 	>
 		<div class="flex gap-2">
 			<BackButton />
@@ -76,7 +76,7 @@
 			<button
 				onclick={openFileSelector}
 				class="absolute -right-3 -bottom-2 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
-				title="Edit"
+				data-tooltip="Edit"
 				aria-label="Edit message"
 				type="button"
 			>
@@ -151,7 +151,7 @@
 						}
 					);
 				}}
-				class="frosted-glass mt-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 hover:bg-teal-500/40"
+				class="mt-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
 				>Change</button
 			>
 		{/if}
@@ -180,7 +180,7 @@
 				await invalidateAll();
 				modalStore.alert('Success', 'Updated successfully!');
 			}}
-			class="frosted-glass mt-5 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 hover:bg-teal-500/40"
+			class="mt-5 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
 		>
 			{#if loadingSave}
 				<LoadingSpinner size="1.5rem" />
@@ -202,7 +202,7 @@
 					}
 				});
 			}}
-			class="frosted-glass mb-2 cursor-pointer rounded-full bg-red-700/40 px-4 py-2 hover:bg-red-600/40"
+			class="mb-2 cursor-pointer rounded-full bg-red-700/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
 			>{logoutButtonText}</button
 		>
 	</div>

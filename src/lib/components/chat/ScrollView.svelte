@@ -98,7 +98,7 @@
 	bind:this={container}
 	onscroll={handleScroll}
 	data-scroll-container
-	class={` relative mini-scrollbar h-full w-full overflow-y-auto ${className}`}
+	class={` relative mini-scrollbar h-full overflow-x-hidden overflow-y-auto ${className}`}
 	aria-live="polite"
 >
 	<div bind:this={content} class="flex flex-col">

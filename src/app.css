@@ -54,8 +54,6 @@
 	box-shadow:
 		inset 0 1px 10px rgba(255, 255, 255, 0.133),
 		inset 0 -1px 10px rgba(255, 255, 255, 0.113);
-	position: relative;
-	overflow: hidden;
 }
 
 @utility frosted-glass-shadow {
@@ -67,6 +65,58 @@
 		inset 0 -1px 10px rgba(255, 255, 255, 0.113),
 		0 20px 25px -5px rgb(0 0 0 / 0.1),
 		0 8px 10px -6px rgb(0 0 0 / 0.1);
-	position: relative;
-	overflow: hidden;
+}
+
+@layer components {
+	[data-tooltip]:not([data-tooltip='false']) {
+		@apply relative;
+	}
+
+	[data-tooltip]:not([data-tooltip='false']):before,
+	[data-tooltip]:not([data-tooltip='false']):after {
+		@apply pointer-events-none invisible opacity-0;
+		transition: all 0.2s ease-out;
+		transition-delay: var(--tooltip-delay, 500ms);
+		transform: translate(-50%, 5px);
+	}
+
+	/* Tooltip content */
+	[data-tooltip]:not([data-tooltip='false']):before {
+		content: attr(data-tooltip);
+		@apply absolute top-full left-1/2 z-50 mb-2 px-3 py-2;
+		@apply max-w-xs min-w-max whitespace-nowrap;
+		@apply rounded-4xl bg-gray-700/80 text-center text-sm text-white;
+		@apply shadow-lg;
+
+		isolation: isolate;
+		backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
+		-webkit-backdrop-filter: blur(5px);
+		border: 1px solid rgba(255, 255, 255, 0.059);
+		box-shadow:
+			inset 0 1px 10px rgba(255, 255, 255, 0.133),
+			inset 0 -1px 10px rgba(255, 255, 255, 0.113);
+	}
+
+	/* Tooltip arrow */
+	[data-tooltip]:not([data-tooltip='false']):after {
+		content: '';
+		@apply absolute top-full left-1/2 z-50;
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-bottom: 5px solid rgba(31, 41, 55, 0.4);
+		margin-top: -5px;
+	}
+
+	/* Show tooltip on hover with delay */
+	[data-tooltip]:not([data-tooltip='false']):hover:before,
+	[data-tooltip]:not([data-tooltip='false']):hover:after {
+		@apply visible opacity-100;
+		transform: translate(-50%, 0);
+	}
+
+	/* Hide immediately when not hovering */
+	[data-tooltip]:not([data-tooltip='false']):not(:hover):before,
+	[data-tooltip]:not([data-tooltip='false']):not(:hover):after {
+		transition-delay: 0ms;
+	}
 }

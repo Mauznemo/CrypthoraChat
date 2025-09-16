@@ -130,7 +130,7 @@
 	});
 </script>
 
-<div class="h-[180px] max-w-[400px] rounded-xl bg-gray-800/40 p-4 md:p-6 {className}">
+<div class="h-[200px] rounded-xl bg-gray-800/40 p-4 sm:p-6 {className}">
 	<audio
 		bind:this={audioElement}
 		{src}
@@ -154,7 +154,7 @@
 		<button
 			onclick={togglePlayPause}
 			disabled={isLoading}
-			class="frosted-glass-shadow mt-10 shrink-0 cursor-pointer rounded-full bg-teal-600/40 p-2 text-white transition-all duration-200 hover:scale-110 hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
+			class="mt-10 shrink-0 cursor-pointer rounded-full bg-teal-600/40 p-2 text-white frosted-glass-shadow transition-all duration-200 hover:scale-110 hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
 			aria-label={isPlaying ? 'Pause' : 'Play'}
 		>
 			{#if isLoading}
@@ -209,7 +209,7 @@
 	</div>
 
 	<!-- Volume Control -->
-	<div class="flex items-center justify-center space-x-3">
+	<div class="hidden items-center justify-center space-x-3 md:flex">
 		<button
 			onclick={toggleMute}
 			class="cursor-pointer p-1 text-slate-400 transition-colors hover:text-white"

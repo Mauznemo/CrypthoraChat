@@ -78,7 +78,7 @@
 	});
 </script>
 
-<div class="message-container m-1 ml-6 flex flex-row-reverse items-start space-x-2 space-x-reverse">
+<div class="message-container my-1 flex flex-row-reverse items-start space-x-2 space-x-reverse">
 	<!-- Profile picture and username (only shown for first message in group) -->
 	<div
 		class="absolute -top-5 -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
@@ -96,11 +96,11 @@
 	<div
 		onmouseenter={onHover}
 		ontouchstart={onTouchStart}
-		class="message-bubble relative flex flex-col items-end"
+		class="message-bubble relative flex max-w-full flex-col items-end"
 	>
 		<!-- Chat message bubble -->
 		<div
-			class="frosted-glass-shadow relative rounded-2xl bg-teal-700/60 p-3 {message.isEdited
+			class="relative max-w-full rounded-2xl bg-teal-700/60 p-3 frosted-glass-shadow {message.isEdited
 				? 'min-w-24 pb-5'
 				: ''}"
 		>
@@ -108,7 +108,7 @@
 
 			{#if message.attachments.length > 0}
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
-				<div class="mt-2 flex flex-col items-end">
+				<div class="mt-2 flex max-w-full flex-col items-end">
 					{#each message.attachments as attachment}
 						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
@@ -160,7 +160,7 @@
 								onUpdateReaction(typedData.encryptedReaction, 'add');
 							}
 						}}
-						title="React with {reaction}"
+						data-tooltip={userReacted ? 'Remove reaction' : 'React with ' + reaction}
 						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
 							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"

@@ -95,7 +95,7 @@
 	<div
 		onmouseenter={onHover}
 		ontouchstart={onTouchStart}
-		class="message-bubble relative flex flex-col items-start"
+		class="message-bubble relative flex max-w-full flex-col items-start"
 	>
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
@@ -108,7 +108,7 @@
 
 		<!-- Chat message bubble -->
 		<div
-			class="frosted-glass-shadow relative rounded-2xl bg-gray-700/60 p-3 {message.isEdited
+			class="relative max-w-full rounded-2xl bg-gray-700/60 p-3 frosted-glass-shadow {message.isEdited
 				? 'min-w-24 pb-5'
 				: ''}"
 		>
@@ -116,7 +116,7 @@
 
 			{#if message.attachments.length > 0}
 				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
-				<div class="mt-2 flex flex-col items-end">
+				<div class="mt-2 flex max-w-full flex-col items-end">
 					{#each message.attachments as attachment}
 						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
 					{/each}
@@ -168,7 +168,7 @@
 								onUpdateReaction(typedData.encryptedReaction, 'add');
 							}
 						}}
-						title="{userReacted ? 'Remove reaction' : 'React with'} {reaction}"
+						data-tooltip="{userReacted ? 'Remove reaction' : 'React with'} {reaction}"
 						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
 							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"

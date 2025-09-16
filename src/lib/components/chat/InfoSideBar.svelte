@@ -125,7 +125,7 @@
 							<button
 								onclick={openFileSelector}
 								class="absolute -right-6 -bottom-5 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
-								title="Edit"
+								data-tooltip="Edit"
 								aria-label="Edit message"
 								type="button"
 							>
@@ -169,7 +169,7 @@
 
 									modalStore.alert('Success', 'Updated successfully!');
 								}}
-								class="frosted-glass mb-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 hover:bg-teal-500/40"
+								class="mb-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
 								>Save</button
 							>
 						{/if}
@@ -185,7 +185,9 @@
 									{participant.user.displayName}
 								</p>
 								{#if participant.user.id === chatOwnerId}
-									<p title="Owner of the group" class="text-sm text-gray-400 select-none">Owner</p>
+									<p data-tooltip="Owner of the group" class="text-sm text-gray-400 select-none">
+										Owner
+									</p>
 								{/if}
 							</div>
 							<button

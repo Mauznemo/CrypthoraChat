@@ -142,7 +142,7 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div
-		class="frosted-glass-shadow m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60"
+		class="frosted-glass-shadow rounded-4xl m-4 flex w-full max-w-[500px] flex-col items-stretch bg-gray-800/60"
 	>
 		<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
 			New Group Chat
@@ -163,8 +163,8 @@
 
 					<button
 						onclick={openFileSelector}
-						class="absolute -right-3 -bottom-2 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
-						title="Edit"
+						class="absolute -bottom-2 -right-3 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
+						data-tooltip="Edit"
 						aria-label="Edit message"
 						type="button"
 					>
@@ -210,7 +210,7 @@
 			<input
 				bind:value={groupName}
 				type="text"
-				class="frosted-glass mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+				class="frosted-glass mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
 				placeholder="Group Name..."
 			/>
 		</div>

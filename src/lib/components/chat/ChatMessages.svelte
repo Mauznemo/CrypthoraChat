@@ -369,7 +369,7 @@
 
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="message-wrapper relative max-w-full"
+				class="message-wrapper relative max-w-full pl-6"
 				data-message-id={message.id}
 				onmouseleave={handleMessageLeave}
 				ontouchend={handleTouchEnd}
@@ -420,7 +420,7 @@
 		in:scale={{ duration: 200, easing: expoInOut }}
 		out:scale={{ duration: 200, easing: expoInOut }}
 		onwheel={handleWheel}
-		class="pointer-events-auto frosted-glass-shadow absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 transition-all duration-200"
+		class="pointer-events-auto absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 frosted-glass-shadow transition-all duration-200"
 		style="top: {toolbarPosition.y}px; {activeMessageFromMe
 			? `right: ${toolbarPosition.x}px`
 			: `left: ${toolbarPosition.x}px`};"
@@ -429,7 +429,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleReply}
-			title="Reply"
+			data-tooltip="Reply"
 			aria-label="Reply to message"
 			type="button"
 		>
@@ -439,7 +439,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleReaction}
-			title="Add Reaction"
+			data-tooltip="Add Reaction"
 			aria-label="Add Reaction"
 			type="button"
 		>
@@ -450,7 +450,7 @@
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 				onclick={handleEdit}
-				title="Edit"
+				data-tooltip="Edit"
 				aria-label="Edit message"
 				type="button"
 			>
@@ -461,7 +461,7 @@
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
 				onclick={handleDelete}
-				title="Delete"
+				data-tooltip="Delete"
 				aria-label="Delete message"
 				type="button"
 			>
@@ -471,7 +471,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleInfo}
-			title="Show info"
+			data-tooltip="Show info"
 			aria-label="Show info"
 			type="button"
 		>
