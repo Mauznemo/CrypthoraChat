@@ -4,6 +4,7 @@ import { db } from '../db';
 import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
+import { removeFile } from './fileUpload';
 
 const VAPID_EMAIL = process.env.VAPID_EMAIL;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -282,11 +283,25 @@ export function initializeSocket(server: HTTPServer) {
 		// Handle message deletion
 		socket.on('delete-message', async (data: { messageId: string; chatId: string }) => {
 			try {
-				// Verify user owns the message and update it
+				const message = await db.message.findUnique({
+					where: { id: data.messageId, senderId: socket.user!.id },
+					select: { attachments: true }
+				});
+
+				if (!message) return;
+
+				for (const attachment of message.attachments) {
+					try {
+						await removeFile(attachment);
+					} catch (error) {
+						console.error('Error deleting attachment:', error);
+					}
+				}
+
 				await db.message.delete({
 					where: {
 						id: data.messageId,
-						senderId: socket.user!.id // Ensure user owns the message
+						senderId: socket.user!.id
 					}
 				});
 

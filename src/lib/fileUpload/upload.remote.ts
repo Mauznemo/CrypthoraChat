@@ -56,7 +56,6 @@ export const getFileSize = query(v.string(), async (filePath: string) => {
 		const sizeBytes = stats.size;
 		return sizeBytes;
 	} catch (err) {
-		console.error('Failed to get file size:', err);
-		error(500, 'Failed to read file info');
+		return 0;
 	}
 });
