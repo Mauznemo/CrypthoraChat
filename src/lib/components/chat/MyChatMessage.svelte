@@ -119,7 +119,7 @@
 				{#await decryptMessage({ message })}
 					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
 				{:then decryptedContent}
-					<p class="pr-9 whitespace-pre-line text-white">
+					<p class="pr-9 break-all whitespace-pre-line text-white">
 						{@html processMessageText(decryptedContent)}
 					</p>
 				{:catch error}
