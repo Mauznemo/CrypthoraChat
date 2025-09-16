@@ -5,8 +5,10 @@ class NotificationStore {
 
 	constructor() {
 		if (typeof window !== 'undefined') {
-			this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
-			this.permission = Notification.permission;
+			this.isSupported =
+				'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+			this.permission = this.isSupported ? Notification.permission : 'default';
 		}
 	}
 

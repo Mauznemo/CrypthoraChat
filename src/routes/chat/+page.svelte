@@ -9,8 +9,7 @@
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import { initializePushNotifications } from '$lib/push-notifications';
-	import { PUBLIC_VAPID_KEY } from '$env/static/public';
+	import { initializePushNotifications } from '$lib/pushNotifications';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import ChatInput from '$lib/components/chat/ChatInput.svelte';
@@ -43,7 +42,7 @@
 
 		socketStore.connect();
 
-		initializePushNotifications(PUBLIC_VAPID_KEY);
+		initializePushNotifications();
 
 		if (wasConnected) {
 			handleConnect();

@@ -1,16 +1,10 @@
 import { notificationStore } from './stores/notifications.svelte';
 import { socketStore } from './stores/socket.svelte';
+import { PUBLIC_VAPID_KEY } from '$env/static/public';
+import { browser } from '$app/environment';
 
-export async function initializePushNotifications(vapidPublicKey: string) {
-	// Register service worker
-	// if ('serviceWorker' in navigator) {
-	// 	try {
-	// 		const registration = await navigator.serviceWorker.register('/service-worker.js');
-	// 		console.log('Service worker registered:', registration);
-	// 	} catch (error) {
-	// 		console.error('Service worker registration failed:', error);
-	// 	}
-	// }
+export async function initializePushNotifications() {
+	if (!browser) return;
 
 	// Request notification permission
 	const hasPermission = await notificationStore.requestPermission();
@@ -20,7 +14,7 @@ export async function initializePushNotifications(vapidPublicKey: string) {
 	}
 
 	// Subscribe to push notifications
-	const subscription = await notificationStore.subscribe(vapidPublicKey);
+	const subscription = await notificationStore.subscribe(PUBLIC_VAPID_KEY);
 	if (subscription) {
 		// Send subscription to your server
 		socketStore.subscribeToPush(subscription);
