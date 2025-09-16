@@ -51,7 +51,7 @@
 	let hideTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 	let messageContainer = $state<HTMLDivElement | null>(null);
 
-	let isLoadingOlder = $state(false);
+	let isLoadingOlder = $state(true);
 
 	let isTouchDevice: boolean = $state(false);
 	let isHovering = false;
@@ -308,6 +308,10 @@
 		// Listen for clicks outside
 		document.addEventListener('click', handleClickOutside);
 		document.addEventListener('touchstart', handleClickOutside);
+
+		setTimeout(() => {
+			isLoadingOlder = false;
+		}, 1000);
 
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
