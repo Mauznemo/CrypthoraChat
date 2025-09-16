@@ -62,17 +62,24 @@
 		const messageRect = messageEl.getBoundingClientRect();
 		const containerRect = messageContainer.getBoundingClientRect();
 
-		// Use viewport coordinates since toolbar is now outside the scrollview
+		let finalX: number;
+
+		if (activeMessageFromMe) {
+			const distanceToRight = window.innerWidth - containerRect.right;
+			finalX = distanceToRight + 8;
+		} else {
+			finalX = containerRect.left + 8;
+		}
+
 		const viewportY = messageRect.top - 30;
 
-		// Clamp to visible container bounds in viewport coordinates
 		const clampedY = Math.max(viewportY, containerRect.top + 10);
 
 		const toolbarHeight = 40;
 		const finalY = Math.min(clampedY, containerRect.bottom - toolbarHeight);
 
 		return {
-			x: 20,
+			x: finalX,
 			y: finalY
 		};
 	}
@@ -81,14 +88,12 @@
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				// When the top message becomes visible and we're not already loading
 				if (entry.isIntersecting && !isLoadingOlder && chats.hasMoreOlder) {
 					console.log('Loading older messages');
 					loadOlderMessages();
 				}
 			},
 			{
-				// Trigger when element is 100px before coming into view
 				rootMargin: '100px 0px 0px 0px',
 				threshold: 0
 			}
@@ -104,8 +109,6 @@
 	}
 
 	async function loadOlderMessages() {
-		//if (isLoadingOlder || !chatStore.messageContainer) return;
-
 		isLoadingOlder = true;
 
 		await chats.loadOlderMessages(chatStore.activeChat);
@@ -129,9 +132,9 @@
 
 		const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
 		if (messageEl) {
-			const position = calculateToolbarPosition(messageEl);
 			activeMessage = message;
 			activeMessageFromMe = isFromMe;
+			const position = calculateToolbarPosition(messageEl);
 			toolbarPosition = position;
 		}
 	}
@@ -154,10 +157,9 @@
 
 		longPressTimer = setTimeout(() => {
 			if (messageEl) {
-				const position = calculateToolbarPosition(messageEl);
-
 				activeMessage = message;
 				activeMessageFromMe = isFromMe;
+				const position = calculateToolbarPosition(messageEl);
 				toolbarPosition = position;
 			}
 		}, 500);
