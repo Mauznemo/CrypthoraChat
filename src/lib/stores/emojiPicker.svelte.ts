@@ -24,6 +24,21 @@ class EmojiPickerStore {
 		};
 	}
 
+	openAt(
+		position: { x: number; y: number },
+		onSelected?: (emoji: string) => void,
+		customEmojiSet?: string[],
+		closeOnPick: boolean = true
+	) {
+		this.isOpen = true;
+
+		this.onSelected = onSelected;
+		this.closeOnPick = closeOnPick;
+		this.customEmojiSet = customEmojiSet;
+
+		this.position = position;
+	}
+
 	close() {
 		this.isOpen = false;
 	}

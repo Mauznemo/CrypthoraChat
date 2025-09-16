@@ -52,19 +52,20 @@ export function handleInfoMessage(message: ClientMessage): void {
 }
 
 /** Opens an emoji picker for reacting on the message */
-export function handleReaction(message: ClientMessage, userId: string): void {
+export function handleReaction(
+	message: ClientMessage,
+	position: { x: number; y: number },
+	userId: string
+): void {
 	console.log('Reaction message:', message.id);
-	const messageEl = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement;
-	const messageBubble = messageEl?.querySelector('.message-bubble') as HTMLElement;
-	if (messageBubble) {
-		emojiPickerStore.open(messageBubble, async (reaction: string) => {
-			const encryptedReaction = await encryptReaction(reaction, userId, message.usedKeyVersion);
-			socketStore.reactToMessage({
-				messageId: message.id,
-				encryptedReaction: encryptedReaction
-			});
+
+	emojiPickerStore.openAt(position, async (reaction: string) => {
+		const encryptedReaction = await encryptReaction(reaction, userId, message.usedKeyVersion);
+		socketStore.reactToMessage({
+			messageId: message.id,
+			encryptedReaction: encryptedReaction
 		});
-	}
+	});
 }
 
 /** Adds or removes a reaction from the message */

@@ -33,7 +33,7 @@
 		onReply: (message: MessageWithRelations) => void;
 		onDelete: (message: MessageWithRelations) => void;
 		onInfo: (message: MessageWithRelations) => void;
-		onReaction: (message: MessageWithRelations) => void;
+		onReaction: (message: MessageWithRelations, position: { x: number; y: number }) => void;
 		onUpdateReaction: (
 			message: MessageWithRelations,
 			encryptedReaction: string,
@@ -282,9 +282,11 @@
 		}
 	}
 
-	function handleReaction(): void {
-		if (activeMessage) {
-			onReaction(activeMessage);
+	function handleReaction(event: Event): void {
+		const button = event.target as HTMLElement;
+		if (activeMessage && button) {
+			const rect = button.getBoundingClientRect();
+			onReaction(activeMessage, { x: rect.left, y: rect.bottom + 8 });
 			activeMessage = null;
 		}
 	}

@@ -284,7 +284,7 @@
 				}}
 				onDelete={(message) => messages.handleDeleteMessage(message)}
 				onInfo={messages.handleInfoMessage}
-				onReaction={(message) => messages.handleReaction(message, data.user?.id || '')}
+				onReaction={(message, pos) => messages.handleReaction(message, pos, data.user?.id || '')}
 				onUpdateReaction={(message, encryptedReaction, operation) =>
 					messages.handleUpdateReaction(message, encryptedReaction, operation)}
 				onDecryptError={(error, message) => messages.handleDecryptError(error, message, data.user)}
