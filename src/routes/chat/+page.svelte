@@ -176,6 +176,7 @@
 		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
+			sideBar?.close();
 			chatStore.scrollView?.scrollToBottom(500);
 		}
 	}

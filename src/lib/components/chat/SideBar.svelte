@@ -16,6 +16,10 @@
 	export function toggle(): void {
 		isOpen = !isOpen;
 	}
+
+	export function close(): void {
+		isOpen = false;
+	}
 </script>
 
 <div
