@@ -17,6 +17,12 @@ declare global {
 			message?: string;
 		}
 	}
+	interface Window {
+		isFlutterWebView?: boolean;
+		ntfyTopic?: string;
+		disconnectSocket? = () => {};
+		connectSocket? = () => {};
+	}
 	var _io: Server | null;
 	var _userSocketMap: Map<string, string>;
 }

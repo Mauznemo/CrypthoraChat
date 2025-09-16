@@ -46,12 +46,12 @@ COPY --from=builder --chown=sveltekit:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=sveltekit:nodejs /app/server ./server
 COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/server ./src/lib/server
 COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/db.ts ./src/lib/db.ts
-COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/auth.ts ./src/lib/auth.ts
+COPY --from=builder --chown=sveltekit:nodejs /app/src/lib/utils/auth.ts ./src/lib/utils/auth.ts
 COPY --from=builder --chown=sveltekit:nodejs /app/src/generated/prisma ./src/generated/prisma
 COPY --from=builder --chown=sveltekit:nodejs /app/prisma ./prisma
 
 # Create uploads directory with proper permissions
-RUN mkdir -p /app/uploads && chown -R sveltekit:nodejs /app/uploads
+RUN mkdir -p /uploads && chown -R sveltekit:nodejs /uploads
 
 # Switch to non-root user
 USER sveltekit

@@ -21,7 +21,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
       - BODY_SIZE_LIMIT=1073741824
-      - UPLOAD_PATH=./uploads
+      - UPLOAD_PATH=/uploads
     volumes:
       # Change app_uploads to the path you want to use on your host
       - app_uploads:/uploads
@@ -68,6 +68,8 @@ services:
     volumes:
       - ntfy_data:/var/cache/ntfy
       - ntfy_config:/etc/ntfy
+    ports:
+      - '8080:80'
     healthcheck:
       test:
         [

@@ -213,8 +213,14 @@ class SocketStore {
 		this.socket?.on('requested-user-verify', callback);
 	}
 
-	subscribeToPush(subscription: PushSubscription) {
-		this.socket?.emit('subscribe-push', {
+	subscribeToNtfyPush(topic: string) {
+		this.socket?.emit('subscribe-ntfy-push', {
+			topic
+		});
+	}
+
+	subscribeToWebPush(subscription: PushSubscription) {
+		this.socket?.emit('subscribe-webpush', {
 			subscription: subscription.toJSON()
 		});
 	}

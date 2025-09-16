@@ -23,6 +23,7 @@
 	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 	import Icon from '@iconify/svelte';
+	import { browser } from '$app/environment';
 
 	let { data }: PageProps = $props();
 
@@ -136,15 +137,26 @@
 		}
 	}
 
+	function removeQueryParams() {
+		const url = window.location.origin + window.location.pathname;
+		window.history.replaceState({}, document.title, url);
+	}
+
 	async function handleConnect(): Promise<void> {
 		chatStore.loadingChat = true;
-		const lastChatId = localStorage.getItem('lastChatId');
-		if (!lastChatId) {
+		const params = new URLSearchParams(window.location.search);
+		removeQueryParams();
+
+		let chatId = params.get('chatId');
+
+		if (!chatId) chatId = localStorage.getItem('lastChatId');
+
+		if (!chatId) {
 			chatStore.loadingChat = false;
 			return;
 		}
 
-		const chat = await getChatById(lastChatId);
+		const chat = await getChatById(chatId);
 
 		if (!chat) {
 			modalStore.alert('Error', 'Failed to load you last selected chat');
@@ -199,6 +211,14 @@
 				console.log('Cache deleted:', name);
 			}
 		}
+	}
+
+	if (browser) {
+		window.disconnectSocket = () => socketStore.disconnect();
+		window.connectSocket = () => {
+			socketStore.connect();
+			handleConnect();
+		};
 	}
 </script>
 

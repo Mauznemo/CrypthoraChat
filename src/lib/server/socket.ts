@@ -5,6 +5,11 @@ import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
 import { removeFile } from './fileUpload';
+import {
+	sendNtfyNotification,
+	sendWebpushNotification,
+	type NotificationDate
+} from './pushNotifications';
 
 const VAPID_EMAIL = process.env.VAPID_EMAIL;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -17,13 +22,12 @@ interface AuthenticatedSocket extends Socket {
 	};
 }
 
-if (!VAPID_EMAIL || !VAPID_PRIVATE_KEY || !PUBLIC_VAPID_KEY) {
-	throw new Error('VAPID keys are not set');
+if (VAPID_EMAIL && VAPID_PRIVATE_KEY && PUBLIC_VAPID_KEY) {
+	webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY);
 }
 
-webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY);
-
-const pushSubscriptions = new Map<string, any>(); // TODO: use database later
+const webpushSubscriptions = new Map<string, any>(); // TODO: use database later
+const ntfySubscriptions = new Map<string, string>(); // TODO: use database later
 
 async function getChatUsers(chatId: string) {
 	// TODO: Add some caching to this
@@ -128,10 +132,16 @@ export function initializeSocket(server: HTTPServer) {
 			console.log(`User ${socket.id} left chat ${chatId}`);
 		});
 
-		socket.on('subscribe-push', (data) => {
+		socket.on('subscribe-webpush', (data) => {
 			const userId = socket.user!.id;
 			console.log(`User ${userId} subscribed to push notifications`);
-			pushSubscriptions.set(userId, data.subscription);
+			webpushSubscriptions.set(userId, data.subscription);
+		});
+
+		socket.on('subscribe-ntfy-push', (data) => {
+			const userId = socket.user!.id;
+			console.log(`User ${userId} subscribed to ntfy push notifications`);
+			ntfySubscriptions.set(userId, data.topic);
 		});
 
 		socket.on('request-user-verify', (data) => {
@@ -207,26 +217,31 @@ export function initializeSocket(server: HTTPServer) {
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
 						if (globalThis._userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
 
-						const subscription = pushSubscriptions.get(user.id);
+						const subscription = webpushSubscriptions.get(user.id);
+						const ntfyTopic = ntfySubscriptions.get(user.id);
+
+						const notificationData: NotificationDate = {
+							groupType: newMessage.chat.type === 'group' ? 'group' : 'dm',
+							username: newMessage.user.username,
+							chatId: newMessage.chat.id,
+							chatName: newMessage.chat.name || undefined
+						};
+
 						if (subscription) {
-							try {
-								console.log('Sending push notification to user: ' + user.id);
-								await webpush.sendNotification(
-									subscription,
-									JSON.stringify({
-										title: 'New Message',
-										message: 'You have a new message from ' + newMessage.user.displayName,
-										chatId: data.chatId,
-										chatType: newMessage.chat.type,
-										chatName: newMessage.chat.name,
-										senderName: newMessage.user.displayName
-									}),
-									{ TTL: 86400, urgency: 'high' }
-								);
-							} catch (error) {
-								console.error('Error sending push notification:', error);
-								// Remove invalid subscription
-								pushSubscriptions.delete(user.id);
+							const success = await sendWebpushNotification(
+								webpush,
+								subscription,
+								notificationData
+							);
+							if (!success) {
+								webpushSubscriptions.delete(user.id);
+							}
+						}
+
+						if (ntfyTopic) {
+							const success = await sendNtfyNotification(ntfyTopic, notificationData);
+							if (!success) {
+								ntfySubscriptions.delete(user.id);
 							}
 						}
 					}
