@@ -44,8 +44,8 @@
 </div>
 
 <AddUserToChat />
-<EmojiPicker />
 <EmojiKeyConverter />
 <EmojiVerification />
+<EmojiPicker />
 <ContextMenu />
 <Modal />
