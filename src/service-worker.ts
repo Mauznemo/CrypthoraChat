@@ -124,46 +124,58 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(respond());
 });
 
-// Push notification handling
 self.addEventListener('push', (event) => {
 	console.log('Push notification received');
+
+	let notificationData = null;
+	let title = 'New Message';
+	let body = 'You have a new message!';
+	let chatId = '';
+
+	if (event.data) {
+		try {
+			const pushData = event.data.json();
+			console.log('Push notification data:', pushData);
+
+			notificationData = pushData.data;
+
+			if (notificationData) {
+				const groupType = notificationData.groupType || '';
+				const username = notificationData.username || '';
+				const chatName = notificationData.chatName || '';
+				chatId = notificationData.chatId || '';
+
+				if (groupType === 'group') {
+					body = `New Message from ${username} in ${chatName}`;
+				} else {
+					body = `New Message from ${username}`;
+				}
+			}
+		} catch (error) {
+			console.error('Error parsing push notification data:', error);
+		}
+	}
+
 	const options = {
-		body: 'You have a new message!',
-		// icon: '/icon-192x192.png', //maybe change to group or dm pic
+		body: body,
+		// icon: '/icon-192x192.png', // maybe change to group or dm pic
 		badge: '/icon-badge-96x96.png',
 		// vibrate: [100, 50, 100],
 		data: {
 			dateOfArrival: Date.now(),
-			primaryKey: '1'
-		},
-		actions: [
-			{
-				action: 'explore',
-				title: 'Open Chat'
-				// icon: '/icon-192x192.png'
-			},
-			{
-				action: 'close',
-				title: 'Close notification'
-				// icon: '/icon-192x192.png'
-			}
-		]
+			chatId: chatId,
+			notificationData: notificationData
+		}
 	};
 
-	if (event.data) {
-		const data = event.data.json();
-		console.log('Push notification data:', data);
-		options.body = data.message || options.body;
-		options.data = { ...options.data, ...data };
-	}
-
-	event.waitUntil(self.registration.showNotification('New Message', options));
+	event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
 	event.notification.close();
 
-	if (event.action === 'explore') {
-		event.waitUntil(self.clients.openWindow('/chat'));
-	}
+	const chatId = event.notification.data.chatId;
+	const chatUrl = chatId ? `/chat?chatId=${chatId}` : '/chat';
+
+	event.waitUntil(self.clients.openWindow(chatUrl));
 });
