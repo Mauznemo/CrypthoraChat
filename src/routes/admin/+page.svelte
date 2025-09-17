@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BackButton from '$lib/components/BackButton.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import type { PageProps } from './$types';
 	import {
@@ -56,7 +57,11 @@
 </script>
 
 <div class="p-4">
-	<h1 class="text-2xl font-bold">Admin Panel</h1>
+	<div class="flex items-center gap-2">
+		<BackButton backPath="/profile" />
+
+		<h1 class="text-2xl font-bold">Admin Panel</h1>
+	</div>
 	<p>Manage users and settings from this panel.</p>
 
 	<h2 class="mt-5 text-xl font-bold">Registered Users</h2>

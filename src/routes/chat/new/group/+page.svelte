@@ -7,13 +7,14 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
-	import type { PageProps } from '../$types';
+	import type { PageProps } from './$types';
 	import { saveEncryptedChatKey } from '$lib/chat/chat.remote';
 	import { createGroup } from '../chatCreation.remote';
 	import { onDestroy } from 'svelte';
 	import GroupPicture from '$lib/components/chat/GroupPicture.svelte';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -142,11 +143,12 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div
-		class="frosted-glass-shadow rounded-4xl m-4 flex w-full max-w-[500px] flex-col items-stretch bg-gray-800/60"
+		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 frosted-glass-shadow"
 	>
-		<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
-			New Group Chat
-		</h1>
+		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
+			<BackButton backPath="/chat" />
+			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">New Group Chat</h1>
+		</div>
 
 		<div class="flex w-full justify-start space-x-4 px-5 py-3 pb-6">
 			<div class="relative">
@@ -163,7 +165,7 @@
 
 					<button
 						onclick={openFileSelector}
-						class="absolute -bottom-2 -right-3 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
+						class="absolute -right-3 -bottom-2 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
 						data-tooltip="Edit"
 						aria-label="Edit message"
 						type="button"
@@ -210,7 +212,7 @@
 			<input
 				bind:value={groupName}
 				type="text"
-				class="frosted-glass mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+				class="mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				placeholder="Group Name..."
 			/>
 		</div>
@@ -224,7 +226,7 @@
 		<button
 			onclick={handleCreateGroup}
 			disabled={selectedUsers.length < 1 || groupName.trim().length < 1}
-			class="frosted-glass m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 		>
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />

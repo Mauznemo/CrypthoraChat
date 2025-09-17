@@ -13,6 +13,7 @@
 	//import { createDm } from '../chatCreation.remote';
 	import type { PageProps } from './$types';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 
 	let { data }: PageProps = $props();
 	let selectedUser: SafeUser | null = $state(null);
@@ -85,11 +86,12 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div
-		class="frosted-glass-shadow m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60"
+		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 frosted-glass-shadow"
 	>
-		<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
-			New Direct Message
-		</h1>
+		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
+			<BackButton backPath="/chat" />
+			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">New Direct Message</h1>
+		</div>
 
 		<UserSelector
 			selectMultiple={false}
@@ -101,7 +103,7 @@
 		<button
 			onclick={handleDmGroup}
 			disabled={!selectedUser}
-			class="frosted-glass m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 		>
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />

@@ -68,7 +68,7 @@
 		class="flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl bg-gray-800/60 p-4 frosted-glass"
 	>
 		<div class="flex gap-2">
-			<BackButton />
+			<BackButton backPath="/chat" />
 			<h1 class="pb-2 text-2xl font-bold">Profile</h1>
 		</div>
 		<div class="relative mb-2 size-16">
