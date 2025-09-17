@@ -136,9 +136,9 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 
 		for (const messageId of messageIds) {
 			const index = chatStore.messages.findIndex((m) => m.id === messageId);
-			if (index === -1) return;
+			if (index === -1) continue;
 
-			if (chatStore.messages[index].readBy.some((u) => u.id === user.id)) return;
+			if (chatStore.messages[index].readBy.some((u) => u.id === user.id)) continue;
 
 			chatStore.messages[index].readBy = [...chatStore.messages[index].readBy, user];
 		}
