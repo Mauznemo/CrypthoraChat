@@ -6,7 +6,7 @@ export interface NotificationDate {
 }
 
 export async function sendNtfyNotification(topic: string, data: NotificationDate) {
-	const url = `http://crypthora_chat_ntfy_server:80/${topic}`;
+	const url = `http://ntfy:80/${topic}`;
 
 	const headers = {
 		'Content-Type': 'application/json'
