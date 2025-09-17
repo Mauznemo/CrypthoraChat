@@ -7,6 +7,7 @@ import { untrack } from 'svelte';
 import { getUserById } from './chat.remote';
 import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
+import { showChatNotification } from '$lib/stores/notifications.svelte';
 
 function updateMessages() {
 	//chatStore.messages = chatStore.messages;
@@ -131,6 +132,8 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 	try {
 		const user = await getUserById(userId);
 
+		if (!user) return;
+
 		for (const messageId of messageIds) {
 			const index = chatStore.messages.findIndex((m) => m.id === messageId);
 			if (index === -1) return;
@@ -246,6 +249,13 @@ export function markReadIfVisible(message: ClientMessage): void {
 			markReadAfterDelay([message]);
 		} else {
 			unreadMessages.push(message);
+			//TODO: Call this from "new message" even that will be called on ANY new message in a chat the user is in
+			showChatNotification(
+				chatStore.user.username,
+				chatStore.activeChat!.id,
+				message.chat.type === 'group' ? 'group' : 'dm',
+				message.chat.name || ''
+			);
 		}
 	}
 }

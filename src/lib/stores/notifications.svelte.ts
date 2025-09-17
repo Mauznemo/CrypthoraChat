@@ -1,3 +1,6 @@
+import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
+
 class NotificationStore {
 	isSupported = $state(false);
 	permission = $state<NotificationPermission>('default');
@@ -38,6 +41,45 @@ class NotificationStore {
 		}
 	}
 
+	async showNotification(
+		title: string,
+		body: string,
+		chatId?: string,
+		groupType?: 'dm' | 'group'
+	): Promise<void> {
+		if (!this.isSupported || this.permission !== 'granted' || window.isFlutterWebView) return;
+
+		try {
+			const notification = new Notification(title, {
+				body,
+				badge: '/icon-badge-96x96.png',
+				// icon: '/icon-192x192.png', // Could change based on groupType
+				tag: chatId,
+				requireInteraction: false,
+				data: {
+					chatId,
+					groupType,
+					timestamp: Date.now()
+				}
+			});
+
+			notification.onclick = (event) => {
+				event.preventDefault();
+				window.focus();
+
+				if (chatId) {
+					if (browser) {
+						goto(`/chat?chatId=${chatId}`);
+					}
+				}
+
+				notification.close();
+			};
+		} catch (error) {
+			console.error('Error showing notification:', error);
+		}
+	}
+
 	private urlBase64ToUint8Array(base64String: string) {
 		const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
 		const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -53,3 +95,20 @@ class NotificationStore {
 }
 
 export const notificationStore = new NotificationStore();
+
+export async function showChatNotification(
+	username: string,
+	chatId: string,
+	groupType: 'dm' | 'group' = 'dm',
+	chatName?: string
+): Promise<void> {
+	let body: string;
+
+	if (groupType === 'group') {
+		body = `New Message from ${username} in ${chatName}`;
+	} else {
+		body = `New Message from ${username}`;
+	}
+
+	await notificationStore.showNotification('New Message', body, chatId, groupType);
+}
