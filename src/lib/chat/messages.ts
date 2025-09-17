@@ -135,6 +135,8 @@ export async function handleMessagesRead(messageIds: string[], userId: string): 
 			const index = chatStore.messages.findIndex((m) => m.id === messageId);
 			if (index === -1) return;
 
+			if (chatStore.messages[index].readBy.some((u) => u.id === user.id)) return;
+
 			chatStore.messages[index].readBy = [...chatStore.messages[index].readBy, user];
 		}
 		updateMessages();
