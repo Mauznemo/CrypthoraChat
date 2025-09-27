@@ -3,7 +3,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { MessageWithRelations } from '$lib/types';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import CustomTextarea from './CustomTextarea.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
@@ -13,6 +13,7 @@
 	import { compressImage, isCompressible } from '$lib/utils/imageConverter';
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import Icon from '@iconify/svelte';
+	import { idb } from '$lib/idb';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -38,11 +39,25 @@
 		chatValue = await decryptMessage({ message });
 	}
 
+	export async function handleChatSelected(): Promise<void> {
+		messageReplying = null;
+		messageEditing = null;
+
+		const draft = await getDraft();
+		if (draft) {
+			console.log('draft', JSON.stringify(draft.trim()));
+			chatValue = draft.trim();
+		} else {
+			chatValue = '';
+		}
+	}
+
 	let messageReplying: MessageWithRelations | null = $state(null);
 	let messageEditing: MessageWithRelations | null = $state(null);
 
 	// let chatInput: HTMLTextAreaElement;
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
+	let draftTimeout: NodeJS.Timeout | null = null;
 	let isTyping = $state(false);
 	let chatValue: string = $state('');
 
@@ -54,6 +69,27 @@
 	let containerWidth = $state(0);
 	let fileSizes: number[] = $state([]);
 	let compressFiles: boolean[] = $state([]);
+
+	async function saveDraft(): Promise<void> {
+		if (!chatStore.activeChat) return;
+		await idb!.put(
+			'draftMessages',
+			{ chatId: chatStore.activeChat.id, message: chatValue },
+			chatStore.activeChat.id
+		);
+	}
+
+	async function clearDraft(): Promise<void> {
+		if (!chatStore.activeChat) return;
+		await idb!.delete('draftMessages', chatStore.activeChat.id);
+	}
+
+	async function getDraft(): Promise<string | null> {
+		if (!chatStore.activeChat) return null;
+		let result = await idb!.get('draftMessages', chatStore.activeChat.id);
+		if (!result) return null;
+		return result.message;
+	}
 
 	function openFileSelector(): void {
 		if (uploadingFile) return;
@@ -114,6 +150,8 @@
 		}
 
 		if ((!chatValue.trim() && selectedFiles.length === 0) || !chatStore.user?.id) return;
+
+		clearDraft();
 
 		let filePaths: string[] = [];
 		if (selectedFiles.length > 0 && !messageEditing) {
@@ -201,11 +239,9 @@
 	}
 
 	function handleInput(): void {
-		//autoGrow(inputField);
 		if (!chatStore.user?.id) return;
 		if (!chatStore.activeChat) return;
 
-		// Handle typing indicators
 		if (!isTyping && chatValue.trim()) {
 			isTyping = true;
 			console.log('start typing');
@@ -215,12 +251,10 @@
 			});
 		}
 
-		// Clear existing timeout
 		if (typingTimeout) {
 			clearTimeout(typingTimeout);
 		}
 
-		// Set new timeout to stop typing indicator
 		typingTimeout = setTimeout(() => {
 			if (isTyping && chatStore.activeChat) {
 				isTyping = false;
@@ -237,6 +271,14 @@
 				chatId: chatStore.activeChat.id
 			});
 		}
+
+		if (draftTimeout) {
+			clearTimeout(draftTimeout);
+		}
+		draftTimeout = setTimeout(() => {
+			console.log('saving draft');
+			saveDraft();
+		}, 500);
 	}
 
 	function handleKeydown(event: KeyboardEvent): void {
@@ -503,7 +545,7 @@
 <div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
 	<button
 		onclick={handleAttachment}
-		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 transition-colors hover:bg-teal-600/60"
+		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 frosted-glass transition-colors hover:bg-teal-600/60"
 		aria-label="Add attachments"
 	>
 		<Icon icon="mdi:plus-thick" class="size-6" />
@@ -522,7 +564,7 @@
 	<button
 		disabled={(!chatValue.trim() && selectedFiles.length === 0) || !socketStore.connected}
 		onclick={sendMessage}
-		class="frosted-glass flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-teal-600/60 transition-colors hover:bg-teal-600/80 disabled:bg-gray-600"
+		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-teal-600/60 frosted-glass transition-colors hover:bg-teal-600/80 disabled:bg-gray-600"
 		aria-label="Send Message"
 	>
 		<Icon icon="ic:round-send" class="ml-0.5 size-6" />

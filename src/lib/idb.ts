@@ -15,19 +15,25 @@ interface CrypthoraChatDB extends DBSchema {
 		};
 	};
 	files: {
-		key: string; // fileId or unique identifier
+		key: string;
 		value: {
 			id: string;
 			blob: Blob;
 			fileName?: string;
 			mimeType?: string;
-			uploadedAt: number; // timestamp
+			uploadedAt: number;
 			size: number;
+		};
+	};
+	draftMessages: {
+		key: string; // chatId
+		value: {
+			chatId: string;
+			message: string;
 		};
 	};
 }
 
-// Open and export a ready-to-use db instance
 export const idb: IDBPDatabase<CrypthoraChatDB> | null = browser
 	? await openDB<CrypthoraChatDB>('CrypthoraChatApp', 1, {
 			upgrade(database, oldVersion) {
@@ -39,6 +45,9 @@ export const idb: IDBPDatabase<CrypthoraChatDB> | null = browser
 				}
 				if (!database.objectStoreNames.contains('files')) {
 					database.createObjectStore('files');
+				}
+				if (!database.objectStoreNames.contains('draftMessages')) {
+					database.createObjectStore('draftMessages');
 				}
 			}
 		})

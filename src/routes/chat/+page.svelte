@@ -32,6 +32,11 @@
 	let sideBar: SideBar;
 
 	onMount(async () => {
+		if (!data || !data.user) {
+			goto('/login');
+			return;
+		}
+
 		chatStore.user = data.user;
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -187,6 +192,7 @@
 		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
+			chatInput.handleChatSelected();
 			sideBar?.close();
 			chatStore.scrollView?.scrollToBottom(500);
 		}

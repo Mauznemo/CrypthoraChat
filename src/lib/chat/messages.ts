@@ -251,7 +251,7 @@ export function markReadIfVisible(message: ClientMessage): void {
 			unreadMessages.push(message);
 			//TODO: Call this from "new message" even that will be called on ANY new message in a chat the user is in
 			showChatNotification(
-				chatStore.user.username,
+				chatStore.user.username, //TODO: This should be the username of the person that sent the message not the logged in user
 				chatStore.activeChat!.id,
 				message.chat.type === 'group' ? 'group' : 'dm',
 				message.chat.name || ''
