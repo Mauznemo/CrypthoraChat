@@ -25,8 +25,8 @@ export function showMasterKeyImport(): void {
 }
 
 /** Checks if the user has a master key and if not, shows a warning */
-export function checkForMasterKey(): void {
-	if (!hasMasterKey() && !emojiKeyConverterStore.isOpen) {
+export async function checkForMasterKey(): Promise<void> {
+	if (!(await hasMasterKey()) && !emojiKeyConverterStore.isOpen) {
 		modalStore.open({
 			title: 'Warning',
 			content: 'Could not find your maser key.',

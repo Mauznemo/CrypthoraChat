@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { openDB } from 'idb';
+import { openDB, deleteDB } from 'idb';
 import type { DBSchema, IDBPDatabase } from 'idb';
 
 interface CrypthoraChatDB extends DBSchema {
@@ -52,6 +52,12 @@ export const idb: IDBPDatabase<CrypthoraChatDB> | null = browser
 			}
 		})
 	: null;
+
+export async function deleteDatabase(): Promise<void> {
+	if (!idb) return;
+
+	await deleteDB('CrypthoraChatApp');
+}
 
 export async function saveFileToIDB(
 	fileId: string,

@@ -242,11 +242,11 @@
 			>Clear Caches</button
 		>
 		<button
-			onclick={() => {
+			onclick={async () => {
 				emojiKeyConverterStore.openDisplay(
 					"Master Key (Don't share with anyone)",
 					false,
-					getMasterSeedForSharing()
+					await getMasterSeedForSharing()
 				);
 			}}
 			class="absolute bottom-20 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"

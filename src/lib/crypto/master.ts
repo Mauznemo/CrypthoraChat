@@ -1,3 +1,4 @@
+import { idb } from '$lib/idb';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 
 // Generate and store master seed (run once on account setup)
@@ -5,13 +6,13 @@ import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 export async function generateAndStoreMasterKey(): Promise<void> {
 	const seed = crypto.getRandomValues(new Uint8Array(16));
 	const base64Seed = arrayBufferToBase64(seed.buffer);
-	localStorage.setItem('masterSeed', base64Seed);
+	idb!.put('master', base64Seed, 'master');
 }
 
 // Retrieve and derive master key from stored seed (use this whenever needed)
 // Derives the 256-bit key from the seed via SHA-256 (no dateSalt here)
 export async function getMasterKey(): Promise<CryptoKey> {
-	const base64Seed = localStorage.getItem('masterSeed');
+	const base64Seed = await idb!.get('master', 'master');
 	if (!base64Seed) {
 		throw new Error('Master seed not found. Generate or import it first.');
 	}
@@ -30,7 +31,7 @@ export async function getMasterKey(): Promise<CryptoKey> {
 }
 
 export async function getHmacKey(): Promise<CryptoKey> {
-	const base64Seed = localStorage.getItem('masterSeed');
+	const base64Seed = await idb!.get('master', 'master');
 	if (!base64Seed) {
 		throw new Error('Master seed not found. Generate or import it first.');
 	}
@@ -44,13 +45,13 @@ export async function getHmacKey(): Promise<CryptoKey> {
 	]);
 }
 
-export function hasMasterKey(): boolean {
-	return !!localStorage.getItem('masterSeed');
+export async function hasMasterKey(): Promise<boolean> {
+	return !!(await idb!.get('master', 'master'));
 }
 
 // Get master key base64 for sharing (e.g., QR or input)
-export function getMasterSeedForSharing(): string {
-	const base64Seed = localStorage.getItem('masterSeed');
+export async function getMasterSeedForSharing(): Promise<string> {
+	const base64Seed = await idb!.get('master', 'master');
 	if (!base64Seed) {
 		throw new Error('Master seed not found. Generate it first.');
 	}
@@ -68,8 +69,7 @@ export async function importAndSaveMasterSeed(masterSeedBase64: string): Promise
 			throw new Error('Invalid master seed length. Must be exactly 16 bytes.');
 		}
 
-		// If valid, store
-		localStorage.setItem('masterSeed', masterSeedBase64);
+		idb!.put('master', masterSeedBase64, 'master');
 	} catch (error) {
 		throw new Error('Invalid master seed provided.');
 	}

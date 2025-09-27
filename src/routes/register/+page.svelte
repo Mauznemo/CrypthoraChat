@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { generateAndStoreKeyPair } from '$lib/crypto/keyPair';
 	import { generateAndStoreMasterKey } from '$lib/crypto/master';
-	import { idb } from '$lib/idb';
+	import { deleteDatabase, idb } from '$lib/idb';
 	import Icon from '@iconify/svelte';
 	import { register } from './data.remote';
 
@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex min-h-dvh items-center justify-center">
-	<div class="frosted-glass m-4 w-[400px] rounded-4xl bg-gray-800/60 p-5">
+	<div class="m-4 w-[400px] rounded-4xl bg-gray-800/60 p-5 frosted-glass">
 		<h1 class="mb-4 text-2xl">Register</h1>
 
 		<form
@@ -28,8 +28,7 @@
 				try {
 					redirectToProfile = false;
 					localStorage.clear();
-					await idb!.clear('master');
-					await idb!.clear('verifiedUsers');
+					await deleteDatabase();
 					await submit();
 					form.reset();
 					await generateAndStoreMasterKey();
@@ -45,7 +44,7 @@
 			<div class="mb-4">
 				<label class="mb-2" for="username">Username:</label>
 				<input
-					class="frosted-glass w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type="text"
 					id="username"
 					name="username"
@@ -56,7 +55,7 @@
 			<div class="relative mb-4">
 				<label class="mb-2" for="password">Password:</label>
 				<input
-					class="frosted-glass w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
 					id="password"
 					name="password"
@@ -78,7 +77,7 @@
 			<div class="relative mb-10">
 				<label class="mb-2" for="password">Confirm Password:</label>
 				<input
-					class="frosted-glass w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
 					id="confirm-password"
 					name="confirm-password"
@@ -98,7 +97,7 @@
 			</div>
 
 			<button
-				class="frosted-glass mb-4 w-full cursor-pointer rounded-full bg-teal-600/40 py-3 text-white hover:bg-teal-500/40 focus:ring-blue-500"
+				class="mb-4 w-full cursor-pointer rounded-full bg-teal-600/40 py-3 text-white frosted-glass hover:bg-teal-500/40 focus:ring-blue-500"
 				type="submit">Register</button
 			>
 
