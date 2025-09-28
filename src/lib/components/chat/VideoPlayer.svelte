@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
+	import Slider from '../Slider.svelte';
 
 	const {
 		src,
@@ -21,19 +22,18 @@
 	let currentTime = $state(0);
 	let duration = $state(0);
 	let volume = $state(1);
+	let lastVolume = 1;
 	let isMuted = $state(muted);
 	let showControls = $state(true);
 	let isFullscreen = $state(false);
 	let hideControlsTimeout: NodeJS.Timeout;
 
-	// Format time helper
 	function formatTime(seconds: number): string {
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
 
-	// Play/Pause toggle
 	function togglePlayPause() {
 		if (!videoElement) return;
 
@@ -44,18 +44,15 @@
 		}
 	}
 
-	// Volume control
-	function handleVolumeChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		volume = parseFloat(target.value);
-		localStorage.setItem('volume', volume.toString());
+	function handleVolumeChange(value: number) {
+		localStorage.setItem('volume', value.toString());
+		volume = value;
 		if (videoElement) {
 			videoElement.volume = volume;
 			isMuted = volume === 0;
 		}
 	}
 
-	// Mute toggle
 	function toggleMute() {
 		if (!videoElement) return;
 
@@ -63,23 +60,22 @@
 		videoElement.muted = isMuted;
 
 		if (isMuted) {
+			lastVolume = volume;
+			volume = 0;
 			videoElement.volume = 0;
 		} else {
+			volume = lastVolume;
 			videoElement.volume = volume;
 		}
 	}
 
-	// Seek functionality
-	function handleSeek(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const seekTime = parseFloat(target.value);
-		currentTime = seekTime;
+	function handleSeek(value: number) {
+		currentTime = value;
 		if (videoElement) {
-			videoElement.currentTime = seekTime;
+			videoElement.currentTime = value;
 		}
 	}
 
-	// Fullscreen toggle
 	async function toggleFullscreen() {
 		if (!videoElement) return;
 
@@ -94,7 +90,6 @@
 		}
 	}
 
-	// Auto-hide controls
 	function showControlsTemporarily() {
 		showControls = true;
 		clearTimeout(hideControlsTimeout);
@@ -105,7 +100,6 @@
 		}, 3000);
 	}
 
-	// Video event handlers
 	function handleLoadedMetadata() {
 		if (videoElement) {
 			duration = videoElement.duration;
@@ -178,18 +172,13 @@
 	>
 		<!-- Progress Bar -->
 		<div class="mb-4">
-			<input
-				type="range"
-				min="0"
+			<Slider
+				class="w-full"
+				min={0}
 				max={duration || 0}
-				value={currentTime}
-				oninput={handleSeek}
-				class="slider h-5 w-full cursor-pointer appearance-none rounded-full bg-white/30"
-				style="background: linear-gradient(to right, #d1d5dc 0%, #d1d5dc calc({duration
-					? (currentTime / duration) * 100
-					: 0}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) calc({duration
-					? (currentTime / duration) * 100
-					: 0}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) 100%)"
+				bind:value={currentTime}
+				onInput={handleSeek}
+				ariaLabel="Video progress"
 			/>
 		</div>
 
@@ -228,20 +217,14 @@
 						{/if}
 					</button>
 
-					<input
-						type="range"
-						min="0"
-						max="1"
-						step="0.1"
-						value={isMuted ? 0 : volume}
-						oninput={handleVolumeChange}
-						class="slider h-5 w-20 cursor-pointer appearance-none rounded-full bg-white/30"
-						style="background: linear-gradient(to right, #d1d5dc 0%, #d1d5dc {(isMuted
-							? 0
-							: volume) *
-							80 +
-							10}%, rgba(255,255,255,0.3) {(isMuted ? 0 : volume) * 80 +
-							10}%, rgba(255,255,255,0.3) 100%)"
+					<Slider
+						class="w-20"
+						min={0}
+						max={1}
+						step={0.1}
+						bind:value={volume}
+						onInput={handleVolumeChange}
+						ariaLabel="Volume control"
 					/>
 				</div>
 

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import Icon from '@iconify/svelte';
+	import Slider from '../Slider.svelte';
 
 	const {
 		src,
@@ -26,6 +27,7 @@
 	let currentTime = $state(0);
 	let duration = $state(0);
 	let volume = $state(1);
+	let lastVolume = 1;
 	let isMuted = $state(muted);
 	let isLoading = $state(true);
 
@@ -47,13 +49,11 @@
 		}
 	}
 
-	function handleVolumeChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		volume = parseFloat(target.value);
-		localStorage.setItem('audioVolume', volume.toString());
+	function handleVolumeChange(value: number) {
+		localStorage.setItem('audioVolume', value.toString());
 		if (audioElement) {
-			audioElement.volume = volume;
-			isMuted = volume === 0;
+			audioElement.volume = value;
+			isMuted = value === 0;
 		}
 	}
 
@@ -64,15 +64,17 @@
 		audioElement.muted = isMuted;
 
 		if (isMuted) {
+			lastVolume = volume;
+			volume = 0;
 			audioElement.volume = 0;
 		} else {
+			volume = lastVolume;
 			audioElement.volume = volume;
 		}
 	}
 
-	function handleSeek(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const seekTime = parseFloat(target.value);
+	function handleSeek(value: number) {
+		const seekTime = value;
 		currentTime = seekTime;
 		if (audioElement) {
 			audioElement.currentTime = seekTime;
@@ -183,20 +185,14 @@
 
 			<!-- Progress Bar -->
 			<div class="mb-1">
-				<input
-					type="range"
-					min="0"
+				<Slider
+					class="w-full"
+					min={0}
 					max={duration || 0}
-					value={currentTime}
-					oninput={handleSeek}
+					bind:value={currentTime}
 					disabled={isLoading}
-					class="slider h-5 w-full cursor-pointer appearance-none rounded-full bg-white/30 disabled:cursor-not-allowed"
-					style="background: linear-gradient(to right, #d1d5dc 0%, #d1d5dc calc({duration
-						? (currentTime / duration) * 100
-						: 0}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) calc({duration
-						? (currentTime / duration) * 100
-						: 0}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) 100%)"
-					aria-label="Audio progress"
+					ariaLabel="Audio progress"
+					onInput={handleSeek}
 				/>
 
 				<!-- Time Display -->
@@ -226,20 +222,14 @@
 			{/if}
 		</button>
 
-		<input
-			type="range"
-			min="0"
-			max="1"
-			step="0.05"
-			value={isMuted ? 0 : volume}
-			oninput={handleVolumeChange}
-			class="slider h-5 max-w-32 flex-1 cursor-pointer appearance-none rounded-full bg-white/30"
-			style="background: linear-gradient(to right, #d1d5dc 0%, #d1d5dc calc({(isMuted
-				? 0
-				: volume) * 100}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) calc({(isMuted
-				? 0
-				: volume) * 100}% * (100% - 20px) / 100% + 10px), rgba(255,255,255,0.3) 100%)"
-			aria-label="Volume control"
+		<Slider
+			class="w-full max-w-32"
+			min={0}
+			max={1}
+			step={0.05}
+			bind:value={volume}
+			ariaLabel="Volume control"
+			onInput={handleVolumeChange}
 		/>
 
 		<span class="text-md w-8 text-center font-mono text-slate-400">
