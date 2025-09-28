@@ -83,7 +83,7 @@
 	/* Tooltip content */
 	[data-tooltip]:not([data-tooltip='false']):before {
 		content: attr(data-tooltip);
-		@apply absolute top-full left-1/2 z-50 mb-2 px-3 py-2;
+		@apply absolute top-full left-1/2 z-50 mb-2 px-2 py-1;
 		@apply max-w-xs min-w-max whitespace-nowrap;
 		@apply rounded-4xl bg-gray-700/80 text-center text-sm text-white;
 		@apply shadow-lg;
@@ -118,5 +118,16 @@
 	[data-tooltip]:not([data-tooltip='false']):not(:hover):before,
 	[data-tooltip]:not([data-tooltip='false']):not(:hover):after {
 		transition-delay: 0ms;
+	}
+
+	[data-tooltip]:not([data-tooltip='false']):hover
+		[data-tooltip]:not([data-tooltip='false']):hover
+		~ :before,
+	[data-tooltip]:not([data-tooltip='false']):hover
+		[data-tooltip]:not([data-tooltip='false']):hover
+		~ :after,
+	[data-tooltip]:not([data-tooltip='false']):has([data-tooltip]:hover):before,
+	[data-tooltip]:not([data-tooltip='false']):has([data-tooltip]:hover):after {
+		@apply invisible opacity-0;
 	}
 }
