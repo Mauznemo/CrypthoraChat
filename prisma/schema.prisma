@@ -89,6 +89,7 @@ model Chat {
   currentKeyVersion  Int
   name               String? // Group name, null for DM
   type               String // 'dm' or 'group'
+  lastMessageAt      DateTime            @default(now())
   image              String? // path to encrypted blob
   imageIv            String? // IV for decryption, base64
   ownerId            String

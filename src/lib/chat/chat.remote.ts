@@ -6,6 +6,7 @@ import {
 	chatWithoutMessagesFields,
 	safeUserFields,
 	type ChatParticipant,
+	type ClientChat,
 	type SafeUser
 } from '$lib/types';
 import { error } from '@sveltejs/kit';
@@ -172,14 +173,46 @@ export const getUserChats = query(async () => {
 			chatParticipations: {
 				select: {
 					chat: {
-						select: chatWithoutMessagesFields
+						select: {
+							...chatWithoutMessagesFields,
+							messages: {
+								take: 10,
+								orderBy: { timestamp: 'desc' },
+								select: {
+									id: true,
+									readBy: {
+										where: { id: locals.user!.id },
+										select: { id: true }
+									}
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 	});
 
-	return userWithChats?.chatParticipations.map((participation) => participation.chat) ?? [];
+	const chats = (userWithChats?.chatParticipations
+		.map((participation) => {
+			const chat = participation.chat as ClientChat;
+
+			let unreadCount = 0;
+			for (const message of participation.chat.messages || []) {
+				const isRead = message.readBy && message.readBy.length > 0;
+				if (isRead) {
+					break;
+				}
+				unreadCount++;
+			}
+
+			chat.unreadMessages = unreadCount;
+
+			return chat;
+		})
+		.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()) ?? []) as ClientChat[];
+
+	return chats;
 });
 
 const addUserToChatSchema = v.object({

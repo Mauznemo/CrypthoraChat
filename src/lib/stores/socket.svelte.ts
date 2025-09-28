@@ -134,6 +134,12 @@ class SocketStore {
 		this.socket?.on('new-message', callback);
 	}
 
+	onNewMessageNotify(
+		callback: (data: { chatId: string; chatName: string; username: string }) => void
+	) {
+		this.socket?.on('new-message-notify', callback);
+	}
+
 	onMessageUpdated(
 		callback: (data: { message: MessageWithRelations; type: 'edit' | 'reaction' }) => void
 	) {

@@ -1,5 +1,5 @@
 import type ScrollView from '$lib/components/chat/ScrollView.svelte';
-import type { ChatWithoutMessages, ClientMessage } from '$lib/types';
+import type { ChatWithoutMessages, ClientChat, ClientMessage } from '$lib/types';
 import type { SystemMessage, User } from '$prisma';
 
 class Chat {
@@ -45,7 +45,7 @@ class Chat {
 		this.systemMessages = [];
 	}
 
-	chats: ChatWithoutMessages[] = $state([]);
+	chats: ClientChat[] = $state([]);
 }
 
 export const chatStore = new Chat();

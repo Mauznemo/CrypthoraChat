@@ -8,6 +8,7 @@ import { getUserById } from './chat.remote';
 import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
 import { showChatNotification } from '$lib/stores/notifications.svelte';
+import { chatList } from './chatList';
 
 function updateMessages() {
 	//chatStore.messages = chatStore.messages;
@@ -295,6 +296,21 @@ export function handleNewMessage(message: ClientMessage): void {
 	}
 
 	markReadIfVisible(message);
+}
+
+export function handleNewMessageNotify(data: {
+	chatId: string;
+	chatName: string;
+	username: string;
+}): void {
+	const chat = chatStore.chats.find((chat) => chat.id === data.chatId);
+	if (!chat) return;
+	chat.lastMessageAt = new Date();
+	if (chatStore.activeChat?.id !== data.chatId) {
+		if (!chat.unreadMessages) chat.unreadMessages = 0;
+		chat.unreadMessages += 1;
+	}
+	chatList.updateChat(chat);
 }
 
 export function handleNewSystemMessage(message: SystemMessage): void {

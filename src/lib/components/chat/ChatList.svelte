@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { getUserChats, leaveChat } from '$lib/chat/chat.remote';
-	import type { ChatWithoutMessages } from '$lib/types';
+	import type { ClientChat } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
@@ -20,13 +20,13 @@
 		onChatSelected,
 		onCreateChat
 	}: {
-		onChatSelected: (chat: ChatWithoutMessages) => void;
+		onChatSelected: (chat: ClientChat) => void;
 		onCreateChat: () => void;
 	} = $props();
 
 	let loadingChats = $state(true);
 
-	async function handleShowContextMenu(event: Event, chat: ChatWithoutMessages): Promise<void> {
+	async function handleShowContextMenu(event: Event, chat: ClientChat): Promise<void> {
 		console.log('showContextMenu');
 		event.stopPropagation();
 		event.preventDefault();
@@ -141,18 +141,18 @@
 			}}
 			role="button"
 			tabindex="0"
-			class="flex h-15 w-full cursor-pointer items-center justify-start space-x-2 px-3 transition-colors {chatStore
+			class="relative flex h-15 w-full cursor-pointer items-center justify-start px-3 transition-colors {chatStore
 				.activeChat?.id === chat.id
 				? 'bg-teal-700/30'
 				: 'hover:bg-gray-700/40 '}"
 		>
 			{#if chat.type === 'dm'}
 				{@const otherUser = chat.participants.find((p) => p.user.id !== chatStore.user?.id)}
-				<ProfilePicture user={otherUser?.user || null} size="3rem" />
+				<ProfilePicture class="mr-2" user={otherUser?.user || null} size="3rem" />
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div title={otherUser?.user.displayName} class="flex items-center space-x-2">
+					<div data-tooltip={otherUser?.user.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
 							{otherUser?.user.displayName}
 						</p>
@@ -180,11 +180,14 @@
 						? firstTwoParticipants.join(', ') + ` +${remainingCount} others`
 						: firstTwoParticipants.join(', ')}
 
-				<GroupPicture {chat} size="3rem" />
+				<GroupPicture class="mr-2" {chat} size="3rem" />
 
 				<!-- Chat text -->
-				<div title={allParticipants} class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div title={chat.name} class="flex items-center space-x-2">
+				<div
+					data-tooltip={allParticipants}
+					class="py-2 pr-3 pl-2 text-lg font-extrabold text-white"
+				>
+					<div data-tooltip={chat.name} class="flex items-center space-x-2">
 						<Icon icon="mdi:account-group" class="size-5" />
 
 						<p class="line-clamp-1 max-w-[150px] break-all text-white">
@@ -204,13 +207,20 @@
 					<Icon icon="mdi:more-vert" class="size-6 text-gray-300 hover:text-white" />
 				</button>
 			{/if}
+			{#if chat.unreadMessages && chat.unreadMessages > 0 && chatStore.activeChat?.id !== chat.id}
+				<div
+					class="absolute right-14 flex h-5 w-5 items-center justify-center rounded-full bg-orange-800/50 text-xs font-semibold text-white"
+				>
+					{chat.unreadMessages > 9 ? '9+' : chat.unreadMessages}
+				</div>
+			{/if}
 		</div>
 	{/each}
 	<div class="mt-5 flex items-center justify-center">
 		<button
 			onclick={() => onCreateChat()}
 			disabled={!socketStore.connected}
-			class="frosted-glass cursor-pointer rounded-full bg-teal-800/60 px-4 py-2 text-sm font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="cursor-pointer rounded-full bg-teal-800/60 px-4 py-2 text-sm font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 			>+ New chat</button
 		>
 	</div>

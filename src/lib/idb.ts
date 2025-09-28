@@ -34,29 +34,38 @@ interface CrypthoraChatDB extends DBSchema {
 	};
 }
 
-export const idb: IDBPDatabase<CrypthoraChatDB> | null = browser
-	? await openDB<CrypthoraChatDB>('CrypthoraChatApp', 1, {
-			upgrade(database, oldVersion) {
-				if (!database.objectStoreNames.contains('master')) {
-					database.createObjectStore('master');
-				}
-				if (!database.objectStoreNames.contains('verifiedUsers')) {
-					database.createObjectStore('verifiedUsers');
-				}
-				if (!database.objectStoreNames.contains('files')) {
-					database.createObjectStore('files');
-				}
-				if (!database.objectStoreNames.contains('draftMessages')) {
-					database.createObjectStore('draftMessages');
-				}
+async function init(): Promise<IDBPDatabase<CrypthoraChatDB>> {
+	return await openDB<CrypthoraChatDB>('CrypthoraChatApp', 1, {
+		upgrade(database, oldVersion) {
+			if (!database.objectStoreNames.contains('master')) {
+				database.createObjectStore('master');
 			}
-		})
-	: null;
+			if (!database.objectStoreNames.contains('verifiedUsers')) {
+				database.createObjectStore('verifiedUsers');
+			}
+			if (!database.objectStoreNames.contains('files')) {
+				database.createObjectStore('files');
+			}
+			if (!database.objectStoreNames.contains('draftMessages')) {
+				database.createObjectStore('draftMessages');
+			}
+		}
+	});
+}
+
+export let idb: IDBPDatabase<CrypthoraChatDB> | null = browser ? await init() : null;
 
 export async function deleteDatabase(): Promise<void> {
+	console.log('Deleting DB');
 	if (!idb) return;
-
-	await deleteDB('CrypthoraChatApp');
+	idb.close();
+	await deleteDB('CrypthoraChatApp', {
+		blocked() {
+			console.warn('Delete blocked: another connection is open');
+		}
+	});
+	idb = await init();
+	console.log('DB deleted');
 }
 
 export async function saveFileToIDB(

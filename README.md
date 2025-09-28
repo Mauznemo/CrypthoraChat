@@ -100,7 +100,7 @@ CrypthoraChat comes with a `docker-compose.yaml` file meaning you can simply dep
 
 ## Developer Setup
 If you wan to contribute or make changes this is how to set everything up.
-1. Set up the Postgres database for development, this depends on your operating system (on linux you can just install it) on windows it is easies to use [Docker Desktop](https://www.docker.com/products/docker-desktop/), after installing it you can run `docker exec -it sveltekit-postgres psql -U dev -d sveltekit_dev` to create the db container.
+1. Set up the Postgres database for development, this depends on your operating system (on linux you can just install it) on windows it is easies to use [Docker Desktop](https://www.docker.com/products/docker-desktop/), after installing it you can run `docker run --name sveltekit-postgres -e POSTGRES_USER=dev -e POSTGRES_PASSWORD=devpassword -e POSTGRES_DB=sveltekit_dev -p 5432:5432 -d postgres:17` to create the db container.
 2. Copy the `.env.example` file and rename it to `.env`, now fill out everything needed. 
 3. Run `npm install`
 4. Run `npx prisma migrate dev` and `npx prisma generate`

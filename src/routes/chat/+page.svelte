@@ -59,6 +59,9 @@
 			//TODO: Check if near bottom first
 			chatStore.scrollView?.scrollToBottom();
 		});
+		socketStore.onNewMessageNotify((d) => {
+			messages.handleNewMessageNotify(d);
+		});
 		socketStore.onMessageUpdated((d) => {
 			messages.handleMessageUpdated(d.message, {
 				content: d.type === 'edit',
@@ -116,6 +119,7 @@
 			socketStore.leaveChat(chatStore.activeChat.id);
 		}
 		socketStore.off('new-message');
+		socketStore.off('new-message-notify');
 		socketStore.off('message-updated');
 		socketStore.off('message-deleted');
 		socketStore.off('messages-read');

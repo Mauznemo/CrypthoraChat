@@ -208,12 +208,30 @@ export function initializeSocket(server: HTTPServer) {
 						}
 					});
 
+					await db.chat.update({
+						where: {
+							id: data.chatId
+						},
+						data: {
+							lastMessageAt: new Date()
+						}
+					});
+
 					// Emit to all users in the chat room
 					io.to(data.chatId).emit('new-message', newMessage);
 
 					//TODO: Send websocket notification (not full message, just which chat) to users in a chat, but not currently joined, otherwise send notification
 					console.log('Sending push notifications to users: ' + chatUsers.length);
 					for (const user of chatUsers) {
+						const userSocketId = globalThis._userSocketMap.get(user.id);
+						if (userSocketId) {
+							io.to(userSocketId).emit('new-message-notify', {
+								chatId: data.chatId,
+								chatName: newMessage.chat.name,
+								username: newMessage.user.username
+							});
+						}
+
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
 						if (globalThis._userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
 
