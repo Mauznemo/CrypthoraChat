@@ -56,8 +56,8 @@
 
 		socketStore.onNewMessage((m) => {
 			messages.handleNewMessage(m);
-			//TODO: Check if near bottom first
-			chatStore.scrollView?.scrollToBottom();
+			if (m.senderId === data?.user?.id) chatStore.scrollView?.scrollToBottom();
+			else chatStore.scrollView?.scrollToBottomIfNear();
 		});
 		socketStore.onNewMessageNotify((d) => {
 			messages.handleNewMessageNotify(d);
@@ -75,8 +75,7 @@
 		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
 		socketStore.onNewSystemMessage((m) => {
 			messages.handleNewSystemMessage(m);
-			//TODO: Check if near bottom first
-			chatStore.scrollView?.scrollToBottom();
+			chatStore.scrollView?.scrollToBottomIfNear();
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));

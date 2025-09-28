@@ -33,6 +33,26 @@
 		}, delay);
 	}
 
+	export function isNearBottom(threshold = 10): boolean {
+		if (!container) return false;
+
+		const { scrollTop, scrollHeight, clientHeight } = container;
+		const maxScrollTop = scrollHeight - clientHeight;
+
+		return maxScrollTop - scrollTop <= threshold;
+	}
+
+	export function scrollToBottomIfNear(delay = 100): void {
+		setTimeout(() => {
+			if (container && isNearBottom(100)) {
+				container.scrollTo({
+					top: container.scrollHeight,
+					behavior: 'smooth'
+				});
+			}
+		}, delay);
+	}
+
 	onMount(() => {
 		if (!container || !content) return;
 
