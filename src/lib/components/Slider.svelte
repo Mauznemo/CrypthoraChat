@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { lerp } from '$lib/utils/math';
 	import { onMount } from 'svelte';
 
 	let {
@@ -6,7 +7,7 @@
 		onInput,
 		min = 0,
 		max = 100,
-		value = $bindable(0),
+		value: remappedValue = $bindable(0),
 		step = 1,
 		disabled = false,
 		ariaLabel = ''
@@ -24,29 +25,45 @@
 	let sliderElement: HTMLDivElement;
 	let isDragging = $state(false);
 
+	let rawValue = $state(0);
+	let internalRemappedValue = $state(0);
 	let displayWidth = $state(50);
+	let remapMin = 0;
+	let isInternalUpdate = $state(false);
 
 	$effect(() => {
-		if (!sliderElement) {
-			displayWidth = 50;
-			return;
+		if (!isInternalUpdate && remappedValue !== internalRemappedValue) {
+			internalRemappedValue = remappedValue;
+			rawValue = unremapRange(remappedValue, remapMin, min, max);
 		}
+		isInternalUpdate = false;
 
-		displayWidth = calculateValue(value);
+		if (sliderElement) {
+			displayWidth = calculateValue(rawValue);
+		}
 	});
 
 	onMount(() => {
 		setTimeout(() => {
-			displayWidth = calculateValue(value);
+			displayWidth = calculateValue(rawValue);
 		}, 100);
 	});
+
+	function setRemappedValue(value: number): void {
+		isInternalUpdate = true;
+		const clampedValue = Math.max(min, Math.min(max, value));
+		internalRemappedValue = clampedValue;
+		remappedValue = clampedValue;
+		onInput?.(clampedValue);
+	}
 
 	function calculateValue(value: number): number {
 		const percentage = max > min ? ((value - min) / (max - min)) * 100 : 0;
 		const sliderWidth = sliderElement.offsetWidth;
 		const minWidthPercentage = (20 / sliderWidth) * 100;
 
-		console.log('minWidthPercentage', minWidthPercentage);
+		let remapMinPercentage = 20 / sliderWidth; // 0 - 1
+		remapMin = lerp(min, max, remapMinPercentage);
 
 		return Math.max(minWidthPercentage, percentage);
 	}
@@ -83,17 +100,27 @@
 		const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 
 		const range = max - min;
-		let newValue = min + percentage * range;
+		rawValue = min + percentage * range;
 
-		if (step > 0) {
-			newValue = Math.round(newValue / step) * step;
-		}
+		//TODO: add back steps
 
-		newValue = Math.max(min, Math.min(max, newValue));
+		const remappedVal = remapRange(rawValue, remapMin, min, max);
+		setRemappedValue(remappedVal);
+	}
 
-		value = newValue;
+	function remapRange(original: number, remapMin: number, min: number, max: number): number {
+		if (original <= remapMin) return min;
+		if (original >= max) return max;
 
-		onInput?.(value);
+		const t = (original - remapMin) / (max - remapMin);
+		return lerp(min, max, t);
+	}
+
+	function unremapRange(remapped: number, remapMin: number, min: number, max: number): number {
+		if (remapped <= min) return remapMin;
+		if (remapped >= max) return max;
+
+		return remapMin + ((remapped - min) * (max - remapMin)) / (max - min);
 	}
 
 	function handleKeyDown(event: KeyboardEvent): void {
@@ -106,20 +133,20 @@
 			case 'ArrowLeft':
 			case 'ArrowDown':
 				event.preventDefault();
-				value = Math.max(min, value - stepSize);
+				rawValue = Math.max(min, rawValue - stepSize);
 				break;
 			case 'ArrowRight':
 			case 'ArrowUp':
 				event.preventDefault();
-				value = Math.min(max, value + stepSize);
+				rawValue = Math.min(max, rawValue + stepSize);
 				break;
 			case 'Home':
 				event.preventDefault();
-				value = min;
+				rawValue = min;
 				break;
 			case 'End':
 				event.preventDefault();
-				value = max;
+				rawValue = max;
 				break;
 		}
 	}
@@ -135,14 +162,16 @@
 	aria-label={ariaLabel}
 	aria-valuemin={min}
 	aria-valuemax={max}
-	aria-valuenow={value}
+	aria-valuenow={internalRemappedValue}
 	aria-disabled={disabled}
 	onpointerdown={handlePointerDown}
 	onkeydown={handleKeyDown}
 >
 	{#if displayWidth > 0}
 		<div
-			class="absolute inset-0 rounded-full bg-gray-300 transition-all duration-75 ease-out"
+			class="absolute inset-0 rounded-full bg-gray-300 {isDragging
+				? ''
+				: 'transition-all duration-75 ease-out'}"
 			style="width: {displayWidth}%"
 		></div>
 	{/if}
