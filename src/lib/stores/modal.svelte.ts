@@ -12,6 +12,7 @@ interface ModalConfig {
 	content: string;
 	buttons?: ModalButton[];
 	showCloseButton?: boolean;
+	dismissible?: boolean;
 	onClose?: () => void;
 	customContent?: Snippet;
 }
@@ -56,6 +57,14 @@ class ModalStore {
 				if (nextModal) this.open(nextModal);
 			}, 100);
 		}
+	}
+
+	updateContent(id: string, content: string) {
+		if (this.config.id === id) this.config.content = content;
+	}
+
+	isModalOpen(id: string) {
+		return this.config.id === id;
 	}
 
 	// Convenience methods for common modal types

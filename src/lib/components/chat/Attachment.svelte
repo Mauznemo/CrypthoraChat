@@ -47,6 +47,7 @@
 	}
 
 	async function getMediaUrl(attachmentPath: string, keyVersion: number, name: string) {
+		console.log('getMediaUrl', attachmentPath, keyVersion, name);
 		// await new Promise((resolve) => setTimeout(resolve, 50000));
 		const retrievedBlob = await getFileFromIDB(attachmentPath);
 
@@ -55,13 +56,18 @@
 		if (retrievedBlob) {
 			previewUrl = URL.createObjectURL(retrievedBlob);
 			blob = retrievedBlob;
+			console.log('retrievedBlob');
 		} else {
 			const result = await tryGetFile(attachmentPath);
 			if (!result.success) return;
 			blob = await decryptFile(result.encodedData!, keyVersion);
+			console.log('decryptFile');
 			previewUrl = URL.createObjectURL(blob);
 			await saveFileToIDB(attachmentPath, blob, name);
+			console.log('saveFileToIDB');
 		}
+
+		console.log('previewUrl', previewUrl);
 
 		return previewUrl;
 	}

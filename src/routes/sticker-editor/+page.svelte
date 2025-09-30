@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { removeBackground } from '$lib/utils/stickerEditor';
+	import Icon from '@iconify/svelte';
+	import { tick } from 'svelte';
+
 	interface CanvasObject {
 		type: 'image' | 'text';
 		x: number;
@@ -7,6 +12,7 @@
 		height: number;
 		rotation: number;
 		selected: boolean;
+		backgroundRemoved: boolean;
 		img?: HTMLImageElement;
 		text?: string;
 		fontSize?: number;
@@ -19,6 +25,7 @@
 
 	let objects = $state<CanvasObject[]>([]);
 	let selectedObj = $state<CanvasObject | null>(null);
+	let aspectRatioLocked = $state(true);
 	let isDragging = $state(false);
 	let isResizing = $state(false);
 	let isRotating = $state(false);
@@ -32,6 +39,7 @@
 		centerY: number;
 		fontSize?: number;
 	} | null>(null);
+	let removingBackground = $state(false);
 
 	$effect(() => {
 		if (canvas) {
@@ -67,13 +75,15 @@
 		if (object.type === 'image' && object.img) {
 			ctx.drawImage(object.img, -object.width / 2, -object.height / 2, object.width, object.height);
 		} else if (object.type === 'text') {
-			// White background
-			ctx.fillStyle = 'white';
-			ctx.fillRect(-object.width / 2, -object.height / 2, object.width, object.height);
+			if (!object.backgroundRemoved) {
+				ctx.fillStyle = 'white';
+				ctx.beginPath();
+				ctx.roundRect(-object.width / 2, -object.height / 2, object.width, object.height, 8);
+				ctx.fill();
+			}
 
-			// Black text
 			ctx.fillStyle = 'black';
-			ctx.font = `${object.fontSize || 24}px sans-serif`;
+			ctx.font = `bold ${object.fontSize || 24}px sans-serif`;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.fillText(object.text || 'Text', 0, 0);
@@ -202,18 +212,37 @@
 			const localVecX = vecX * cos - vecY * sin;
 			const localVecY = vecX * sin + vecY * cos;
 
-			// New dimensions
-			const newWidth = Math.abs(localVecX);
-			const newHeight = Math.abs(localVecY);
+			let newWidth = Math.abs(localVecX);
+			let newHeight = Math.abs(localVecY);
 
-			// Keep center at opposite corner + half the vector
-			const halfVecX = vecX / 2;
-			const halfVecY = vecY / 2;
+			if (aspectRatioLocked && resizeStart.width && resizeStart.height) {
+				const aspectRatio = resizeStart.width / resizeStart.height;
+				if (resizeHandle % 2 === 0) {
+					if (Math.abs(localVecX) / aspectRatio > Math.abs(localVecY)) {
+						newHeight = newWidth / aspectRatio;
+					} else {
+						newWidth = newHeight * aspectRatio;
+					}
+				}
+			}
 
-			selectedObj.width = Math.max(20, newWidth);
-			selectedObj.height = Math.max(20, newHeight);
-			selectedObj.x = oppositeCorner.x + halfVecX;
-			selectedObj.y = oppositeCorner.y + halfVecY;
+			const minSize = 20;
+			const constrainedWidth = Math.max(minSize, newWidth);
+			const constrainedHeight = Math.max(minSize, newHeight);
+
+			const finalWidth = constrainedWidth;
+			const finalHeight = constrainedHeight;
+
+			const finalLocalVecX = (localVecX >= 0 ? 1 : -1) * finalWidth;
+			const finalLocalVecY = (localVecY >= 0 ? 1 : -1) * finalHeight;
+
+			const finalVecX = finalLocalVecX * cos + finalLocalVecY * sin;
+			const finalVecY = -finalLocalVecX * sin + finalLocalVecY * cos;
+
+			selectedObj.width = finalWidth;
+			selectedObj.height = finalHeight;
+			selectedObj.x = oppositeCorner.x + finalVecX / 2;
+			selectedObj.y = oppositeCorner.y + finalVecY / 2;
 
 			if (selectedObj.type === 'text' && resizeStart.fontSize && resizeStart.width) {
 				const widthRatio = selectedObj.width / resizeStart.width;
@@ -260,7 +289,6 @@
 				let width = img.width;
 				let height = img.height;
 
-				// Maintain aspect ratio
 				if (width > maxSize || height > maxSize) {
 					if (width > height) {
 						height = (height / width) * maxSize;
@@ -279,7 +307,8 @@
 					height,
 					rotation: 0,
 					selected: false,
-					img
+					img,
+					backgroundRemoved: false
 				};
 				objects.push(obj);
 				render();
@@ -315,10 +344,71 @@
 			rotation: 0,
 			selected: false,
 			text,
-			fontSize
+			fontSize,
+			backgroundRemoved: false
 		};
 		objects.push(obj);
 		render();
+	}
+
+	function handleDuplicate() {
+		if (!selectedObj) return;
+		selectedObj.selected = false;
+		const newObj = { ...selectedObj };
+		newObj.selected = true;
+		newObj.x += 20;
+		newObj.y += 20;
+		objects.push(newObj);
+		selectedObj = newObj;
+		render();
+	}
+
+	async function handleRemoveBackground() {
+		if (selectedObj && selectedObj.type === 'text') {
+			selectedObj.backgroundRemoved = !selectedObj.backgroundRemoved;
+			render();
+			return;
+		}
+
+		if (localStorage.getItem('showedBgDownloadNotice') === 'true') {
+			removeBg();
+			return;
+		}
+		modalStore.confirm(
+			'Download Model',
+			'This will download an around 80MB model, so it may take a while. Also keep in mind that in browser background removal will be slow. You might want to use an external app and select the png file. Do you want to proceed?',
+			() => {
+				localStorage.setItem('showedBgDownloadNotice', 'true');
+				removeBg();
+			}
+		);
+	}
+
+	function handleToggleAspectRatio() {
+		aspectRatioLocked = !aspectRatioLocked;
+		render();
+	}
+
+	function handleDelete() {
+		if (!selectedObj) return;
+		const index = objects.indexOf(selectedObj);
+		if (index === -1) return;
+		objects.splice(index, 1);
+		selectedObj = null;
+		render();
+	}
+
+	async function removeBg() {
+		if (!selectedObj || !selectedObj.img || selectedObj.backgroundRemoved) return;
+		removingBackground = true;
+		await tick();
+		const newImage = await removeBackground(selectedObj.img);
+		const index = objects.indexOf(selectedObj);
+		if (index === -1) return;
+		objects[index].img = newImage;
+		objects[index].backgroundRemoved = true;
+		render();
+		removingBackground = false;
 	}
 
 	function handleCornerPointerDown(e: MouseEvent | TouchEvent, cornerIndex: number) {
@@ -360,6 +450,37 @@
 			centerY: selectedObj.y
 		};
 	}
+
+	async function handleSaveSticker() {
+		if (!canvas) return;
+		selectedObj = null;
+		objects.forEach((obj) => (obj.selected = false));
+		render();
+		const blob: Blob = await new Promise((resolve) =>
+			canvas?.toBlob((b) => resolve(b!), 'image/webp', 0.8)
+		);
+		if (!blob) return;
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = 'sticker.png';
+		link.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Shift') {
+			e.preventDefault();
+			aspectRatioLocked = false;
+		}
+	}
+
+	function handleKeyUp(e: KeyboardEvent) {
+		if (e.key === 'Shift') {
+			e.preventDefault();
+			aspectRatioLocked = true;
+		}
+	}
 </script>
 
 <svelte:window
@@ -367,24 +488,67 @@
 	onmouseup={handleDocumentPointerUp}
 	ontouchmove={handleDocumentPointerMove}
 	ontouchend={handleDocumentPointerUp}
+	onkeydown={handleKeyDown}
+	onkeyup={handleKeyUp}
 />
 
 <div class="min-h-screen bg-gray-900 p-8 text-white">
 	<div class="mx-auto max-w-4xl">
-		<h1 class="mb-6 text-3xl font-bold">Image Editor</h1>
+		<h1 class="mb-6 w-full text-center text-3xl font-bold">Create Sticker</h1>
 
-		<div class="mb-6 flex gap-4">
+		<div class="mb-10 flex w-full flex-wrap items-center justify-center gap-2">
 			<button
 				onclick={handleImportClick}
+				data-tooltip="Add Image"
 				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
 			>
-				Import Image
+				<Icon icon="mdi:image-plus" class="size-6" />
+			</button>
+			<button
+				onclick={handleImportClick}
+				data-tooltip="Add Sticker"
+				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
+			>
+				<Icon icon="mdi:sticker-plus-outline" class="size-6" />
 			</button>
 			<button
 				onclick={handleAddText}
+				data-tooltip="Add Text"
 				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
 			>
-				Add Text
+				<Icon icon="mdi:format-text" class="size-6" />
+			</button>
+			<button
+				onclick={handleDuplicate}
+				data-tooltip="Duplicate"
+				disabled={!selectedObj}
+				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+			>
+				<Icon icon="mdi:content-copy" class="size-6" />
+			</button>
+			<button
+				onclick={handleRemoveBackground}
+				data-tooltip="Remove Background"
+				disabled={!selectedObj || removingBackground || selectedObj.backgroundRemoved}
+				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+			>
+				<Icon icon="material-symbols-light:background-replace-rounded" class="size-6" />
+			</button>
+			<button
+				onclick={handleToggleAspectRatio}
+				data-tooltip={aspectRatioLocked ? 'Unlock Aspect Ratio' : 'Lock Aspect Ratio'}
+				disabled={!selectedObj}
+				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+			>
+				<Icon icon={aspectRatioLocked ? 'mdi:lock' : 'mdi:lock-open-variant'} class="size-6" />
+			</button>
+			<button
+				onclick={handleDelete}
+				data-tooltip="Delete"
+				disabled={!selectedObj}
+				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+			>
+				<Icon icon="mdi:delete-forever" class="size-6" />
 			</button>
 			<input
 				bind:this={fileInput}
@@ -441,6 +605,27 @@
 					tabindex="0"
 				></div>
 			{/if}
+			{#if removingBackground}
+				<div
+					class="absolute inset-0 flex items-center justify-center rounded-lg bg-gray-500/50 text-center backdrop-blur-lg"
+				>
+					<div>
+						<p class="text-lg font-semibold">Removing Background</p>
+						<p class="text-xs font-thin text-gray-200">
+							This may take a while depending on your device
+						</p>
+					</div>
+				</div>
+			{/if}
+		</div>
+		<div class="flex justify-center">
+			<button
+				onclick={handleSaveSticker}
+				disabled={objects.length === 0}
+				class="m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			>
+				Save Sticker
+			</button>
 		</div>
 	</div>
 </div>

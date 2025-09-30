@@ -22,13 +22,13 @@
 	});
 
 	function handleBackdropClick(event: MouseEvent) {
-		if (open) {
+		if (open && !modalStore.config.dismissible) {
 			modalStore.close();
 		}
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
+		if (event.key === 'Escape' && !modalStore.config.dismissible) {
 			modalStore.close();
 		}
 	}
@@ -65,7 +65,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="frosted-glass-shadow m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/60 p-6"
+			class="m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/60 p-6 frosted-glass-shadow"
 		>
 			<!-- Header -->
 			<div class="mb-4 flex items-center justify-between">

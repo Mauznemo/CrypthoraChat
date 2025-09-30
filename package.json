@@ -56,6 +56,7 @@
 	},
 	"dependencies": {
 		"@iconify/svelte": "^5.0.1",
+		"@imgly/background-removal": "^1.7.0",
 		"@prisma/client": "^6.14.0",
 		"bcryptjs": "^3.0.2",
 		"buffer": "^6.0.3",
