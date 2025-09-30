@@ -209,46 +209,59 @@
 			// Rotate vector back to local space
 			const cos = Math.cos(-selectedObj.rotation);
 			const sin = Math.sin(-selectedObj.rotation);
-			const localVecX = vecX * cos - vecY * sin;
-			const localVecY = vecX * sin + vecY * cos;
+			let localVecX = vecX * cos - vecY * sin;
+			let localVecY = vecX * sin + vecY * cos;
 
-			let newWidth = Math.abs(localVecX);
-			let newHeight = Math.abs(localVecY);
-
-			if (aspectRatioLocked && resizeStart.width && resizeStart.height) {
-				const aspectRatio = resizeStart.width / resizeStart.height;
-				if (resizeHandle % 2 === 0) {
-					if (Math.abs(localVecX) / aspectRatio > Math.abs(localVecY)) {
-						newHeight = newWidth / aspectRatio;
-					} else {
-						newWidth = newHeight * aspectRatio;
-					}
+			if (aspectRatioLocked) {
+				const origAspect = resizeStart.width / resizeStart.height;
+				const proposedAspect = Math.abs(localVecX / localVecY);
+				const signX = Math.sign(localVecX);
+				const signY = Math.sign(localVecY);
+				if (proposedAspect > origAspect) {
+					// Constrain width to match height
+					localVecX = signX * Math.abs(localVecY) * origAspect;
+				} else {
+					// Constrain height to match width
+					localVecY = (signY * Math.abs(localVecX)) / origAspect;
 				}
 			}
-
+			// Clamp to minimum size
 			const minSize = 20;
-			const constrainedWidth = Math.max(minSize, newWidth);
-			const constrainedHeight = Math.max(minSize, newHeight);
+			const signX = Math.sign(localVecX);
+			const signY = Math.sign(localVecY);
+			if (aspectRatioLocked) {
+				const proposedWidth = Math.abs(localVecX);
+				const proposedHeight = Math.abs(localVecY);
+				const scale = proposedWidth / resizeStart.width;
+				const minScaleW = minSize / resizeStart.width;
+				const minScaleH = minSize / resizeStart.height;
+				const minScale = Math.max(minScaleW, minScaleH);
+				if (scale < minScale) {
+					localVecX = signX * resizeStart.width * minScale;
+					localVecY = signY * resizeStart.height * minScale;
+				}
+			} else {
+				localVecX = signX * Math.max(minSize, Math.abs(localVecX));
+				localVecY = signY * Math.max(minSize, Math.abs(localVecY));
+			}
 
-			const finalWidth = constrainedWidth;
-			const finalHeight = constrainedHeight;
+			// Rotate clamped local vector back to world space
+			const cosPos = Math.cos(selectedObj.rotation);
+			const sinPos = Math.sin(selectedObj.rotation);
+			const clampedVecX = localVecX * cosPos - localVecY * sinPos;
+			const clampedVecY = localVecX * sinPos + localVecY * cosPos;
 
-			const finalLocalVecX = (localVecX >= 0 ? 1 : -1) * finalWidth;
-			const finalLocalVecY = (localVecY >= 0 ? 1 : -1) * finalHeight;
+			// New dimensions
+			selectedObj.width = Math.abs(localVecX);
+			selectedObj.height = Math.abs(localVecY);
 
-			const finalVecX = finalLocalVecX * cos + finalLocalVecY * sin;
-			const finalVecY = -finalLocalVecX * sin + finalLocalVecY * cos;
-
-			selectedObj.width = finalWidth;
-			selectedObj.height = finalHeight;
-			selectedObj.x = oppositeCorner.x + finalVecX / 2;
-			selectedObj.y = oppositeCorner.y + finalVecY / 2;
-
+			// Keep center at opposite corner + half the clamped vector
+			selectedObj.x = oppositeCorner.x + clampedVecX / 2;
+			selectedObj.y = oppositeCorner.y + clampedVecY / 2;
 			if (selectedObj.type === 'text' && resizeStart.fontSize && resizeStart.width) {
 				const widthRatio = selectedObj.width / resizeStart.width;
 				selectedObj.fontSize = Math.max(12, Math.floor(resizeStart.fontSize * widthRatio));
 			}
-
 			render();
 		} else if (isRotating) {
 			const scale = rect.width / canvas.width;
