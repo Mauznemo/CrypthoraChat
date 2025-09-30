@@ -31,6 +31,15 @@ model User {
   readMessages       Message[]           @relation("ReadMessages")
   publicUserChatKeys PublicUserChatKey[]
   keyPair            KeyPair?
+  stickers           UserSticker[]
+}
+
+model UserSticker {
+  id          String  @id @default(uuid())
+  userId      String
+  stickerPath String
+  favorited   Boolean @default(false)
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 // With users master key encrypted chat keys for multi device setup

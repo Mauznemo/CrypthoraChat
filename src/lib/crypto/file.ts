@@ -1,21 +1,25 @@
 import { chatStore } from '$lib/stores/chat.svelte';
+import { getMasterKey } from './master';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 
 export async function encryptFile(
-	file: File
+	file: File,
+	keyToUse: 'master' | 'chat' = 'chat'
 ): Promise<{ encryptedData: Blob; encryptedFileNameSafeBase64: string }> {
-	const chatKey = chatStore.getNewestChatKey();
-	if (chatKey === null) throw new Error('Chat key not found');
+	let key: CryptoKey | null = null;
+	if (keyToUse === 'master') key = await getMasterKey();
+	else if (keyToUse === 'chat') key = chatStore.getNewestChatKey();
+	if (key === null) throw new Error('Key not found (' + keyToUse + ')');
 
 	const fileBuffer = await file.arrayBuffer();
 	const iv = crypto.getRandomValues(new Uint8Array(12));
-	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, chatKey, fileBuffer);
+	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, fileBuffer);
 
 	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
 	combined.set(iv, 0);
 	combined.set(new Uint8Array(encrypted), iv.byteLength);
 
-	const encryptedFileNameBase64 = await encryptFileName(file.name);
+	const encryptedFileNameBase64 = await encryptFileName(file.name, keyToUse);
 	const encryptedFileNameSafeBase64 = base64UrlEncode(encryptedFileNameBase64);
 
 	return {
@@ -24,30 +28,41 @@ export async function encryptFile(
 	};
 }
 
-export async function decryptFile(encryptedData: ArrayBuffer, keyVersion: number): Promise<Blob> {
-	const chatKey = chatStore.versionedChatKey[keyVersion];
-	if (chatKey === null) throw new Error('Chat key not found');
+export async function decryptFile(
+	encryptedData: ArrayBuffer,
+	keyVersion: number,
+	keyToUse: 'master' | 'chat' = 'chat'
+): Promise<Blob> {
+	let key: CryptoKey | null = null;
+	if (keyToUse === 'master') key = await getMasterKey();
+	else if (keyToUse === 'chat') key = chatStore.versionedChatKey[keyVersion];
+	if (key === null) throw new Error('Key not found (' + keyToUse + ')');
 
 	const iv = encryptedData.slice(0, 12);
 	const encryptedBuffer = encryptedData.slice(12);
 
 	const decryptedBuffer = await crypto.subtle.decrypt(
 		{ name: 'AES-GCM', iv },
-		chatKey,
+		key,
 		encryptedBuffer
 	);
 
 	return new Blob([decryptedBuffer]);
 }
 
-async function encryptFileName(fileName: string): Promise<string> {
-	const chatKey = chatStore.getNewestChatKey();
-	if (chatKey === null) throw new Error('Chat key not found');
+async function encryptFileName(
+	fileName: string,
+	keyToUse: 'master' | 'chat' = 'chat'
+): Promise<string> {
+	let key: CryptoKey | null = null;
+	if (keyToUse === 'master') key = await getMasterKey();
+	else if (keyToUse === 'chat') key = chatStore.getNewestChatKey();
+	if (key === null) throw new Error('Key not found (' + keyToUse + ')');
 
 	const encoder = new TextEncoder();
 	const data = encoder.encode(fileName);
 	const iv = crypto.getRandomValues(new Uint8Array(12));
-	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, chatKey, data);
+	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
 	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
 	combined.set(iv, 0);
 	combined.set(new Uint8Array(encrypted), iv.byteLength);
@@ -56,10 +71,13 @@ async function encryptFileName(fileName: string): Promise<string> {
 
 export async function decryptFileName(
 	encryptedFileNameSafeBase64: string,
-	keyVersion: number
+	keyVersion: number,
+	keyToUse: 'master' | 'chat' = 'chat'
 ): Promise<string> {
-	const chatKey = chatStore.versionedChatKey[keyVersion];
-	if (chatKey === null) throw new Error('Chat key not found');
+	let key: CryptoKey | null = null;
+	if (keyToUse === 'master') key = await getMasterKey();
+	else if (keyToUse === 'chat') key = chatStore.versionedChatKey[keyVersion];
+	if (key === null) throw new Error('Key not found (' + keyToUse + ')');
 
 	const encryptedBase64 = await base64UrlDecode(encryptedFileNameSafeBase64);
 	try {
@@ -68,7 +86,7 @@ export async function decryptFileName(
 		const encryptedData = combined.slice(12);
 		const decrypted = await crypto.subtle.decrypt(
 			{ name: 'AES-GCM', iv },
-			chatKey,
+			key,
 			encryptedData.buffer
 		);
 		const decoder = new TextDecoder();

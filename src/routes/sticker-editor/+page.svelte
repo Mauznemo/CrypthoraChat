@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { tryUploadUserSticker } from '$lib/fileUpload/upload';
 	import { modalStore } from '$lib/stores/modal.svelte';
+	import { blobToFile } from '$lib/utils/imageConverter';
 	import { removeBackground } from '$lib/utils/stickerEditor';
 	import Icon from '@iconify/svelte';
 	import { tick } from 'svelte';
+	import { saveUserSticker } from './stickerEditor.remote';
 
 	interface CanvasObject {
 		type: 'image' | 'text';
@@ -473,12 +477,14 @@
 			canvas?.toBlob((b) => resolve(b!), 'image/webp', 0.8)
 		);
 		if (!blob) return;
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = 'sticker.png';
-		link.click();
-		URL.revokeObjectURL(url);
+
+		const file = blobToFile(blob, 'sticker.webp');
+		const result = await tryUploadUserSticker(file);
+
+		if (result.success) {
+			saveUserSticker(result.filePath);
+			goto('/chat');
+		}
 	}
 
 	function handleKeyDown(e: KeyboardEvent) {

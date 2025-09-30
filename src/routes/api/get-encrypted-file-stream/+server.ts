@@ -5,7 +5,7 @@ import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 
-const UPLOAD_BASE_PATH = (process.env.UPLOAD_PATH || './uploads') + '/media';
+const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
 
 export const GET: RequestHandler = async ({ url, locals, request }) => {
 	if (!locals.sessionId) {

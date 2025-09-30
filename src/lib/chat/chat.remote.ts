@@ -594,7 +594,7 @@ export const updateGroupImage = command(
 
 		const chat = await db.chat.findUnique({
 			where: { id: chatId },
-			select: { image: true, participants: { select: { userId: true } } }
+			select: { imagePath: true, participants: { select: { userId: true } } }
 		});
 
 		if (!chat) {
@@ -609,14 +609,14 @@ export const updateGroupImage = command(
 			error(403, 'You are not a participant of this chat');
 		}
 
-		if (chat.image) {
-			await removeFile(chat.image);
+		if (chat.imagePath) {
+			await removeFile(chat.imagePath);
 		}
 
 		try {
 			await db.chat.update({
 				where: { id: chatId },
-				data: { image: imagePath }
+				data: { imagePath: imagePath }
 			});
 
 			await sendSystemMessage(chatId, `@${locals.user!.username} updated the group image.`);

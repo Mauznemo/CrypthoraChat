@@ -6,8 +6,9 @@ import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { ensureUploadDir, errorResponse, removeFile } from '$lib/server/fileUpload';
+import e from 'cors';
 
-const UPLOAD_BASE_PATH = (process.env.UPLOAD_PATH || './uploads') + '/media';
+const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.sessionId) {
@@ -28,6 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		});
 
+		let type: string | null = null;
 		let chatId: string | null = null;
 		let encryptedFileNameSafeBase64: string | null = null;
 		let filePath: string | null = null;
@@ -55,7 +57,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		};
 
 		bb.on('field', (name: string, value: string) => {
-			if (name === 'chatId') {
+			if (name === 'type') {
+				type = value;
+			} else if (name === 'chatId') {
 				chatId = value;
 			} else if (name === 'encryptedFileNameSafeBase64') {
 				encryptedFileNameSafeBase64 = value;
@@ -84,14 +88,24 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				resolve(errorResponse(413, 'File size limit exceeded'));
 			});
 
-			if (!chatId || !encryptedFileNameSafeBase64) {
+			if (!type || !encryptedFileNameSafeBase64 || (!chatId && type === 'chatMedia')) {
 				file.resume();
 				resolve(errorResponse(400, 'Missing required fields: chatId and encryptedFileNameBase64'));
 				return;
 			}
 
 			try {
-				const relativePath = `/${chatId}`;
+				let relativePath = '';
+				if (type === 'chatMedia') {
+					relativePath = `/media/${chatId}`;
+				} else if (type === 'userSticker') {
+					relativePath = `/users/${locals.user!.id}/stickers`;
+				} else {
+					file.resume();
+					resolve(errorResponse(400, 'Invalid upload type'));
+					return;
+				}
+
 				await ensureUploadDir(UPLOAD_BASE_PATH + relativePath);
 
 				const filename = `${randomUUID()}_${locals.user!.id}_${encryptedFileNameSafeBase64}.enc`;

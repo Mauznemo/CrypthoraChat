@@ -12,6 +12,16 @@ CREATE TABLE "public"."User" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."UserSticker" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "stickerPath" TEXT NOT NULL,
+    "favorited" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "UserSticker_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."UserChatKey" (
     "userId" TEXT NOT NULL,
     "chatId" TEXT NOT NULL,
@@ -133,6 +143,9 @@ CREATE UNIQUE INDEX "ServerSettings_id_key" ON "public"."ServerSettings"("id");
 
 -- CreateIndex
 CREATE INDEX "_ReadMessages_B_index" ON "public"."_ReadMessages"("B");
+
+-- AddForeignKey
+ALTER TABLE "public"."UserSticker" ADD CONSTRAINT "UserSticker_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."UserChatKey" ADD CONSTRAINT "UserChatKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

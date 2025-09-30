@@ -14,6 +14,8 @@
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import Icon from '@iconify/svelte';
 	import { idb } from '$lib/idb';
+	import { goto } from '$app/navigation';
+	import StickerPicker from './StickerPicker.svelte';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -69,6 +71,8 @@
 	let containerWidth = $state(0);
 	let fileSizes: number[] = $state([]);
 	let compressFiles: boolean[] = $state([]);
+
+	let stickerPicker: StickerPicker;
 
 	async function saveDraft(): Promise<void> {
 		if (!chatStore.activeChat) return;
@@ -316,17 +320,19 @@
 					openFileSelector();
 				}
 			},
-			{
-				id: 'gif',
-				label: 'Gif',
-				icon: 'mdi:file-gif-box',
-				action: () => {}
-			},
+			// {
+			// 	id: 'gif',
+			// 	label: 'Gif',
+			// 	icon: 'mdi:file-gif-box',
+			// 	action: () => {}
+			// },
 			{
 				id: 'sticker',
 				label: 'Sticker',
 				icon: 'mdi:sticker-emoji',
-				action: () => {}
+				action: () => {
+					stickerPicker.open();
+				}
 			}
 		];
 		contextMenuStore.open(event.target as HTMLElement, items);
@@ -570,6 +576,8 @@
 		<Icon icon="ic:round-send" class="ml-0.5 size-6" />
 	</button>
 </div>
+
+<StickerPicker bind:this={stickerPicker} />
 
 <input
 	class="hidden"
