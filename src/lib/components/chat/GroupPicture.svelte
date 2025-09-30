@@ -44,14 +44,14 @@
 			draggable="false"
 		/>
 	</div>
-{:else if chat?.image}
+{:else if chat?.imagePath}
 	<div
 		class="{className} flex flex-shrink-0 items-center justify-center rounded-full bg-gray-500 select-none"
 		style="{style} width: {size}; height: {size};"
 	>
 		<img
 			class="h-full w-full rounded-full object-cover"
-			src={`/api/profile-picture?filePath=${encodeURIComponent(chat.image)}${imageSize ? `&size=${imageSize}` : ''}`}
+			src={`/api/profile-picture?filePath=${encodeURIComponent(chat.imagePath)}${imageSize ? `&size=${imageSize}` : ''}`}
 			alt="Profile"
 			draggable="false"
 		/>

@@ -44,14 +44,14 @@
 			draggable="false"
 		/>
 	</div>
-{:else if user?.profilePic}
+{:else if user?.profilePicPath}
 	<div
 		class="{className} flex flex-shrink-0 items-center justify-center rounded-full bg-gray-500 select-none"
 		style="{style} width: {size}; height: {size};"
 	>
 		<img
 			class="h-full w-full rounded-full object-cover"
-			src={`/api/profile-picture?filePath=${encodeURIComponent(user.profilePic)}${imageSize ? `&size=${imageSize}` : ''}`}
+			src={`/api/profile-picture?filePath=${encodeURIComponent(user.profilePicPath)}${imageSize ? `&size=${imageSize}` : ''}`}
 			alt="Profile"
 			draggable="false"
 		/>

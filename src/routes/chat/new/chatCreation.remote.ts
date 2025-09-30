@@ -48,7 +48,7 @@ export const createGroup = command(
 					currentKeyVersion: 0,
 					type: 'group',
 					ownerId: locals.user!.id,
-					image: imagePath,
+					imagePath: imagePath,
 					participants: {
 						create: allParticipantIds.map((id) => ({
 							user: { connect: { id } },

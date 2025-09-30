@@ -106,11 +106,11 @@
 		>
 			<Reply replyToMessage={message} />
 
-			{#if message.attachments.length > 0}
-				<p class="text-sm text-gray-400">{message.attachments.length} attachments</p>
+			{#if message.attachmentPaths.length > 0}
+				<p class="text-sm text-gray-400">{message.attachmentPaths.length} attachments</p>
 				<div class="mt-2 flex max-w-full flex-col items-end">
-					{#each message.attachments as attachment}
-						<Attachment attachmentPath={attachment} keyVersion={message.usedKeyVersion} />
+					{#each message.attachmentPaths as attachmentPath}
+						<Attachment {attachmentPath} keyVersion={message.usedKeyVersion} />
 					{/each}
 				</div>
 			{/if}

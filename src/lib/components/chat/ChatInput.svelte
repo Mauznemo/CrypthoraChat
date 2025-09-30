@@ -229,7 +229,7 @@
 				senderId: chatStore.user.id,
 				encryptedContent: encryptedContent,
 				replyToId: messageReplying ? messageReplying.id : null,
-				attachments: filePaths
+				attachmentPaths: filePaths
 			});
 		} catch (error) {
 			modalStore.alert('Error', 'Failed to send message: ' + error);

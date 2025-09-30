@@ -38,16 +38,16 @@ export const updateProfilePicture = command(v.string(), async (filePath: string)
 
 	const user = await db.user.findUnique({
 		where: { id: locals.user!.id },
-		select: { profilePic: true }
+		select: { profilePicPath: true }
 	});
 
-	if (user?.profilePic) {
-		await removeFile(user.profilePic);
+	if (user?.profilePicPath) {
+		await removeFile(user.profilePicPath);
 	}
 
 	await db.user.update({
 		where: { id: locals.user!.id },
-		data: { profilePic: filePath }
+		data: { profilePicPath: filePath }
 	});
 });
 

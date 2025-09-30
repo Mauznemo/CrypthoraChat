@@ -93,7 +93,7 @@ class SocketStore {
 		senderId: string;
 		encryptedContent: string;
 		replyToId?: string | null;
-		attachments?: string[];
+		attachmentPaths?: string[];
 	}) {
 		this.socket?.emit('send-message', data);
 	}

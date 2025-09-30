@@ -4,8 +4,7 @@ CREATE TABLE "public"."User" (
     "username" TEXT NOT NULL,
     "displayName" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "profilePic" TEXT,
-    "profileIv" TEXT,
+    "profilePicPath" TEXT,
     "isAdmin" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -66,8 +65,8 @@ CREATE TABLE "public"."Chat" (
     "currentKeyVersion" INTEGER NOT NULL,
     "name" TEXT,
     "type" TEXT NOT NULL,
-    "image" TEXT,
-    "imageIv" TEXT,
+    "lastMessageAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "imagePath" TEXT,
     "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "Chat_pkey" PRIMARY KEY ("id")
@@ -89,7 +88,7 @@ CREATE TABLE "public"."Message" (
     "usedKeyVersion" INTEGER NOT NULL,
     "chatId" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
-    "attachments" TEXT[],
+    "attachmentPaths" TEXT[],
     "encryptedReactions" TEXT[],
     "encryptedContent" TEXT NOT NULL,
     "isEdited" BOOLEAN NOT NULL DEFAULT false,

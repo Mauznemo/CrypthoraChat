@@ -168,7 +168,7 @@ export function initializeSocket(server: HTTPServer) {
 				keyVersion: number;
 				encryptedContent: string;
 				replyToId?: string | null;
-				attachments?: string[];
+				attachmentPaths?: string[];
 			}) => {
 				const MAX_BASE64_LENGTH = 64 * 1024; // 64 KB
 
@@ -192,7 +192,7 @@ export function initializeSocket(server: HTTPServer) {
 							usedKeyVersion: data.keyVersion,
 							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
-							attachments: data.attachments || [],
+							attachmentPaths: data.attachmentPaths || [],
 							encryptedReactions: [],
 							replyToId: data.replyToId
 						},
@@ -318,12 +318,12 @@ export function initializeSocket(server: HTTPServer) {
 			try {
 				const message = await db.message.findUnique({
 					where: { id: data.messageId, senderId: socket.user!.id },
-					select: { attachments: true }
+					select: { attachmentPaths: true }
 				});
 
 				if (!message) return;
 
-				for (const attachment of message.attachments) {
+				for (const attachment of message.attachmentPaths) {
 					try {
 						await removeFile(attachment);
 					} catch (error) {

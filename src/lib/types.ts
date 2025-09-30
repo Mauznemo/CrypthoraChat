@@ -4,8 +4,7 @@ export const safeUserFields = {
 	id: true,
 	username: true,
 	displayName: true,
-	profilePic: true,
-	profileIv: true
+	profilePicPath: true
 } satisfies Prisma.UserSelect;
 
 export type MessageWithRelations = Prisma.MessageGetPayload<{
@@ -31,8 +30,7 @@ export const chatWithoutMessagesFields = {
 	lastMessageAt: true,
 	name: true,
 	type: true,
-	image: true,
-	imageIv: true,
+	imagePath: true,
 	ownerId: true,
 	participants: { include: { user: { select: safeUserFields } } }
 } satisfies Prisma.ChatSelect;
