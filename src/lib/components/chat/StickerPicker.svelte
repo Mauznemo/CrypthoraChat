@@ -91,6 +91,17 @@
 				</div>
 				<p>Create</p>
 			</button>
+			<button
+				onclick={() => goto('/sticker-importer')}
+				class="flex size-24 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
+			>
+				<div
+					class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-600 frosted-glass"
+				>
+					<Icon icon="mdi:import" class="size-6" />
+				</div>
+				<p>Import</p>
+			</button>
 			{#each stickers as sticker}
 				<button class="size-24 cursor-pointer rounded-lg bg-gray-800/60 hover:bg-gray-800/40">
 					<img src={sticker.previewUrl} alt="Sticker" />

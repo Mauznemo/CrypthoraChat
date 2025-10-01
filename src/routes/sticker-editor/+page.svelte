@@ -482,7 +482,7 @@
 		const result = await tryUploadUserSticker(file);
 
 		if (result.success) {
-			saveUserSticker(result.filePath);
+			await saveUserSticker(result.filePath);
 			goto('/chat');
 		}
 	}
