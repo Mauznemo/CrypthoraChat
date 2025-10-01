@@ -158,6 +158,12 @@
 
 		<button
 			onclick={async () => {
+				displayName = displayName.trim();
+				if (displayName === '') {
+					modalStore.alert('Error', 'Display name cannot be empty!');
+					return;
+				}
+
 				loadingSave = true;
 				try {
 					await updateDisplayName(displayName);
