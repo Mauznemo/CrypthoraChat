@@ -55,9 +55,14 @@
 		}
 
 		socketStore.onNewMessage((m) => {
+			const nearBottom = chatStore.scrollView?.isNearBottom();
 			messages.handleNewMessage(m);
 			if (m.senderId === data?.user?.id) chatStore.scrollView?.scrollToBottom();
-			else chatStore.scrollView?.scrollToBottomIfNear();
+			else {
+				if (nearBottom) {
+					chatStore.scrollView?.scrollToBottom();
+				}
+			}
 		});
 		socketStore.onNewMessageNotify((d) => {
 			messages.handleNewMessageNotify(d);
@@ -74,8 +79,11 @@
 		socketStore.onNewChat(chats.handleAddedToChatChat);
 		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
 		socketStore.onNewSystemMessage((m) => {
+			const nearBottom = chatStore.scrollView?.isNearBottom();
 			messages.handleNewSystemMessage(m);
-			chatStore.scrollView?.scrollToBottomIfNear();
+			if (nearBottom) {
+				chatStore.scrollView?.scrollToBottom();
+			}
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
