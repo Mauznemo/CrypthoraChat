@@ -1,22 +1,30 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getUserStickers } from '$lib/chat/stickers.remote';
+	import {
+		favoriteUserSticker,
+		getUserStickers,
+		unfavoriteUserSticker
+	} from '$lib/chat/stickers.remote';
 	import { decryptFile } from '$lib/crypto/file';
 	import { tryGetFile } from '$lib/fileUpload/upload';
 	import { getFileFromIDB, saveFileToIDB } from '$lib/idb';
+	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import type { Prisma } from '$prisma';
 	import Icon from '@iconify/svelte';
+	import e from 'cors';
 	import { tick } from 'svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
 	type ServerSticker = Prisma.UserStickerGetPayload<{
 		select: {
+			id: true;
 			stickerPath: true;
 			favorited: true;
 		};
 	}>;
 
 	interface Sticker {
+		id: string;
 		previewUrl: string;
 		favorited: boolean;
 	}
@@ -35,10 +43,20 @@
 		for (const sticker of stickersPaths) {
 			const previewUrl = await getMediaUrl(sticker.stickerPath);
 			if (!previewUrl) continue;
-			stickers.push({
-				previewUrl,
-				favorited: sticker.favorited
-			});
+			if (sticker.favorited) {
+				stickers.unshift({
+					id: sticker.id,
+					previewUrl,
+					favorited: sticker.favorited
+				});
+			} else {
+				stickers.push({
+					id: sticker.id,
+					previewUrl,
+					favorited: sticker.favorited
+				});
+			}
+
 			await tick();
 		}
 	}
@@ -68,6 +86,53 @@
 		console.log('previewUrl', previewUrl);
 
 		return previewUrl;
+	}
+
+	function handleContextMenu(event: Event, sticker: Sticker): void {
+		event.preventDefault();
+
+		const items: ContextMenuItem[] = [
+			{
+				id: 'delete',
+				label: 'Delete',
+				icon: 'mdi:delete',
+				action: () => {}
+			}
+		];
+		if (sticker.favorited) {
+			items.unshift({
+				id: 'unfavorite',
+				label: 'Unfavorite',
+				icon: 'mdi:star-outline',
+				action: () => {
+					favoriteSticker(sticker, false);
+				}
+			});
+		} else {
+			items.unshift({
+				id: 'favorite',
+				label: 'Favorite',
+				icon: 'mdi:star',
+				action: () => {
+					favoriteSticker(sticker, true);
+				}
+			});
+		}
+		contextMenuStore.openAtCursor(items);
+	}
+
+	async function favoriteSticker(sticker: Sticker, favorited: boolean): Promise<void> {
+		sticker.favorited = favorited;
+		if (sticker.favorited) {
+			await favoriteUserSticker(sticker.id);
+		} else {
+			await unfavoriteUserSticker(sticker.id);
+		}
+	}
+
+	function handleFavoriteToggle(event: Event, sticker: Sticker): void {
+		event.stopPropagation();
+		favoriteSticker(sticker, !sticker.favorited);
 	}
 </script>
 
@@ -103,8 +168,24 @@
 				<p>Import</p>
 			</button>
 			{#each stickers as sticker}
-				<button class="size-24 cursor-pointer rounded-lg bg-gray-800/60 hover:bg-gray-800/40">
-					<img src={sticker.previewUrl} alt="Sticker" />
+				<button
+					oncontextmenu={(e) => handleContextMenu(e, sticker)}
+					class="relative size-24 cursor-pointer rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
+				>
+					<img class="pointer-events-none" src={sticker.previewUrl} alt="Sticker" />
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<span
+						class="absolute top-1 right-1"
+						onclick={(e) => handleFavoriteToggle(e, sticker)}
+						role="button"
+						tabindex="0"
+					>
+						{#if sticker.favorited}
+							<Icon icon="mdi:star" class="size-6 hover:text-gray-400" />
+						{:else}
+							<Icon icon="mdi:star-outline" class="size-6 hover:text-yellow-400" />
+						{/if}
+					</span>
 				</button>
 			{/each}
 		</div>

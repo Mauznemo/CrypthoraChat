@@ -1,3 +1,5 @@
+import { cursorStore } from './cursor.svelte';
+
 export interface ContextMenuItem {
 	id: string;
 	label: string;
@@ -43,6 +45,43 @@ class ContextMenuStore {
 				x = 8;
 			}
 
+			if (y < 8) {
+				y = 8;
+			}
+
+			this.position = { x, y };
+		}
+	}
+
+	openAtCursor(items: ContextMenuItem[], closeOnSelect: boolean = true) {
+		this.isOpen = true;
+		this.items = items;
+		this.closeOnSelect = closeOnSelect;
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+		const isMobile = viewportWidth < 768;
+
+		if (isMobile) {
+			this.position = { x: 0, y: 0 };
+		} else {
+			const menuWidth = 200;
+			const menuHeight = items.length * 40;
+			const pos = cursorStore.position;
+
+			let x = pos.x;
+			let y = pos.y + 8;
+
+			if (x + menuWidth > viewportWidth) {
+				x = pos.x - menuWidth;
+			}
+
+			if (y + menuHeight > viewportHeight) {
+				y = pos.y - menuHeight - 8;
+			}
+
+			if (x < 8) {
+				x = 8;
+			}
 			if (y < 8) {
 				y = 8;
 			}
