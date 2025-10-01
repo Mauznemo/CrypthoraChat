@@ -12,14 +12,12 @@
 		message,
 		showProfile,
 		onHover,
-		onTouchStart,
 		onUpdateReaction,
 		onDecryptError
 	}: {
 		message: ClientMessage;
 		showProfile: boolean;
 		onHover: (event: MouseEvent) => void;
-		onTouchStart: (event: TouchEvent) => void;
 		onUpdateReaction: (encryptedReaction: string, operation: 'add' | 'remove') => void;
 		onDecryptError: (error: any, message: ClientMessage) => void;
 	} = $props();
@@ -92,11 +90,7 @@
 
 	<!-- Chat message container -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		onmouseenter={onHover}
-		ontouchstart={onTouchStart}
-		class="message-bubble relative flex max-w-full flex-col items-start"
-	>
+	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-start">
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
 			<div class="mb-0.5 pl-7 lg:pl-1.5">

@@ -17,14 +17,12 @@
 		showProfile,
 		isLast,
 		onHover,
-		onTouchStart,
 		onUpdateReaction
 	}: {
 		message: ClientMessage;
 		showProfile: boolean;
 		isLast: boolean;
 		onHover: (event: MouseEvent) => void;
-		onTouchStart: (event: TouchEvent) => void;
 		onUpdateReaction: (emoji: string, operation: 'add' | 'remove') => void;
 	} = $props();
 
@@ -93,11 +91,7 @@
 
 	<!-- Chat message container -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		onmouseenter={onHover}
-		ontouchstart={onTouchStart}
-		class="message-bubble relative flex max-w-full flex-col items-end"
-	>
+	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-end">
 		<!-- Chat message bubble -->
 		<div
 			class="relative max-w-full rounded-2xl bg-teal-700/60 p-3 frosted-glass-shadow {message.isEdited

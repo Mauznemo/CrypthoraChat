@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import { decryptFile, decryptFileName } from '$lib/crypto/file';
-	import { tryGetFile } from '$lib/fileUpload/upload';
+	import { tryGetFile, tryUploadUserSticker } from '$lib/fileUpload/upload';
 	import { getFileSize } from '$lib/fileUpload/upload.remote';
 	import { fileExistsInIDB, getFileFromIDB, saveFileToIDB } from '$lib/idb';
 	import Icon from '@iconify/svelte';
@@ -9,6 +9,10 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
 	import type { ClientMessage } from '$lib/types';
+	import { tick } from 'svelte';
+	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
+	import { saveUserSticker } from '../../../routes/sticker-editor/stickerEditor.remote';
+	import { blobToFile } from '$lib/utils/imageConverter';
 
 	const {
 		attachmentPath,
@@ -23,6 +27,7 @@
 	let fileInIDB = $state(false);
 
 	let fileType: 'image' | 'video' | 'audio' | 'other' = $state('other');
+	let subType: string | null = $state(null);
 
 	let previewUrl: string | null = $state(null);
 	let fileSizeBytes: number = $state(0);
@@ -30,6 +35,14 @@
 	let downloadingFile = $state(false);
 
 	async function decryptName(attachmentPath: string, keyVersion: number): Promise<string> {
+		if (attachmentPath.startsWith('sticker:')) {
+			await tick();
+			fileType = 'image';
+			subType = 'sticker';
+			fileSizeBytes = await getFileSize(attachmentPath);
+			fileInIDB = await fileExistsInIDB(attachmentPath);
+			return 'sticker.webp';
+		}
 		const normalized = attachmentPath.replace(/\\/g, '/');
 		const serverFilename = normalized.split('/').pop() || '';
 		const filename = serverFilename.split('_')[2]; //uuid_userId_filename
@@ -84,6 +97,45 @@
 		fileUtils.downloadFile(blob, name);
 		downloadingFile = false;
 	}
+
+	function handleContextMenu(event: Event, name: string) {
+		event.preventDefault();
+
+		const items: ContextMenuItem[] = [
+			{
+				id: 'download',
+				label: 'Download',
+				icon: 'mdi:download',
+				action: () => {
+					handleDownloadFile(name);
+				}
+			}
+		];
+
+		if (fileType === 'image' && subType === 'sticker') {
+			items.unshift({
+				id: 'add',
+				label: 'Add to my stickers',
+				icon: 'mdi:plus',
+				action: async () => {
+					const getResult = await tryGetFile(attachmentPath);
+					if (!getResult.success) {
+						return;
+					}
+					const blob = await decryptFile(getResult.encodedData!, keyVersion);
+					const file = blobToFile(blob, 'sticker.webp');
+
+					const result = await tryUploadUserSticker(file);
+
+					if (result.success) {
+						await saveUserSticker(result.filePath);
+					}
+				}
+			});
+		}
+
+		contextMenuStore.openAtCursor(items);
+	}
 </script>
 
 <div class="max-w-full self-stretch">
@@ -127,19 +179,25 @@
 			</div>
 		{:then previewUrl}
 			{#if previewUrl}
-				<div class="max-w-[min(100%, 400px)] relative flex items-end justify-end">
+				<div
+					oncontextmenu={(e) => handleContextMenu(e, name)}
+					role="group"
+					class="max-w-[min(100%, 400px)] relative flex items-end justify-end"
+				>
 					<img src={previewUrl} alt="Attachment" class="max-h-[300px] rounded-lg" />
 
-					<button
-						onclick={() => {
-							fileUtils.downloadFileFromUrl(previewUrl!, name);
-						}}
-						data-tooltip="Download"
-						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
-						aria-label="Download"
-					>
-						<Icon icon="mdi:tray-download" class="size-6" />
-					</button>
+					{#if subType !== 'sticker'}
+						<button
+							onclick={() => {
+								fileUtils.downloadFileFromUrl(previewUrl!, name);
+							}}
+							data-tooltip="Download"
+							class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+							aria-label="Download"
+						>
+							<Icon icon="mdi:tray-download" class="size-6" />
+						</button>
+					{/if}
 				</div>
 			{/if}
 		{:catch error}
@@ -155,6 +213,8 @@
 	{:else}
 		{#await getMediaUrl(attachmentPath, keyVersion, name)}
 			<div
+				oncontextmenu={(e) => handleContextMenu(e, name)}
+				role="group"
 				class="relative flex h-[300px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 			>
 				<LoadingSpinner />

@@ -141,6 +141,8 @@
 	}
 
 	function handleMessageLeave(): void {
+		if (isTouchDevice) return;
+		console.log('handleMessageLeave');
 		isHovering = false;
 		// Delay hiding to allow hovering over toolbar
 		hideTimeout = setTimeout(() => {
@@ -149,39 +151,33 @@
 		}, 150);
 	}
 
-	function handleTouchStart(
+	let scrolled = false;
+
+	function handleTouchStart(event: TouchEvent): void {
+		scrolled = false;
+	}
+
+	function handleTouchEnd(
 		event: TouchEvent,
 		message: MessageWithRelations,
 		isFromMe: boolean
 	): void {
+		if (scrolled) return;
 		const messageEl = event.currentTarget as HTMLElement;
-
-		longPressTimer = setTimeout(() => {
-			if (messageEl) {
-				activeMessage = message;
-				activeMessageFromMe = isFromMe;
-				const position = calculateToolbarPosition(messageEl);
-				toolbarPosition = position;
-			}
-		}, 500);
-	}
-
-	function handleTouchEnd(event: TouchEvent): void {
-		if (longPressTimer) {
-			clearTimeout(longPressTimer);
-			longPressTimer = null;
+		if (messageEl) {
+			activeMessage = message;
+			activeMessageFromMe = isFromMe;
+			const position = calculateToolbarPosition(messageEl);
+			toolbarPosition = position;
 		}
 
-		if (activeMessage) {
-			event.preventDefault();
-		}
+		// if (activeMessage) {
+		// 	event.preventDefault();
+		// }
 	}
 
 	function handleTouchMove(): void {
-		if (longPressTimer) {
-			clearTimeout(longPressTimer);
-			longPressTimer = null;
-		}
+		scrolled = true;
 	}
 
 	// Keep toolbar visible when hovering over it
@@ -195,7 +191,7 @@
 	function handleClickOutside(event: MouseEvent | TouchEvent): void {
 		const target = event.target as HTMLElement;
 		if (activeMessage && !toolbarElement?.contains(target)) {
-			activeMessage = null;
+			// activeMessage = null;
 		}
 	}
 
@@ -373,8 +369,9 @@
 				class="message-wrapper relative max-w-full pl-6"
 				data-message-id={message.id}
 				onmouseleave={handleMessageLeave}
-				ontouchend={handleTouchEnd}
+				ontouchend={(e) => handleTouchEnd(e, message, isFromMe)}
 				ontouchmove={handleTouchMove}
+				ontouchstart={handleTouchStart}
 			>
 				{#if isFromMe}
 					{@const isLast =
@@ -388,7 +385,6 @@
 						{showProfile}
 						{isLast}
 						onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
-						onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
 						onUpdateReaction={(encryptedReaction, operation) =>
 							onUpdateReaction(message, encryptedReaction, operation)}
 					/>
@@ -397,7 +393,6 @@
 						{message}
 						{showProfile}
 						onHover={(e) => handleMessageBubbleHover(e, message, isFromMe)}
-						onTouchStart={(e) => handleTouchStart(e, message, isFromMe)}
 						onUpdateReaction={(encryptedReaction, operation) =>
 							onUpdateReaction(message, encryptedReaction, operation)}
 						{onDecryptError}

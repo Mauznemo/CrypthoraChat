@@ -6,9 +6,13 @@
 		unfavoriteUserSticker
 	} from '$lib/chat/stickers.remote';
 	import { decryptFile } from '$lib/crypto/file';
-	import { tryGetFile } from '$lib/fileUpload/upload';
+	import { tryGetFile, tryUploadFile } from '$lib/fileUpload/upload';
 	import { getFileFromIDB, saveFileToIDB } from '$lib/idb';
+	import { chatStore } from '$lib/stores/chat.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { socketStore } from '$lib/stores/socket.svelte';
+	import { blobToFile } from '$lib/utils/imageConverter';
 	import type { Prisma } from '$prisma';
 	import Icon from '@iconify/svelte';
 	import e from 'cors';
@@ -25,6 +29,7 @@
 
 	interface Sticker {
 		id: string;
+		filePath: string;
 		previewUrl: string;
 		favorited: boolean;
 	}
@@ -33,6 +38,7 @@
 	let stickersPaths: ServerSticker[] = $state([]);
 
 	let stickers: Sticker[] = $state([]);
+	let uploadingFile: boolean = $state(false);
 
 	export async function open(): Promise<void> {
 		isOpen = true;
@@ -46,12 +52,14 @@
 			if (sticker.favorited) {
 				stickers.unshift({
 					id: sticker.id,
+					filePath: sticker.stickerPath,
 					previewUrl,
 					favorited: sticker.favorited
 				});
 			} else {
 				stickers.push({
 					id: sticker.id,
+					filePath: sticker.stickerPath,
 					previewUrl,
 					favorited: sticker.favorited
 				});
@@ -61,29 +69,64 @@
 		}
 	}
 
-	async function getMediaUrl(attachmentPath: string) {
-		console.log('getMediaUrl', attachmentPath);
+	async function sendStickerMessage(filePath: string): Promise<void> {
+		if (uploadingFile || !chatStore.user) return;
 
+		if (!chatStore.activeChat) {
+			modalStore.alert('Error', 'Failed to send sticker message: No chat selected');
+			return;
+		}
+
+		const blob = await getBlob(filePath);
+		if (!blob) return;
+		const fileToUpload = blobToFile(blob, 'sticker.webp');
+
+		const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id);
+
+		if (!result.success) {
+			modalStore.error('Failed to upload sticker');
+			return;
+		}
+
+		try {
+			const encryptedContent = '';
+
+			socketStore.sendMessage({
+				chatId: chatStore.activeChat.id,
+				keyVersion: chatStore.activeChat.currentKeyVersion,
+				senderId: chatStore.user.id,
+				encryptedContent: encryptedContent,
+				replyToId: null,
+				attachmentPaths: ['sticker:' + result.filePath]
+			});
+		} catch (error) {
+			modalStore.error(error, 'Failed to send sticker message:');
+		}
+	}
+
+	async function getBlob(attachmentPath: string): Promise<Blob | null> {
 		const retrievedBlob = await getFileFromIDB(attachmentPath);
 
 		let blob: Blob;
-		let previewUrl: string;
 
 		if (retrievedBlob) {
-			previewUrl = URL.createObjectURL(retrievedBlob);
 			blob = retrievedBlob;
-			console.log('retrievedBlob');
 		} else {
 			const result = await tryGetFile(attachmentPath);
-			if (!result.success) return;
+			if (!result.success) return null;
 			blob = await decryptFile(result.encodedData!, -1, 'master');
-			console.log('decryptFile');
-			previewUrl = URL.createObjectURL(blob);
 			await saveFileToIDB(attachmentPath, blob);
-			console.log('saveFileToIDB');
 		}
 
-		console.log('previewUrl', previewUrl);
+		return blob;
+	}
+
+	async function getMediaUrl(attachmentPath: string): Promise<string> {
+		console.log('getMediaUrl', attachmentPath);
+
+		const blob = await getBlob(attachmentPath);
+		if (!blob) return '';
+		const previewUrl = URL.createObjectURL(blob);
 
 		return previewUrl;
 	}
@@ -169,6 +212,7 @@
 			</button>
 			{#each stickers as sticker}
 				<button
+					onclick={() => sendStickerMessage(sticker.filePath)}
 					oncontextmenu={(e) => handleContextMenu(e, sticker)}
 					class="relative size-24 cursor-pointer rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
 				>

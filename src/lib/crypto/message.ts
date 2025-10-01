@@ -25,16 +25,11 @@ export async function decryptMessage(data: {
 	let keyVersion: number | null = null;
 
 	if (data.message) {
-		if (data.message.decryptedContent) {
-			return data.message.decryptedContent;
-		}
 		encryptedBase64 = data.message.encryptedContent;
 		keyVersion = data.message.usedKeyVersion;
 	} else if (data.messageId) {
 		const m = findMessageById(data.messageId);
-		if (m && m.decryptedContent) {
-			return m.decryptedContent;
-		}
+
 		encryptedBase64 = m?.encryptedContent || '';
 		keyVersion = m?.usedKeyVersion || null;
 	}
@@ -42,7 +37,7 @@ export async function decryptMessage(data: {
 		throw new Error('Chat key not found');
 
 	if (!encryptedBase64) {
-		throw new Error('Message not found');
+		return '';
 	}
 
 	try {

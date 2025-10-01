@@ -12,9 +12,15 @@ export const GET: RequestHandler = async ({ url, locals, request }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	const filePath = url.searchParams.get('filePath');
+	let filePath = url.searchParams.get('filePath');
 	if (!filePath) {
 		return errorResponse(400, 'Missing filePath parameter');
+	}
+
+	let customType = '';
+	if (filePath.startsWith('sticker:')) {
+		customType = 'sticker';
+		filePath = filePath.substring('sticker:'.length);
 	}
 
 	const normalizedPath = path.normalize(filePath);

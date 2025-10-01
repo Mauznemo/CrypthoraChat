@@ -48,7 +48,7 @@
 		bind:this={menuElement}
 		in:scale={{ duration: 200, easing: expoInOut }}
 		out:scale={{ duration: 200, easing: expoInOut }}
-		class="frosted-glass fixed z-50 min-w-48 rounded-2xl bg-gray-800/60 py-2"
+		class="fixed z-50 min-w-48 rounded-2xl bg-gray-800/60 py-2 frosted-glass"
 		style="left: {contextMenuStore.position.x}px; top: {contextMenuStore.position.y}px;"
 	>
 		{#each contextMenuStore.items as item}
@@ -66,12 +66,13 @@
 {/if}
 <!-- Animations don't work with else or else if -->
 {#if contextMenuStore.isOpen && isMobile}
+	<div class="fixed top-0 right-0 bottom-0 left-0 z-40"></div>
 	<!-- Bottom Sheet -->
 	<div
 		bind:this={menuElement}
 		in:fly={{ y: 200, duration: 500, easing: expoInOut }}
 		out:fly={{ y: 200, duration: 500, easing: expoInOut }}
-		class="frosted-glass fixed right-0 bottom-0 left-0 z-50 rounded-t-4xl bg-gray-800/60"
+		class="fixed right-0 bottom-0 left-0 z-50 rounded-t-4xl bg-gray-800/60 frosted-glass"
 	>
 		<!-- Handle -->
 		<div class="flex justify-center py-3">
