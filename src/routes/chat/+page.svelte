@@ -30,6 +30,7 @@
 	let inputField: HTMLTextAreaElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
+	let chatName: string | null = $state(null);
 
 	onMount(async () => {
 		if (!data || !data.user) {
@@ -203,6 +204,13 @@
 		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
+			if (newChat.type === 'group') {
+				chatName = newChat.name;
+			} else {
+				const otherUser = newChat.participants.find((p) => p.user.id !== chatStore.user?.id);
+				chatName = otherUser?.user.displayName || null;
+			}
+
 			chatInput.handleChatSelected();
 			sideBar?.close();
 			chatStore.scrollView?.scrollToBottom(500);
@@ -238,6 +246,10 @@
 		};
 	}
 </script>
+
+<svelte:head>
+	<title>{chatName || 'Chat'}</title>
+</svelte:head>
 
 <div class="flex h-dvh min-h-0">
 	<SideBar bind:this={sideBar}>
@@ -280,9 +292,11 @@
 			<div class="flex items-center">
 				<div>
 					{#if socketStore.connected}
-						<p class="px-3 py-2 text-3xl font-extrabold text-white">Chat</p>
+						<p class="px-3 py-2 text-3xl font-extrabold text-white">{chatName || 'Chat'}</p>
 					{:else}
-						<p class="px-3 pt-3 text-3xl font-extrabold text-white">Chat - Offline</p>
+						<p class="px-3 pt-3 text-3xl font-extrabold text-white">
+							{chatName || 'Chat'} - Offline
+						</p>
 						<p class="font-semi px-3 pb-1 text-sm text-white/60">
 							You may not see all messages in this chat
 						</p>
