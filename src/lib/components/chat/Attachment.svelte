@@ -13,6 +13,7 @@
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { saveUserSticker } from '../../../routes/sticker-editor/stickerEditor.remote';
 	import { blobToFile } from '$lib/utils/imageConverter';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	const {
 		attachmentPath,
@@ -129,6 +130,7 @@
 
 					if (result.success) {
 						await saveUserSticker(result.filePath);
+						toastStore.success('Sticker added to your stickers successfully');
 					}
 				}
 			});

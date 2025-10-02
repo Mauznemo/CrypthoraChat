@@ -6,6 +6,7 @@
 	import ContextMenu from '$lib/components/ContextMenu.svelte';
 	import EmojiVerification from '$lib/components/EmojiVerification.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 
 	let { children } = $props();
 </script>
@@ -49,3 +50,4 @@
 <EmojiPicker />
 <ContextMenu />
 <Modal />
+<Toast />

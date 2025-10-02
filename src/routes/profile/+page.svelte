@@ -8,6 +8,7 @@
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Icon from '@iconify/svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let { data } = $props();
 
@@ -184,7 +185,7 @@
 				}
 				loadingSave = false;
 				await invalidateAll();
-				modalStore.alert('Success', 'Updated successfully!');
+				toastStore.success('Updated successfully!');
 			}}
 			class="mt-5 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
 		>

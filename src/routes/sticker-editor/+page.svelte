@@ -7,6 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import { tick } from 'svelte';
 	import { saveUserSticker } from './stickerEditor.remote';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	interface CanvasObject {
 		type: 'image' | 'text';
@@ -483,6 +484,7 @@
 
 		if (result.success) {
 			await saveUserSticker(result.filePath);
+			toastStore.success('Sticker saved successfully');
 			goto('/chat');
 		}
 	}
