@@ -64,7 +64,7 @@
 <div class="relative inline-block">
 	<button
 		onclick={() => (isOpen = !isOpen)}
-		class="flex items-center gap-3 rounded-full border-2 bg-gray-800/60 p-6 px-4 py-2 pl-2 shadow-sm frosted-glass-shadow transition-colors hover:border-gray-400"
+		class="flex items-center gap-3 rounded-full border-2 bg-gray-800/60 p-6 px-4 py-2 pl-2 shadow-sm frosted-glass transition-colors hover:border-gray-400"
 	>
 		<div
 			class="h-8 w-8 rounded-full border-2 border-gray-700 shadow-inner"
