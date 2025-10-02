@@ -156,7 +156,7 @@
 		<button
 			onclick={togglePlayPause}
 			disabled={isLoading}
-			class="mt-10 shrink-0 cursor-pointer rounded-full bg-teal-600/40 p-2 text-white frosted-glass-shadow transition-all duration-200 hover:scale-110 hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
+			class="mt-10 shrink-0 cursor-pointer rounded-full bg-accent-600/40 p-2 text-white frosted-glass-shadow transition-all duration-200 hover:scale-110 hover:bg-accent-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 md:mt-0 md:p-4"
 			aria-label={isPlaying ? 'Pause' : 'Play'}
 		>
 			{#if isLoading}

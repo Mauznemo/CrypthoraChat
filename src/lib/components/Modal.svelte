@@ -39,7 +39,7 @@
 
 		switch (variant) {
 			case 'primary':
-				return `${baseClasses} bg-teal-600/40 text-white hover:bg-teal-500/40 focus:ring-blue-500`;
+				return `${baseClasses} bg-accent-600/40 text-white hover:bg-accent-500/40 focus:ring-blue-500`;
 			case 'secondary':
 				return `${baseClasses} bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600`;
 			case 'danger':

@@ -106,7 +106,7 @@
 		tabindex="0"
 	>
 		<div
-			class="frosted-glass-shadow m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 text-white"
+			class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 text-white frosted-glass-shadow"
 		>
 			<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
 				Add users to {addUserToChatStore.chat?.name}
@@ -130,7 +130,7 @@
 			<button
 				onclick={handleAddUser}
 				disabled={selectedUsers.length < 1}
-				class="frosted-glass m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 				>{selectedUsers.length === 1 ? 'Add User' : 'Add Users'}</button
 			>
 		</div>

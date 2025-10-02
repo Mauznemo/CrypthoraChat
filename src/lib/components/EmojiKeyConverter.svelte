@@ -228,7 +228,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="frosted-glass-shadow mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4"
+			class="mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4 frosted-glass-shadow"
 		>
 			<button
 				onclick={() => emojiKeyConverterStore.close()}
@@ -276,7 +276,7 @@
 						</h3>
 						<div class="h-2 w-full overflow-hidden rounded-full bg-gray-700">
 							<div
-								class="h-full bg-teal-500 transition-all duration-300 ease-out"
+								class="h-full bg-accent-500 transition-all duration-300 ease-out"
 								style="width: {progress}%"
 							></div>
 						</div>
@@ -301,21 +301,21 @@
 
 					<div class="mt-6 flex flex-wrap justify-center gap-2">
 						<button
-							class="frosted-glass cursor-pointer rounded-full bg-yellow-600/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+							class="cursor-pointer rounded-full bg-yellow-600/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-yellow-500/40 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={removeLastEmoji}
 							disabled={inputIndex === 0}
 						>
 							Remove Last
 						</button>
 						<button
-							class="frosted-glass cursor-pointer rounded-full bg-red-600/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+							class="cursor-pointer rounded-full bg-red-600/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-red-500/40 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={clearSequence}
 							disabled={inputIndex === 0}
 						>
 							Clear All
 						</button>
 						<button
-							class="frosted-glass cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+							class="cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-accent-500/40 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={openEmojiPicker}
 							disabled={inputIndex >= 16}
 						>

@@ -7,8 +7,14 @@
 	import EmojiVerification from '$lib/components/EmojiVerification.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+	import { onMount } from 'svelte';
+	import { loadTheme } from '$lib/theming';
 
 	let { children } = $props();
+
+	onMount(() => {
+		loadTheme();
+	});
 </script>
 
 <svelte:head>

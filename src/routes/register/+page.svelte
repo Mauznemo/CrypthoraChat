@@ -97,7 +97,7 @@
 			</div>
 
 			<button
-				class="mb-4 w-full cursor-pointer rounded-full bg-teal-600/40 py-3 text-white frosted-glass hover:bg-teal-500/40 focus:ring-blue-500"
+				class="mb-4 w-full cursor-pointer rounded-full bg-accent-600/40 py-3 text-white frosted-glass hover:bg-accent-500/40 focus:ring-blue-500"
 				type="submit">Register</button
 			>
 

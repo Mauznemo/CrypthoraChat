@@ -169,7 +169,7 @@
 
 									modalStore.alert('Success', 'Updated successfully!');
 								}}
-								class="mb-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
+								class="mb-2 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
 								>Save</button
 							>
 						{/if}

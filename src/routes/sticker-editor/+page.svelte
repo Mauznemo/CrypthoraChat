@@ -525,21 +525,21 @@
 			<button
 				onclick={handleImportClick}
 				data-tooltip="Add Image"
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:image-plus" class="size-6" />
 			</button>
 			<button
 				onclick={handleImportClick}
 				data-tooltip="Add Sticker"
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:sticker-plus-outline" class="size-6" />
 			</button>
 			<button
 				onclick={handleAddText}
 				data-tooltip="Add Text"
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:format-text" class="size-6" />
 			</button>
@@ -547,7 +547,7 @@
 				onclick={handleDuplicate}
 				data-tooltip="Duplicate"
 				disabled={!selectedObj}
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
 				<Icon icon="mdi:content-copy" class="size-6" />
 			</button>
@@ -555,7 +555,7 @@
 				onclick={handleRemoveBackground}
 				data-tooltip="Remove Background"
 				disabled={!selectedObj || removingBackground || selectedObj.backgroundRemoved}
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
 				<Icon icon="material-symbols-light:background-replace-rounded" class="size-6" />
 			</button>
@@ -563,7 +563,7 @@
 				onclick={handleToggleAspectRatio}
 				data-tooltip={aspectRatioLocked ? 'Unlock Aspect Ratio' : 'Lock Aspect Ratio'}
 				disabled={!selectedObj}
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
 				<Icon icon={aspectRatioLocked ? 'mdi:lock' : 'mdi:lock-open-variant'} class="size-6" />
 			</button>
@@ -571,7 +571,7 @@
 				onclick={handleDelete}
 				data-tooltip="Delete"
 				disabled={!selectedObj}
-				class="rounded-full bg-teal-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-teal-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
 				<Icon icon="mdi:delete-forever" class="size-6" />
 			</button>
@@ -647,7 +647,7 @@
 			<button
 				onclick={handleSaveSticker}
 				disabled={objects.length === 0}
-				class="m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 			>
 				Save Sticker
 			</button>

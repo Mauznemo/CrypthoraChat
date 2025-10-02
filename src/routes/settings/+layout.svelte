@@ -19,7 +19,7 @@
 
 <div class="w-full p-2">
 	<div
-		class="flex items-center justify-start gap-2 rounded-full bg-teal-600/20 px-5 py-3 frosted-glass-shadow"
+		class="flex items-center justify-start gap-2 rounded-full bg-accent-600/20 px-5 py-3 frosted-glass-shadow"
 	>
 		{#if page.url.pathname !== '/settings'}
 			<BackButton backPath="/settings" />
@@ -28,7 +28,7 @@
 		{/if}
 		<h1 class="ml-2 text-3xl font-bold">{title}</h1>
 	</div>
-	<div class="p-5 px-10">
+	<div class="p-5 px-2 md:px-10">
 		{@render children?.()}
 	</div>
 </div>

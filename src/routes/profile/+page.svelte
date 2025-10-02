@@ -152,7 +152,7 @@
 						}
 					);
 				}}
-				class="mt-2 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
+				class="mt-2 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
 				>Change</button
 			>
 		{/if}
@@ -187,7 +187,7 @@
 				await invalidateAll();
 				toastStore.success('Updated successfully!');
 			}}
-			class="mt-5 cursor-pointer rounded-full bg-teal-600/40 px-4 py-2 frosted-glass hover:bg-teal-500/40"
+			class="mt-5 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
 		>
 			{#if loadingSave}
 				<LoadingSpinner size="1.5rem" />

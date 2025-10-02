@@ -164,8 +164,8 @@
 						}}
 						data-tooltip="{userReacted ? 'Remove reaction' : 'React with'} {reaction}"
 						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
-							? 'bg-teal-800/90 ring-1 ring-teal-400 hover:bg-teal-900/90'
-							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-teal-700/90'}"
+							? 'bg-accent-800/90 ring-1 ring-accent-400 hover:bg-accent-900/90'
+							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-accent-700/90'}"
 					>
 						<span>{reaction}</span>
 						{#if typedData.count > 1}

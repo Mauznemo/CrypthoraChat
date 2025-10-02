@@ -2,6 +2,20 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+@theme {
+	--color-accent-50: var(--color-teal-50);
+	--color-accent-100: var(--color-teal-100);
+	--color-accent-200: var(--color-teal-200);
+	--color-accent-300: var(--color-teal-300);
+	--color-accent-400: var(--color-teal-400);
+	--color-accent-500: var(--color-teal-500);
+	--color-accent-600: var(--color-teal-600);
+	--color-accent-700: var(--color-teal-700);
+	--color-accent-800: var(--color-teal-800);
+	--color-accent-900: var(--color-teal-900);
+	--color-accent-950: var(--color-teal-950);
+}
+
 @utility no-scrollbar {
 	@apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
 }

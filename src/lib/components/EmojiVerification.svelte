@@ -164,7 +164,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="frosted-glass-shadow mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4"
+			class="mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4 frosted-glass-shadow"
 		>
 			<button
 				onclick={() => emojiVerificationStore.close()}
@@ -191,12 +191,12 @@
 			<div class="mt-5 p-5">
 				<button
 					onclick={() => emojiVerificationStore.onMatch?.()}
-					class="frosted-glass mb-5 w-full cursor-pointer rounded-full bg-teal-600/40 py-3 text-white transition-colors hover:bg-teal-500/40 focus:ring-blue-500"
+					class="mb-5 w-full cursor-pointer rounded-full bg-accent-600/40 py-3 text-white frosted-glass transition-colors hover:bg-accent-500/40 focus:ring-blue-500"
 					>They match</button
 				>
 				<button
 					onclick={() => emojiVerificationStore.onFail?.()}
-					class="frosted-glass w-full cursor-pointer rounded-full bg-red-600/40 py-3 text-white transition-colors hover:bg-red-500/40 focus:ring-blue-500"
+					class="w-full cursor-pointer rounded-full bg-red-600/40 py-3 text-white frosted-glass transition-colors hover:bg-red-500/40 focus:ring-blue-500"
 					>They don't match</button
 				>
 			</div>
