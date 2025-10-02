@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import {
+		deleteUserSticker,
 		favoriteUserSticker,
 		getUserStickers,
 		unfavoriteUserSticker
@@ -12,6 +13,7 @@
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import type { Prisma } from '$prisma';
 	import Icon from '@iconify/svelte';
@@ -139,7 +141,14 @@
 				id: 'delete',
 				label: 'Delete',
 				icon: 'mdi:delete',
-				action: () => {}
+				action: async () => {
+					try {
+						await deleteUserSticker(sticker.id);
+						stickers = stickers.filter((s) => s.id !== sticker.id);
+					} catch (error) {
+						toastStore.error('Failed to delete sticker');
+					}
+				}
 			}
 		];
 		if (sticker.favorited) {
