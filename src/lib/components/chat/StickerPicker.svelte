@@ -44,28 +44,25 @@
 
 	export async function open(): Promise<void> {
 		isOpen = true;
+		stickers = [];
+
 		stickersPaths = await getUserStickers();
 
-		stickers = [];
+		stickersPaths = stickersPaths.sort((a, b) => {
+			if (a.favorited && !b.favorited) return -1;
+			if (!a.favorited && b.favorited) return 1;
+			return 0;
+		});
 
 		for (const sticker of stickersPaths) {
 			const previewUrl = await getMediaUrl(sticker.stickerPath);
 			if (!previewUrl) continue;
-			if (sticker.favorited) {
-				stickers.unshift({
-					id: sticker.id,
-					filePath: sticker.stickerPath,
-					previewUrl,
-					favorited: sticker.favorited
-				});
-			} else {
-				stickers.push({
-					id: sticker.id,
-					filePath: sticker.stickerPath,
-					previewUrl,
-					favorited: sticker.favorited
-				});
-			}
+			stickers.push({
+				id: sticker.id,
+				filePath: sticker.stickerPath,
+				previewUrl,
+				favorited: sticker.favorited
+			});
 
 			await tick();
 		}

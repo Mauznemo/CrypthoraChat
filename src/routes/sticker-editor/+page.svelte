@@ -8,6 +8,7 @@
 	import { tick } from 'svelte';
 	import { saveUserSticker } from './stickerEditor.remote';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import BackButton from '$lib/components/BackButton.svelte';
 
 	interface CanvasObject {
 		type: 'image' | 'text';
@@ -515,7 +516,10 @@
 
 <div class="min-h-screen bg-gray-900 p-8 text-white">
 	<div class="mx-auto max-w-4xl">
-		<h1 class="mb-6 w-full text-center text-3xl font-bold">Create Sticker</h1>
+		<div class="my-5 flex w-full items-center justify-center gap-2 lg:my-8">
+			<BackButton backPath="/chat" />
+			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">Create Sticker</h1>
+		</div>
 
 		<div class="mb-10 flex w-full flex-wrap items-center justify-center gap-2">
 			<button
