@@ -135,6 +135,8 @@ export async function deleteFilesNotContaining(
 ): Promise<{ deletedIds: string[]; count: number }> {
 	if (!idb) return { deletedIds: [], count: 0 };
 
+	idParts.push('users'); // always keep user files like stickers
+
 	const transaction = idb.transaction('files', 'readwrite');
 	const store = transaction.objectStore('files');
 	let cursor = await store.openCursor();
