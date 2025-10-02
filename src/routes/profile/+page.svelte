@@ -152,7 +152,7 @@
 						}
 					);
 				}}
-				class="mt-2 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
+				class="mt-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
 				>Change</button
 			>
 		{/if}
@@ -187,7 +187,7 @@
 				await invalidateAll();
 				toastStore.success('Updated successfully!');
 			}}
-			class="mt-5 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
+			class="mt-5 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
 		>
 			{#if loadingSave}
 				<LoadingSpinner size="1.5rem" />
@@ -209,7 +209,7 @@
 					}
 				});
 			}}
-			class="mb-2 cursor-pointer rounded-full bg-red-700/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
+			class="mb-2 cursor-pointer rounded-full bg-red-800/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
 			>{logoutButtonText}</button
 		>
 	</div>

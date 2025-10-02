@@ -308,14 +308,14 @@
 							Remove Last
 						</button>
 						<button
-							class="cursor-pointer rounded-full bg-red-600/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-red-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+							class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-red-600/40 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={clearSequence}
 							disabled={inputIndex === 0}
 						>
 							Clear All
 						</button>
 						<button
-							class="cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-accent-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+							class="cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={openEmojiPicker}
 							disabled={inputIndex >= 16}
 						>

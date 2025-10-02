@@ -12,6 +12,7 @@
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import { chatList } from '$lib/chat/chatList';
 	import Icon from '@iconify/svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let groupName: string = $state('');
 
@@ -163,13 +164,13 @@
 											previewUrl = null;
 										}
 									} catch (error) {
-										modalStore.error(error, 'Failed update chat: ');
+										modalStore.error(error, 'Failed update chat:');
 										return;
 									}
 
-									modalStore.alert('Success', 'Updated successfully!');
+									toastStore.success('Updated successfully!');
 								}}
-								class="mb-2 cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 frosted-glass hover:bg-accent-500/40"
+								class="mb-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
 								>Save</button
 							>
 						{/if}

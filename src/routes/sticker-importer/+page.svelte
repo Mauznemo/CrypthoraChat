@@ -90,7 +90,7 @@
 			<p class="text-lg text-gray-300">You can select any <code>.webp</code> sticker</p>
 			<button
 				onclick={() => fileInput.click()}
-				class="cursor-pointer rounded-full bg-accent-800/60 px-8 py-2 font-semibold frosted-glass transition-colors hover:bg-accent-600/60"
+				class="cursor-pointer rounded-full bg-accent-700/60 px-8 py-2 font-semibold frosted-glass transition-colors hover:bg-accent-600/50"
 			>
 				Select
 			</button>
@@ -103,7 +103,7 @@
 				? ''
 				: `background: linear-gradient(to right, oklch(43.7% 0.078 188.216 / 0.6) 0%, oklch(43.7% 0.078 188.216 / 0.6) ${percentage}%, oklch(44.6% 0.03 256.802 / 0.6) ${percentage}%, oklch(44.6% 0.03 256.802 / 0.6) 100%);`}
 			class="{percentage === -1
-				? 'bg-accent-800/60 hover:bg-accent-600/60'
+				? 'bg-accent-700/60 hover:bg-accent-600/50'
 				: ''} m-10 mt-7 cursor-pointer rounded-full px-8 py-4 font-semibold frosted-glass transition-colors hover:brightness-110 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:brightness-100"
 		>
 			{#if loading}

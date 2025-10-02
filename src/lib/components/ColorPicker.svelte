@@ -137,7 +137,7 @@
 					isOpen = false;
 					onColorChange(color);
 				}}
-				class="mt-4 w-full cursor-pointer rounded-full bg-accent-600/40 px-4 py-2 font-medium text-white frosted-glass transition-colors hover:bg-accent-500/40"
+				class="mt-4 w-full cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50"
 			>
 				Done
 			</button>

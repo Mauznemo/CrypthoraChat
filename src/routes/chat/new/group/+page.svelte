@@ -226,7 +226,7 @@
 		<button
 			onclick={handleCreateGroup}
 			disabled={selectedUsers.length < 1 || groupName.trim().length < 1}
-			class="m-10 mt-7 cursor-pointer rounded-full bg-teal-800/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-teal-600/60 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 		>
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />
