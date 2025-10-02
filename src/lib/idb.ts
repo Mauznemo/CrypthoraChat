@@ -55,6 +55,28 @@ async function init(): Promise<IDBPDatabase<CrypthoraChatDB>> {
 
 export let idb: IDBPDatabase<CrypthoraChatDB> | null = browser ? await init() : null;
 
+export async function getQuota(): Promise<number> {
+	if (!browser) return 0;
+	try {
+		const estimate = await navigator.storage.estimate();
+		return estimate.quota || 0;
+	} catch (error) {
+		console.error('Failed to get storage quota:', error);
+		return 0;
+	}
+}
+
+export async function getUsage(): Promise<number> {
+	if (!browser) return 0;
+	try {
+		const estimate = await navigator.storage.estimate();
+		return estimate.usage || 0;
+	} catch (error) {
+		console.error('Failed to get storage usage:', error);
+		return 0;
+	}
+}
+
 export async function deleteDatabase(): Promise<void> {
 	console.log('Deleting DB');
 	if (!idb) return;
