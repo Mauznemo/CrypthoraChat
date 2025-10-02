@@ -16,24 +16,9 @@
 
 	let content: HTMLElement | null = null;
 	let anchorMessageId: string = '';
+	let lockedToBottom = true;
 
-	export function scrollToBottomImmediate(): void {
-		container?.scrollTo({
-			top: container.scrollHeight,
-			behavior: 'smooth'
-		});
-	}
-
-	export function scrollToBottom(delay = 100): void {
-		setTimeout(() => {
-			container?.scrollTo({
-				top: container.scrollHeight,
-				behavior: 'smooth'
-			});
-		}, delay);
-	}
-
-	export function isNearBottom(threshold = 10): boolean {
+	function isNearBottom(threshold = 10): boolean {
 		if (!container) return false;
 
 		const { scrollTop, scrollHeight, clientHeight } = container;
@@ -42,15 +27,38 @@
 		return maxScrollTop - scrollTop <= threshold;
 	}
 
-	export function scrollToBottomIfNear(delay = 100): void {
-		setTimeout(() => {
-			if (container && isNearBottom(100)) {
-				container.scrollTo({
-					top: container.scrollHeight,
-					behavior: 'smooth'
-				});
-			}
-		}, delay);
+	export function lockToBottom(): void {
+		lockedToBottom = true;
+		container?.scrollTo({
+			top: container.scrollHeight,
+			behavior: 'smooth'
+		});
+	}
+
+	function handleWheel(event: Event) {
+		console.log('handleWheel');
+		if (isNearBottom(10)) lockedToBottom = true;
+		else lockedToBottom = false;
+	}
+
+	let wasDragging = false;
+
+	function handleTouchMove(event: Event) {
+		wasDragging = true;
+	}
+
+	function handleTouchEnd(event: Event) {
+		if (wasDragging) {
+			wasDragging = false;
+			if (isNearBottom(10)) lockedToBottom = true;
+			else lockedToBottom = false;
+		}
+	}
+
+	function onScroll(event: Event) {
+		if (isNearBottom(10)) lockedToBottom = true;
+
+		handleScroll?.();
 	}
 
 	onMount(() => {
@@ -79,6 +87,11 @@
 		};
 
 		const ro = new ResizeObserver(() => {
+			if (lockedToBottom) {
+				container!.scrollTop = container!.scrollHeight;
+				return;
+			}
+
 			const contentRect = content!.getBoundingClientRect();
 			const refEl = document.querySelector(`[data-message-id="${anchorMessageId}"]`);
 			const refTop = refEl?.getBoundingClientRect().top ?? 0;
@@ -116,7 +129,10 @@
 
 <div
 	bind:this={container}
-	onscroll={handleScroll}
+	onscroll={onScroll}
+	onwheel={handleWheel}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
 	data-scroll-container
 	class={` relative mini-scrollbar h-full overflow-x-hidden overflow-y-auto ${className}`}
 	aria-live="polite"

@@ -25,7 +25,6 @@ class Chat {
 	messages: ClientMessage[] = $state([]);
 	systemMessages: SystemMessage[] = $state([]);
 	loadingChat = $state(true);
-	shouldAutoScroll = $state(true);
 
 	getNewestChatKey(): CryptoKey | null {
 		if (this.activeChat === null) return null;

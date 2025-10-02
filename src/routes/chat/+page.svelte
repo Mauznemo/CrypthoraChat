@@ -56,14 +56,8 @@
 		}
 
 		socketStore.onNewMessage((m) => {
-			const nearBottom = chatStore.scrollView?.isNearBottom();
 			messages.handleNewMessage(m);
-			if (m.senderId === data?.user?.id) chatStore.scrollView?.scrollToBottom();
-			else {
-				if (nearBottom) {
-					chatStore.scrollView?.scrollToBottom();
-				}
-			}
+			if (m.senderId === data?.user?.id) chatStore.scrollView?.lockToBottom();
 		});
 		socketStore.onNewMessageNotify((d) => {
 			messages.handleNewMessageNotify(d);
@@ -80,11 +74,7 @@
 		socketStore.onNewChat(chats.handleAddedToChatChat);
 		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
 		socketStore.onNewSystemMessage((m) => {
-			const nearBottom = chatStore.scrollView?.isNearBottom();
 			messages.handleNewSystemMessage(m);
-			if (nearBottom) {
-				chatStore.scrollView?.scrollToBottom();
-			}
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
@@ -116,8 +106,6 @@
 			modalStore.alert('Error', error.error);
 			console.error('Socket error:', error);
 		});
-
-		chatStore.scrollView?.scrollToBottom();
 	});
 
 	onDestroy(() => {
@@ -198,8 +186,7 @@
 	}
 
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
-		chatStore.shouldAutoScroll = true;
-		chatStore.scrollView?.scrollToBottomImmediate();
+		// chatStore.scrollView?.lockToBottom();
 
 		const result = await chats.trySelectChat(newChat);
 
@@ -213,7 +200,7 @@
 
 			chatInput.handleChatSelected();
 			sideBar?.close();
-			chatStore.scrollView?.scrollToBottom(500);
+			// chatStore.scrollView?.scrollToBottom(500);
 		}
 	}
 
