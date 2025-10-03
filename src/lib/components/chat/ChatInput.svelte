@@ -163,14 +163,22 @@
 				const file = selectedFiles[i];
 				uploadingFile = file;
 
-				//TODO: Add option to disable compression
 				let fileToUpload = file;
 				if (file.type.startsWith('image/') && compressFiles[i]) {
 					fileToUpload = await compressImage(file);
 					fileSizes[i] = fileToUpload.size;
 				}
 
-				const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id);
+				let previewDimensions: { width: number; height: number } | null = null;
+				if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+					previewDimensions = await fileUtils.getMediaDimensions(fileToUpload);
+				}
+
+				const result = await tryUploadFile(
+					fileToUpload,
+					chatStore.activeChat.id,
+					previewDimensions
+				);
 
 				if (result.success) {
 					filePaths.push(result.filePath);

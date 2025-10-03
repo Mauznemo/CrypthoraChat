@@ -30,6 +30,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		let type: string | null = null;
+		let fileExtension: string | null = null;
 		let chatId: string | null = null;
 		let encryptedFileNameSafeBase64: string | null = null;
 		let filePath: string | null = null;
@@ -59,6 +60,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		bb.on('field', (name: string, value: string) => {
 			if (name === 'type') {
 				type = value;
+			} else if (name === 'fileExtension') {
+				fileExtension = value;
 			} else if (name === 'chatId') {
 				chatId = value;
 			} else if (name === 'encryptedFileNameSafeBase64') {
@@ -88,9 +91,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				resolve(errorResponse(413, 'File size limit exceeded'));
 			});
 
-			if (!type || !encryptedFileNameSafeBase64 || (!chatId && type === 'chatMedia')) {
+			if (
+				!type ||
+				!encryptedFileNameSafeBase64 ||
+				!fileExtension ||
+				(!chatId && type === 'chatMedia')
+			) {
 				file.resume();
-				resolve(errorResponse(400, 'Missing required fields: chatId and encryptedFileNameBase64'));
+				resolve(errorResponse(400, 'Missing required fields'));
 				return;
 			}
 
@@ -108,7 +116,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 				await ensureUploadDir(UPLOAD_BASE_PATH + relativePath);
 
-				const filename = `${randomUUID()}_${locals.user!.id}_${encryptedFileNameSafeBase64}.enc`;
+				const filename = `${randomUUID()}_${locals.user!.id}_${encryptedFileNameSafeBase64}.${fileExtension}.enc`;
 				filePath = path.join(UPLOAD_BASE_PATH + relativePath, filename);
 
 				const writeStream = createWriteStream(filePath);

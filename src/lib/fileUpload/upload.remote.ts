@@ -13,6 +13,10 @@ export const removeFile = command(v.string(), async (filePath: string) => {
 		error(401, 'Unauthorized');
 	}
 
+	if (filePath.indexOf(':') !== -1) {
+		filePath = filePath.substring(filePath.indexOf(':') + 1);
+	}
+
 	if (!fileExists(filePath)) {
 		error(404, 'File not found');
 	}
@@ -47,6 +51,10 @@ export const getFileSize = query(v.string(), async (filePath: string) => {
 		error(401, 'Unauthorized');
 	}
 
+	if (filePath.indexOf(':') !== -1) {
+		filePath = filePath.substring(filePath.indexOf(':') + 1);
+	}
+
 	if (!fileExists(filePath)) {
 		error(404, 'File not found');
 	}
@@ -56,6 +64,7 @@ export const getFileSize = query(v.string(), async (filePath: string) => {
 		const sizeBytes = stats.size;
 		return sizeBytes;
 	} catch (err) {
+		console.error(err);
 		return 0;
 	}
 });

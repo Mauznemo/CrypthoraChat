@@ -17,10 +17,8 @@ export const GET: RequestHandler = async ({ url, locals, request }) => {
 		return errorResponse(400, 'Missing filePath parameter');
 	}
 
-	let customType = '';
-	if (filePath.startsWith('sticker:')) {
-		customType = 'sticker';
-		filePath = filePath.substring('sticker:'.length);
+	if (filePath.indexOf(':') !== -1) {
+		filePath = filePath.substring(filePath.indexOf(':') + 1);
 	}
 
 	const normalizedPath = path.normalize(filePath);

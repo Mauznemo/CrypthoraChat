@@ -119,7 +119,9 @@
 
 			<svelte:boundary>
 				{#await decryptMessage({ message })}
-					<p class="pr-9 whitespace-pre-line text-white">loading...</p>
+					{#if message.attachmentPaths.length === 0}
+						<p class="pr-9 whitespace-pre-line text-white">loading...</p>
+					{/if}
 				{:then decryptedContent}
 					<p class="pr-9 break-all whitespace-pre-line text-white">
 						{@html processMessageText(decryptedContent)}

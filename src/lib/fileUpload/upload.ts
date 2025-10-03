@@ -3,12 +3,14 @@ import { modalStore } from '$lib/stores/modal.svelte';
 
 export async function tryUploadFile(
 	file: File,
-	chatId: string
+	chatId: string,
+	previewDimensions: { width: number; height: number } | null
 ): Promise<{ success: boolean; filePath: string }> {
 	const encrypted = await encryptFile(file);
 
 	const formData = new FormData();
 	formData.append('type', 'chatMedia');
+	formData.append('fileExtension', file.name.split('.').pop() ?? 'unknown');
 	formData.append('chatId', chatId);
 	formData.append('encryptedFileNameSafeBase64', encrypted.encryptedFileNameSafeBase64);
 	formData.append('encryptedData', encrypted.encryptedData, 'encrypted-file.enc');
@@ -26,7 +28,13 @@ export async function tryUploadFile(
 
 	const response = await res.json();
 
-	return { success: true, filePath: response.filePath };
+	let filePath = response.filePath;
+	if (previewDimensions) {
+		const { width, height } = previewDimensions;
+		filePath = `dimensions(${width}x${height}):${filePath}`;
+	}
+
+	return { success: true, filePath };
 }
 
 let activeControllers: AbortController[] = [];
@@ -96,6 +104,7 @@ export async function tryUploadUserSticker(
 
 	const formData = new FormData();
 	formData.append('type', 'userSticker');
+	formData.append('fileExtension', 'webp');
 	formData.append('encryptedFileNameSafeBase64', encrypted.encryptedFileNameSafeBase64);
 	formData.append('encryptedData', encrypted.encryptedData, 'encrypted-file.enc');
 

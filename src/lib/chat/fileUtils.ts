@@ -32,6 +32,10 @@ export const fileUtils = {
 		return IMAGE_EXTENSIONS.has(extension);
 	},
 
+	isImageExtension(extension: string): boolean {
+		return IMAGE_EXTENSIONS.has(extension);
+	},
+
 	/** Check if a filename has a video extension */
 	isVideoFile(filename: string): boolean {
 		if (!filename || typeof filename !== 'string') {
@@ -47,6 +51,10 @@ export const fileUtils = {
 		return VIDEO_EXTENSIONS.has(extension);
 	},
 
+	isVideoExtension(extension: string): boolean {
+		return VIDEO_EXTENSIONS.has(extension);
+	},
+
 	/** Check if a filename has an audio extension */
 	isAudioFile(filename: string): boolean {
 		if (!filename || typeof filename !== 'string') {
@@ -59,6 +67,10 @@ export const fileUtils = {
 		}
 
 		const extension = filename.substring(lastDotIndex + 1).toLowerCase();
+		return AUDIO_EXTENSIONS.has(extension);
+	},
+
+	isAudioExtension(extension: string): boolean {
 		return AUDIO_EXTENSIONS.has(extension);
 	},
 
@@ -103,5 +115,61 @@ export const fileUtils = {
 		const size = bytes / Math.pow(k, i);
 
 		return `${size.toFixed(decimals)} ${sizes[i]}`;
+	},
+
+	async getMediaDimensions(file: File): Promise<{ width: number; height: number }> {
+		const fileType = file.type.split('/')[0];
+
+		if (fileType === 'image') {
+			return getImageDimensions(file);
+		} else if (fileType === 'video') {
+			return getVideoDimensions(file);
+		} else {
+			throw new Error(`Unsupported file type: ${file.type}`);
+		}
 	}
 };
+
+function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+	return new Promise((resolve, reject) => {
+		const img = new Image();
+		const url = URL.createObjectURL(file);
+
+		img.onload = () => {
+			URL.revokeObjectURL(url);
+			resolve({
+				width: img.naturalWidth,
+				height: img.naturalHeight
+			});
+		};
+
+		img.onerror = () => {
+			URL.revokeObjectURL(url);
+			reject(new Error('Failed to load image'));
+		};
+
+		img.src = url;
+	});
+}
+
+function getVideoDimensions(file: File): Promise<{ width: number; height: number }> {
+	return new Promise((resolve, reject) => {
+		const video = document.createElement('video');
+		const url = URL.createObjectURL(file);
+
+		video.onloadedmetadata = () => {
+			URL.revokeObjectURL(url);
+			resolve({
+				width: video.videoWidth,
+				height: video.videoHeight
+			});
+		};
+
+		video.onerror = () => {
+			URL.revokeObjectURL(url);
+			reject(new Error('Failed to load video'));
+		};
+
+		video.src = url;
+	});
+}
