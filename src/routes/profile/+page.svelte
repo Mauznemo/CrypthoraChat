@@ -9,6 +9,8 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+	import { getMasterSeedForSharing } from '$lib/crypto/master';
 
 	let { data } = $props();
 
@@ -99,6 +101,16 @@
 			class="cursor-pointer text-left text-blue-400 underline"
 			onclick={() => (showChangePassword = !showChangePassword)}>Change Password</button
 		>
+		<button
+			class="cursor-pointer text-left text-blue-400 underline"
+			onclick={async () => {
+				emojiKeyConverterStore.openDisplay(
+					"Master Key (Don't share with anyone)",
+					false,
+					await getMasterSeedForSharing()
+				);
+			}}>Show Master Key</button
+		>
 
 		{#if showChangePassword}
 			<div class="flex gap-2">
@@ -157,44 +169,46 @@
 			>
 		{/if}
 
-		<button
-			onclick={async () => {
-				displayName = displayName.trim();
-				if (displayName === '') {
-					modalStore.alert('Error', 'Display name cannot be empty!');
-					return;
-				}
-
-				loadingSave = true;
-				try {
-					await updateDisplayName(displayName);
-
-					if (selectedFile) {
-						const result = await tryUploadProfilePicture(selectedFile);
-						if (!result.success) {
-							loadingSave = false;
-							return;
-						}
-
-						await updateProfilePicture(result.filePath);
+		{#if data.user?.displayName !== displayName || previewUrl}
+			<button
+				onclick={async () => {
+					displayName = displayName.trim();
+					if (displayName === '') {
+						modalStore.alert('Error', 'Display name cannot be empty!');
+						return;
 					}
-				} catch (error) {
+
+					loadingSave = true;
+					try {
+						await updateDisplayName(displayName);
+
+						if (selectedFile) {
+							const result = await tryUploadProfilePicture(selectedFile);
+							if (!result.success) {
+								loadingSave = false;
+								return;
+							}
+
+							await updateProfilePicture(result.filePath);
+						}
+					} catch (error) {
+						loadingSave = false;
+						modalStore.error(error, 'Failed update profile:');
+						return;
+					}
 					loadingSave = false;
-					modalStore.error(error, 'Failed update profile:');
-					return;
-				}
-				loadingSave = false;
-				await invalidateAll();
-				toastStore.success('Updated successfully!');
-			}}
-			class="mt-5 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
-		>
-			{#if loadingSave}
-				<LoadingSpinner size="1.5rem" />
-			{:else}
-				Save
-			{/if}
-		</button>
+					await invalidateAll();
+					toastStore.success('Updated successfully!');
+				}}
+				class="mt-5 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
+			>
+				{#if loadingSave}
+					<LoadingSpinner size="1.5rem" />
+				{:else}
+					Save
+				{/if}
+			</button>
+		{/if}
 
 		<button
 			onclick={async () => {

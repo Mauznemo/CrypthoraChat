@@ -226,18 +226,6 @@
 		<ChatList onChatSelected={selectChat} onCreateChat={handleCreateChat} />
 
 		<button
-			onclick={async () => {
-				emojiKeyConverterStore.openDisplay(
-					"Master Key (Don't share with anyone)",
-					false,
-					await getMasterSeedForSharing()
-				);
-			}}
-			class="absolute bottom-20 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
-			>Show Master Key</button
-		>
-
-		<button
 			onclick={() => goto('/settings')}
 			class="absolute bottom-2 left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
 			><Icon icon="mdi:gear" class="size-6" /></button
