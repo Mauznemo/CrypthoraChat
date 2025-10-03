@@ -208,27 +208,6 @@
 		processingChatSelection = false;
 	}
 
-	async function resetServiceWorkers(): Promise<void> {
-		if ('serviceWorker' in navigator) {
-			const registrations = await navigator.serviceWorker.getRegistrations();
-			for (const registration of registrations) {
-				await registration.unregister();
-				console.log('Service worker unregistered:', registration);
-			}
-			window.location.reload();
-		}
-	}
-
-	async function clearCaches(): Promise<void> {
-		if ('caches' in window) {
-			const cacheNames = await caches.keys();
-			for (const name of cacheNames) {
-				await caches.delete(name);
-				console.log('Cache deleted:', name);
-			}
-		}
-	}
-
 	if (browser) {
 		window.disconnectSocket = () => socketStore.disconnect();
 		window.connectSocket = () => {
@@ -245,16 +224,7 @@
 <div class="flex h-dvh min-h-0">
 	<SideBar bind:this={sideBar}>
 		<ChatList onChatSelected={selectChat} onCreateChat={handleCreateChat} />
-		<button
-			onclick={resetServiceWorkers}
-			class="absolute bottom-0 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
-			>Reset Service Workers</button
-		>
-		<button
-			onclick={clearCaches}
-			class="absolute bottom-10 rounded-full bg-gray-700 p-2 text-sm font-bold text-gray-400"
-			>Clear Caches</button
-		>
+
 		<button
 			onclick={async () => {
 				emojiKeyConverterStore.openDisplay(
@@ -283,8 +253,6 @@
 			>
 				☰
 			</button>
-
-			<!-- Chat text //TODO: Replace with chat name and pic -->
 
 			<div class="flex items-center">
 				<div>
