@@ -1,2 +1,66 @@
 <script lang="ts">
+	import type { Session } from '$prisma';
+	import { onMount } from 'svelte';
+	import { getCurrentSessionId, getSessions, logoutSession } from './data.remote';
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
+
+	let sessions: Session[] = $state([]);
+	let currentSessionId = $state('');
+
+	onMount(async () => {
+		currentSessionId = (await getCurrentSessionId()) ?? '';
+		sessions = (await getSessions()) ?? [];
+	});
+
+	function handleLogout(sessionId: string) {
+		if (sessionId === currentSessionId) {
+			return;
+		}
+
+		modalStore.confirm('Logout?', 'Are you sure you want to logout this device?', async () => {
+			try {
+				await logoutSession(sessionId);
+			} catch (error: any) {
+				console.error(error);
+				toastStore.error('Failed to logout: ' + error.body.message);
+			} finally {
+				sessions = sessions.filter((s) => s.id !== sessionId);
+				toastStore.success('Successfully logged out session!');
+			}
+		});
+	}
 </script>
+
+{#if sessions.length > 0}
+	<div class="flex flex-col gap-2">
+		{#each sessions as session}
+			{@const isActive = session.id === currentSessionId}
+			<div class="flex justify-between rounded-3xl bg-gray-600/40 p-3 px-5 frosted-glass">
+				<div>
+					<div class="mb-2 flex items-center justify-start">
+						<p class="mr-5 text-xl font-bold">{session.deviceOs || 'Unknown OS'}</p>
+						{#if isActive}
+							<p class="text-md font-bold text-green-300">Current Session</p>
+						{/if}
+					</div>
+					<p class="text-md text-gray-200">
+						Created: {new Date(session.createdAt).toLocaleString()}
+					</p>
+					<p class="text-md text-gray-200">
+						Expires: {new Date(session.expiresAt).toLocaleString()}
+					</p>
+				</div>
+				<div class="flex items-center">
+					{#if !isActive}
+						<button
+							onclick={() => handleLogout(session.id)}
+							class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
+							>Logout</button
+						>
+					{/if}
+				</div>
+			</div>
+		{/each}
+	</div>
+{/if}

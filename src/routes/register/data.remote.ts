@@ -6,18 +6,18 @@ import { error, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const register = form(async (data) => {
-	// Check the user is logged in
 	const username = data.get('username');
 	const password = data.get('password');
 	const confirmPassword = data.get('confirm-password');
+	const deviceOs = data.get('device-os');
 
 	const input = {
-		username: typeof username === 'string' ? username : '', // Fallback to empty string if not string (Valibot will catch it)
+		username: typeof username === 'string' ? username : '',
 		password: typeof password === 'string' ? password : '',
-		confirmPassword: typeof confirmPassword === 'string' ? confirmPassword : ''
+		confirmPassword: typeof confirmPassword === 'string' ? confirmPassword : '',
+		deviceOs: typeof deviceOs === 'string' ? deviceOs : ''
 	};
 
-	// Validate against the schema
 	const result = v.safeParse(RegisterSchema, input);
 
 	if (!result.success) {
@@ -45,16 +45,16 @@ export const register = form(async (data) => {
 
 	try {
 		const user = await createUser(result.output.username, result.output.password);
-		const session = await createSession(user.id);
+		const session = await createSession(user.id, result.output.deviceOs);
 
 		const { cookies } = getRequestEvent();
 
 		cookies.set('session', session.id, {
 			path: '/',
 			httpOnly: true,
-			secure: false, // Set to true in production with HTTPS
+			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
-			maxAge: 60 * 60 * 24 * 360 // 30 days
+			maxAge: 60 * 60 * 24 * 360
 		});
 	} catch (err: any) {
 		if (err.code === 'P2002') {
@@ -63,6 +63,4 @@ export const register = form(async (data) => {
 		console.error('Registration error:', err);
 		error(500, 'Something went wrong. Please try again.');
 	}
-
-	//redirect(302, '/chat');
 });

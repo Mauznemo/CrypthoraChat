@@ -5,6 +5,7 @@
 	import { deleteDatabase, idb } from '$lib/idb';
 	import Icon from '@iconify/svelte';
 	import { register } from './data.remote';
+	import { getDeviceInfo } from '$lib/utils/device';
 
 	let { data } = $props();
 
@@ -26,6 +27,8 @@
 		<form
 			{...register.enhance(async ({ form, data, submit }) => {
 				try {
+					const deviceInfo = getDeviceInfo();
+					data.set('device-os', `${deviceInfo.browser} on ${deviceInfo.os}`);
 					redirectToProfile = false;
 					localStorage.clear();
 					await deleteDatabase();

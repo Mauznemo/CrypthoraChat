@@ -20,14 +20,16 @@ export const RegisterSchema = v.pipe(
 			v.string('Confirm Password is required'),
 			v.minLength(6, 'Confirm Password must be at least 6 characters'),
 			v.maxLength(128, 'Confirm Password must be less than 128 characters')
-		)
+		),
+		deviceOs: v.string()
 	}),
 	v.check((input) => input.password === input.confirmPassword, 'Passwords do not match')
 );
 
 export const LoginSchema = v.object({
 	username: v.pipe(v.string('Username is required'), v.minLength(1, 'Username is required')),
-	password: v.pipe(v.string('Password is required'), v.minLength(1, 'Password is required'))
+	password: v.pipe(v.string('Password is required'), v.minLength(1, 'Password is required')),
+	deviceOs: v.string()
 });
 
 export function collectErrorMessages(issues: v.BaseIssue<unknown>[]): string[] {

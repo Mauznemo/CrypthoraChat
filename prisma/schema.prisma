@@ -88,6 +88,8 @@ model PublicUserChatKey {
 model Session {
   id        String   @id @default(cuid())
   userId    String
+  deviceOs  String
+  createdAt DateTime @default(now())
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

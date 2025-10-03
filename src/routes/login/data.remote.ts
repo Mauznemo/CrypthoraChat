@@ -5,16 +5,16 @@ import { error, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const login = form(async (data) => {
-	// Check the user is logged in
 	const username = data.get('username');
 	const password = data.get('password');
+	const deviceOs = data.get('device-os');
 
 	const input = {
 		username: typeof username === 'string' ? username : '',
-		password: typeof password === 'string' ? password : ''
+		password: typeof password === 'string' ? password : '',
+		deviceOs: typeof deviceOs === 'string' ? deviceOs : ''
 	};
 
-	// Validate against the schema
 	const result = v.safeParse(LoginSchema, input);
 
 	if (!result.success) {
@@ -29,7 +29,7 @@ export const login = form(async (data) => {
 		error(400, 'Invalid username or password');
 	}
 
-	const session = await createSession(user.id);
+	const session = await createSession(user.id, result.output.deviceOs);
 
 	const { cookies } = getRequestEvent();
 

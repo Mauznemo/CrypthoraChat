@@ -3,6 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { login } from './data.remote';
 	import { deleteDatabase } from '$lib/idb';
+	import { getDeviceInfo } from '$lib/utils/device';
 
 	let { data } = $props();
 
@@ -23,6 +24,8 @@
 		<form
 			{...login.enhance(async ({ form, data, submit }) => {
 				try {
+					const deviceInfo = getDeviceInfo();
+					data.set('device-os', `${deviceInfo.browser} on ${deviceInfo.os}`);
 					await deleteDatabase();
 					await submit();
 					form.reset();

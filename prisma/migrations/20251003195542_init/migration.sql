@@ -64,6 +64,8 @@ CREATE TABLE "public"."PublicUserChatKey" (
 CREATE TABLE "public"."Session" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "deviceOs" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expiresAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")

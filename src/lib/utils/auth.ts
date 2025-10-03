@@ -36,14 +36,15 @@ export async function validateUser(username: string, password: string): Promise<
 	return isValid ? user : null;
 }
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, deviceOs: string) {
 	const expiresAt = new Date();
 	expiresAt.setDate(expiresAt.getDate() + 360); // 360 days
 
 	return db.session.create({
 		data: {
 			userId,
-			expiresAt
+			expiresAt,
+			deviceOs
 		}
 	});
 }
