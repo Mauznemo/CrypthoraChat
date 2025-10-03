@@ -11,7 +11,7 @@ interface ToastItem {
 class Toast {
 	toasts = $state<ToastItem[]>([]);
 
-	private show(message: string, type: ToastType, title?: string, duration = 3000) {
+	private show(message: string, type: ToastType, title?: string, duration = 8000) {
 		const id = Math.random().toString(36).substring(2, 9);
 
 		const toast: ToastItem = {

@@ -17,7 +17,6 @@
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import type { Prisma } from '$prisma';
 	import Icon from '@iconify/svelte';
-	import e from 'cors';
 	import { tick } from 'svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
@@ -46,7 +45,13 @@
 		isOpen = true;
 		stickers = [];
 
-		stickersPaths = await getUserStickers();
+		try {
+			stickersPaths = await getUserStickers();
+		} catch (error) {
+			console.error(error);
+			toastStore.error('Failed to fetch stickers');
+			return;
+		}
 
 		stickersPaths = stickersPaths.sort((a, b) => {
 			if (a.favorited && !b.favorited) return -1;
@@ -56,6 +61,7 @@
 
 		for (const sticker of stickersPaths) {
 			const previewUrl = await getMediaUrl(sticker.stickerPath);
+
 			if (!previewUrl) continue;
 			stickers.push({
 				id: sticker.id,
@@ -80,7 +86,7 @@
 		if (!blob) return;
 		const fileToUpload = blobToFile(blob, 'sticker.webp');
 
-		const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id);
+		const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id, null);
 
 		if (!result.success) {
 			modalStore.error('Failed to upload sticker');
@@ -113,8 +119,13 @@
 		} else {
 			const result = await tryGetFile(attachmentPath);
 			if (!result.success) return null;
-			blob = await decryptFile(result.encodedData!, -1, 'master');
-			await saveFileToIDB(attachmentPath, blob);
+			try {
+				blob = await decryptFile(result.encodedData!, -1, 'master');
+				await saveFileToIDB(attachmentPath, blob);
+			} catch (error) {
+				console.error('Failed to decrypt file', error);
+				return null;
+			}
 		}
 
 		return blob;
