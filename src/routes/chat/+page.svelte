@@ -185,8 +185,10 @@
 		});
 	}
 
+	let processingChatSelection = false;
 	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
-		// chatStore.scrollView?.lockToBottom();
+		if (processingChatSelection) return;
+		processingChatSelection = true;
 
 		const result = await chats.trySelectChat(newChat);
 
@@ -202,6 +204,8 @@
 			sideBar?.close();
 			// chatStore.scrollView?.scrollToBottom(500);
 		}
+
+		processingChatSelection = false;
 	}
 
 	async function resetServiceWorkers(): Promise<void> {

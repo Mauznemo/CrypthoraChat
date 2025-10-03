@@ -99,7 +99,7 @@ export const chats = {
 	}): void {
 		if (data.chatId !== chatStore.activeChat?.id) return;
 		if (data.newName) chatStore.activeChat.name = data.newName;
-		if (data.newImagePath) chatStore.activeChat.image = data.newImagePath;
+		if (data.newImagePath) chatStore.activeChat.imagePath = data.newImagePath;
 		chatList.updateChat(chatStore.activeChat);
 	},
 

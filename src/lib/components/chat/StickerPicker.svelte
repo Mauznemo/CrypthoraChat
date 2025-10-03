@@ -42,6 +42,7 @@
 	let uploadingFile: boolean = $state(false);
 
 	export async function open(): Promise<void> {
+		if (isOpen) return;
 		isOpen = true;
 		stickers = [];
 
@@ -71,6 +72,13 @@
 			});
 
 			await tick();
+		}
+	}
+
+	export function close(): void {
+		isOpen = false;
+		for (const sticker of stickers) {
+			if (sticker.previewUrl) URL.revokeObjectURL(sticker.previewUrl);
 		}
 	}
 
@@ -250,7 +258,7 @@
 				</button>
 			{/each}
 		</div>
-		<button class="absolute top-2 right-2 cursor-pointer" onclick={() => (isOpen = false)}>
+		<button class="absolute top-2 right-2 cursor-pointer" onclick={close}>
 			<Icon icon="mdi:close" class="size-6" />
 		</button>
 	</div>

@@ -8,7 +8,7 @@
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
-	import { onMount, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { saveUserSticker } from '../../../routes/sticker-editor/stickerEditor.remote';
 	import { blobToFile } from '$lib/utils/imageConverter';
@@ -60,6 +60,12 @@
 		}
 	});
 
+	onDestroy(() => {
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+		}
+	});
+
 	async function decryptName(attachmentPath: string, keyVersion: number): Promise<string> {
 		// await new Promise((resolve) => setTimeout(resolve, 5000));
 		if (attachmentPath.startsWith('sticker:')) {
@@ -107,7 +113,7 @@
 			console.log('saveFileToIDB');
 		}
 
-		console.log('previewUrl', previewUrl);
+		console.log('previewUrl', previewUrl, 'for', name);
 
 		return previewUrl;
 	}
@@ -430,7 +436,8 @@
 
 {#snippet ignoreLimitButton(name: string, fileSizeBytes: number)}
 	<div
-		class="relative flex h-[300px] w-[400px] max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
+		style={getPreviewSize()}
+		class="relative flex max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
 	>
 		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
 			<button

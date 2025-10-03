@@ -142,7 +142,7 @@
 </script>
 
 <div
-	class="group relative overflow-hidden rounded-lg bg-black {className}"
+	class="group relative h-full w-full overflow-hidden rounded-lg bg-black {className}"
 	role="region"
 	aria-label="Video player"
 	onmousemove={showControlsTemporarily}
@@ -154,7 +154,7 @@
 		{autoplay}
 		muted={isMuted}
 		{loop}
-		class="h-full max-h-[600px] w-full"
+		class="h-full w-full"
 		onloadedmetadata={handleLoadedMetadata}
 		ontimeupdate={handleTimeUpdate}
 		onplay={handlePlay}

@@ -58,6 +58,7 @@
 	}
 
 	function calculateValue(value: number): number {
+		if (!sliderElement) return 0;
 		const percentage = max > min ? ((value - min) / (max - min)) * 100 : 0;
 		const sliderWidth = sliderElement.offsetWidth;
 		const minWidthPercentage = (20 / sliderWidth) * 100;
