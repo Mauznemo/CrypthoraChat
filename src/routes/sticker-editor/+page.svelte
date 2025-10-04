@@ -161,7 +161,7 @@
 	}
 
 	function handleCanvasPointerDown(e: MouseEvent | TouchEvent) {
-		if (!canvas) return;
+		if (!canvas || isResizing || isRotating) return; // Prevent new selection while resizing/rotating
 
 		const pos = getPointerPosition(e);
 		const rect = canvas.getBoundingClientRect();
@@ -195,12 +195,12 @@
 		const dx = (pos.x - dragStart.x) * ratio;
 		const dy = (pos.y - dragStart.y) * ratio;
 
-		if (isDragging) {
+		if (isDragging && selectedObj && !isResizing && !isRotating) {
 			selectedObj.x += dx;
 			selectedObj.y += dy;
 			dragStart = { x: pos.x, y: pos.y };
 			render();
-		} else if (isResizing && resizeHandle !== null && resizeStart) {
+		} else if (isResizing && selectedObj && resizeHandle !== null && resizeStart) {
 			const mouseX = (pos.x - rect.left) * ratio;
 			const mouseY = (pos.y - rect.top) * ratio;
 
@@ -283,7 +283,10 @@
 		}
 	}
 
-	function handleDocumentPointerUp() {
+	function handleDocumentPointerUp(e: MouseEvent | TouchEvent) {
+		if (isResizing || isRotating) {
+			e.stopPropagation();
+		}
 		isDragging = false;
 		isResizing = false;
 		isRotating = false;
@@ -508,6 +511,7 @@
 <svelte:window
 	onmousemove={handleDocumentPointerMove}
 	onmouseup={handleDocumentPointerUp}
+	onpointercancel={handleDocumentPointerUp}
 	ontouchmove={handleDocumentPointerMove}
 	ontouchend={handleDocumentPointerUp}
 	onkeydown={handleKeyDown}
@@ -592,7 +596,7 @@
 				bind:this={canvas}
 				width="512"
 				height="512"
-				class="h-full w-full border-2 border-gray-600 bg-gray-700"
+				class="h-full w-full border-2 border-gray-600 bg-gray-700 select-none"
 				onmousedown={handleCanvasPointerDown}
 				ontouchstart={handleCanvasPointerDown}
 			></canvas>
@@ -605,13 +609,22 @@
 				{@const offsetX = canvasRect.left - containerRect.left}
 				{@const offsetY = canvasRect.top - containerRect.top}
 				{@const rotatePos = getRotateHandlePosition(selectedObj)}
+				{@const rotationDegrees = ((selectedObj.rotation || 0) * 180) / Math.PI}
 
 				{#each corners as corner, i}
+					{@const baseAngle = i * 90}
+					<!-- 0, 90, 180, 270 for corners 0,1,2,3 -->
+					{@const totalAngle = (baseAngle + rotationDegrees) % 360}
+					{@const normalizedAngle = ((totalAngle % 180) + 180) % 180}
+					<!-- Normalize to 0-180 -->
+					{@const cursor =
+						normalizedAngle >= 45 && normalizedAngle < 135 ? 'nesw-resize' : 'nwse-resize'}
+
 					<div
-						class="absolute h-4 w-4 cursor-pointer touch-none rounded-full border-2 border-blue-500 bg-white"
+						class="resi absolute h-4 w-4 cursor-pointer touch-none rounded-full border-2 border-blue-500 bg-white select-none"
 						style="left: {corner.x * scale + offsetX - 8}px; top: {corner.y * scale +
 							offsetY -
-							8}px; cursor: {i % 2 === 0 ? 'nwse-resize' : 'nesw-resize'};"
+							8}px; cursor: {cursor};"
 						onmousedown={(e) => handleCornerPointerDown(e, i)}
 						ontouchstart={(e) => handleCornerPointerDown(e, i)}
 						role="button"
