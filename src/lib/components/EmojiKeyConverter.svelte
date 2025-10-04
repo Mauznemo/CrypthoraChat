@@ -7,6 +7,9 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
 	import Icon from '@iconify/svelte';
+	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
+
+	type EmojiDataType = typeof emojiData;
 
 	let mode: 'display' | 'input' = $state('input');
 	let base64Seed: string;
@@ -247,10 +250,18 @@
 						class="emoji-consistent grid grid-cols-4 justify-items-center gap-3 px-0 select-none"
 					>
 						{#each displayEmojis as emoji, index}
+							{@const data = (emojiData as EmojiDataType)[emoji as keyof EmojiDataType]}
 							<div
-								class="flex size-18 items-center justify-center rounded-lg border-2 border-gray-600 text-4xl transition-colors"
+								class="flex h-24 w-22 flex-col items-center justify-center gap-1 rounded-lg border-2 border-gray-600 text-4xl transition-colors"
 							>
 								{emoji}
+								<p
+									class="px-0.5 text-center {data.name.length > 20
+										? 'text-xs'
+										: 'text-sm'} leading-tight break-words text-gray-400"
+								>
+									{data.name}
+								</p>
 							</div>
 						{/each}
 					</div>
@@ -287,14 +298,24 @@
 
 					<div class="grid grid-cols-4 justify-items-center gap-3">
 						{#each Array(16) as _, index}
+							{@const data = emojiSequence[index]
+								? (emojiData as EmojiDataType)[emojiSequence[index] as keyof EmojiDataType]
+								: { name: '' }}
 							<button
-								class="flex size-18 cursor-pointer items-center justify-center rounded-lg border-2 border-gray-600 text-4xl transition-colors hover:border-blue-400 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
+								class="flex h-24 w-22 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-gray-600 text-4xl transition-colors hover:border-blue-400 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
 								class:filled={emojiSequence[index]}
 								class:active={index === inputIndex}
 								onclick={openEmojiPicker}
 								disabled={index > inputIndex}
 							>
 								{emojiSequence[index] || '❓'}
+								<p
+									class="px-0.5 text-center {data.name.length > 20
+										? 'text-xs'
+										: 'text-sm'} leading-tight break-words text-gray-400"
+								>
+									{data.name}
+								</p>
 							</button>
 						{/each}
 					</div>

@@ -202,7 +202,8 @@ export async function tryGetPublicKey(): Promise<{ success: boolean; publicKey: 
 							);
 						}
 					}
-				]
+				],
+				id: 'public-key-integrity-error'
 			});
 			return { success: false, publicKey: '' };
 		}

@@ -33,16 +33,23 @@ export async function checkForMasterKey(): Promise<void> {
 			buttons: [
 				{
 					text: 'Generate New',
-					variant: 'primary',
+					variant: 'danger',
 					onClick: () => {
 						modalStore.removeFromQueue('decryption-chat-key-error'); //Content of error would be outdated at this point
-						generateAndStoreMasterKey();
+						modalStore.confirm(
+							'Are you sure?',
+							'You will no longer have access to your current chats and stickers, only new ones created after re-generating your master key.',
+							() => {
+								generateAndStoreMasterKey();
+							}
+						);
 					}
 				},
 				{
 					text: 'Import Existing',
 					variant: 'primary',
 					onClick: () => {
+						modalStore.removeFromQueue('public-key-integrity-error');
 						showMasterKeyImport();
 					}
 				}

@@ -11,6 +11,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
+	import { showMasterKeyImport } from '$lib/chat/masterKey';
 
 	let { data } = $props();
 
@@ -94,15 +95,17 @@
 		{#if data.user?.isAdmin}
 			<p>
 				<strong>You are Admin of this Server</strong>
-				<a class="text-blue-400 underline" href="/admin">Go to Admin Dashboard</a>
+				<a class="text-blue-400 underline hover:text-blue-300" href="/admin"
+					>Go to Admin Dashboard</a
+				>
 			</p>
 		{/if}
 		<button
-			class="cursor-pointer text-left text-blue-400 underline"
+			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
 			onclick={() => (showChangePassword = !showChangePassword)}>Change Password</button
 		>
 		<button
-			class="cursor-pointer text-left text-blue-400 underline"
+			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
 			onclick={async () => {
 				emojiKeyConverterStore.openDisplay(
 					"Master Key (Don't share with anyone)",
@@ -111,6 +114,11 @@
 				);
 			}}>Show Master Key</button
 		>
+		<button
+			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
+			onclick={() => showMasterKeyImport()}>Re-import Master Key</button
+		>
+		<br />
 
 		{#if showChangePassword}
 			<div class="flex gap-2">

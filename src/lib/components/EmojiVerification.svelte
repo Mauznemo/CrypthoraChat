@@ -5,6 +5,9 @@
 	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
 	import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
 	import Icon from '@iconify/svelte';
+	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
+
+	type EmojiDataType = typeof emojiData;
 
 	let base64: string;
 
@@ -179,10 +182,18 @@
 			<div class="space-y-4">
 				<div class="emoji-consistent grid grid-cols-4 justify-items-center gap-3 px-0 select-none">
 					{#each displayEmojis as emoji, index}
+						{@const data = (emojiData as EmojiDataType)[emoji as keyof EmojiDataType]}
 						<div
-							class="flex size-18 items-center justify-center rounded-lg border-2 border-gray-600 text-4xl transition-colors"
+							class="flex h-24 w-22 flex-col items-center justify-center gap-1 rounded-lg border-2 border-gray-600 text-4xl transition-colors"
 						>
 							{emoji}
+							<p
+								class="px-0.5 text-center {data.name.length > 20
+									? 'text-xs'
+									: 'text-sm'} leading-tight break-words text-gray-400"
+							>
+								{data.name}
+							</p>
 						</div>
 					{/each}
 				</div>
