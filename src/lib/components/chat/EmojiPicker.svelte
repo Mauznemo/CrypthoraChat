@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
+	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
 	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
@@ -161,7 +162,7 @@
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
 			bind:this={pickerElement}
-			class="frosted-glass-shadow fixed flex h-96 w-80 flex-col rounded-4xl bg-gray-800/60"
+			class="fixed flex h-96 w-80 flex-col rounded-4xl bg-gray-800/60 frosted-glass-shadow"
 			style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px;"
 		>
 			<!-- Header with search -->
@@ -169,7 +170,7 @@
 				<input
 					bind:this={searchInput}
 					type="text"
-					placeholder="Search emojis..."
+					placeholder={$t('utils.emoji-picker.search-placeholder')}
 					bind:value={searchTerm}
 					class="w-full rounded-full border border-gray-700 bg-gray-700/20 px-3 py-2 text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				/>
@@ -209,7 +210,7 @@
 				</div>
 
 				{#if filteredEmojis.length === 0}
-					<div class="py-8 text-center text-gray-400">No emojis found</div>
+					<div class="py-8 text-center text-gray-400">{$t('utils.emoji-picker.no-results')}</div>
 				{/if}
 			</div>
 		</div>

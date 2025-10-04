@@ -15,6 +15,7 @@
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
+	import { t } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 
@@ -36,13 +37,18 @@
 							? 'All users not verified'
 							: 'Some users not verified',
 					content:
-						(unverifiedUsers.length === 1 ? 'User ' : 'Users ') +
-						unverifiedUsers.map((u) => '@' + u.username).join(', ') +
-						(unverifiedUsers.length === 1 ? ' is' : ' are') +
-						' not verified. You need to verify with them once before creating a chat with them.',
+						unverifiedUsers.length === 1
+							? $t('chat.new.dm.not-verified-content', {
+									values: { username: unverifiedUsers[0].username }
+								})
+							: $t('chat.new.group.not-verified-content', {
+									values: { usernames: unverifiedUsers.map((u) => '@' + u.username).join(', ') }
+								}),
 					buttons: [
 						{
-							text: 'Verify @' + unverifiedUsers[0].username,
+							text: $t('chat.new.group.verify-user', {
+								values: { username: unverifiedUsers[0].username }
+							}),
 							variant: 'primary',
 							onClick: () => {
 								verifyUser(unverifiedUsers[0], true);
@@ -88,7 +94,7 @@
 				});
 			} catch (err) {
 				console.error(err);
-				modalStore.error(err, 'Failed to save chat key:');
+				modalStore.error(err, $t('chat.new.failed-to-save-chat-key'));
 			}
 
 			if (result.success) {
@@ -102,9 +108,7 @@
 			}
 		} catch (err: any) {
 			loading = false;
-			if (err?.body.message) {
-				modalStore.alert('Error', 'Failed to create group: ' + err.body.message);
-			}
+			modalStore.error(err, $t('chat.new.failed-to-create-chat'));
 		}
 	}
 
@@ -147,7 +151,9 @@
 	>
 		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
 			<BackButton backPath="/chat" />
-			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">New Group Chat</h1>
+			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">
+				{$t('chat.new-group')}
+			</h1>
 		</div>
 
 		<div class="flex w-full justify-start space-x-4 px-5 py-3 pb-6">
@@ -213,7 +219,7 @@
 				bind:value={groupName}
 				type="text"
 				class="mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-				placeholder="Group Name..."
+				placeholder={$t('chat.new.group.group-name')}
 			/>
 		</div>
 
@@ -231,7 +237,7 @@
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				Create Group
+				{$t('chat.new.group.create-group')}
 			{/if}
 		</button>
 	</div>

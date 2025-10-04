@@ -3,6 +3,7 @@
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { formatHex } from 'culori';
 	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	let currentAccentColor: string | null = $state(null);
 	let currentBackgroundColor1: string | null = $state(null);
@@ -40,7 +41,7 @@
 	});
 </script>
 
-<p class="mt-4 mb-1 text-xl font-bold">Accent Color</p>
+<p class="mt-4 mb-1 text-xl font-bold">{$t('settings.appearance.accent-color')}</p>
 {#if currentAccentColor}
 	<ColorPicker
 		initialColor={formatHex(currentAccentColor)}
@@ -48,10 +49,10 @@
 	/>
 {/if}
 
-<p class="mt-4 mb-1 text-lg font-bold">Preview</p>
+<p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.preview')}</p>
 <div class="flex w-fit flex-col items-end gap-2 rounded-xl border border-gray-400 p-4">
 	<div class="relative w-fit rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow">
-		<p class="pr-8">Hello</p>
+		<p class="pr-8">{$t('settings.appearance.preview-message-1')}</p>
 		<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
 			{new Date().toLocaleTimeString([], {
 				hour: '2-digit',
@@ -60,7 +61,7 @@
 		</div>
 	</div>
 	<div class="relative w-fit rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow">
-		<p class="pr-8">This is what a message looks like!</p>
+		<p class="pr-8">{$t('settings.appearance.preview-message-2')}</p>
 		<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
 			{new Date().toLocaleTimeString([], {
 				hour: '2-digit',
@@ -84,7 +85,7 @@
 	</div>
 </div>
 
-<p class="mt-4 mb-1 text-xl font-bold">Background</p>
+<p class="mt-4 mb-1 text-xl font-bold">{$t('settings.appearance.background')}</p>
 
 <select
 	onchange={handleBackgroundChange}
@@ -98,18 +99,18 @@
 </select>
 
 {#if themeStore.backgroundType === 'gradient' && currentBackgroundColor1 && currentBackgroundColor2}
-	<p class="mt-4 mb-1 text-lg font-bold">Top Left</p>
+	<p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.top-left')}</p>
 	<ColorPicker
 		initialColor={formatHex(currentBackgroundColor1)}
 		onColorChange={(c) => handleBackgroundColorChange(c, '1')}
 	/>
-	<p class="mt-4 mb-1 text-lg font-bold">Bottom Right</p>
+	<p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.bottom-right')}</p>
 	<ColorPicker
 		initialColor={formatHex(currentBackgroundColor2)}
 		onColorChange={(c) => handleBackgroundColorChange(c, '2')}
 	/>
 {:else if themeStore.backgroundType === 'solid' && currentBackgroundColor1}
-	<p class="mt-4 mb-1 text-lg font-bold">Tint Color</p>
+	<p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.background-tint')}</p>
 	<ColorPicker
 		initialColor={formatHex(currentBackgroundColor1)}
 		onColorChange={(c) => handleBackgroundColorChange(c, '1')}

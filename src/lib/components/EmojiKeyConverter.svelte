@@ -8,6 +8,7 @@
 	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
 	import Icon from '@iconify/svelte';
 	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
+	import { t } from 'svelte-i18n';
 
 	type EmojiDataType = typeof emojiData;
 
@@ -70,7 +71,12 @@
 		const hours = Math.floor(diffMinutes / 60);
 		const minutes = diffMinutes % 60;
 
-		return `${hours.toString().padStart(1, '0')} hours and ${minutes.toString().padStart(2, '0')} minutes`;
+		return $t('utils.emoji-key-converter.time-remaining', {
+			values: {
+				hours: hours.toString().padStart(1, '0'),
+				minutes: minutes.toString().padStart(2, '0')
+			}
+		});
 	}
 
 	export function removeAdditionalDataFromEmoji(emoji: string): string {
@@ -168,7 +174,7 @@
 			const seed = await emojiSequenceToSeed(emojiSequence);
 			emojiKeyConverterStore.onDone?.(seed);
 		} catch (error) {
-			modalStore.alert('Error', 'Failed to generate key from emoji sequence: ' + error);
+			modalStore.error(error, $t('utils.emoji-key-converter.failed-to-generate-key'));
 			console.error('Failed to generate key from emoji sequence:', error);
 		}
 	}
@@ -268,7 +274,9 @@
 				</div>
 				{#if emojiKeyConverterStore.useDateSalt}
 					<p class="mt-3 text-center text-sm text-gray-400">
-						This Key will expire in {getSaltTimeRemaining()}
+						{$t('utils.emoji-key-converter.expires-in-date', {
+							values: { time: getSaltTimeRemaining() }
+						})}
 					</p>
 				{/if}
 			{:else}
@@ -292,7 +300,7 @@
 							></div>
 						</div>
 						<p class="mt-1 text-sm text-gray-400">
-							{inputIndex}/16 emojis entered
+							{$t('utils.emoji-key-converter.input-progress', { values: { index: inputIndex } })}
 						</p>
 					</div>
 
@@ -326,21 +334,21 @@
 							onclick={removeLastEmoji}
 							disabled={inputIndex === 0}
 						>
-							Remove Last
+							{$t('utils.emoji-key-converter.remove-last')}
 						</button>
 						<button
 							class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-red-600/40 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={clearSequence}
 							disabled={inputIndex === 0}
 						>
-							Clear All
+							{$t('utils.emoji-key-converter.clear')}
 						</button>
 						<button
 							class="cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 text-sm font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50 disabled:cursor-not-allowed disabled:opacity-50"
 							onclick={openEmojiPicker}
 							disabled={inputIndex >= 16}
 						>
-							Add Emoji
+							{$t('utils.emoji-key-converter.add-emoji')}
 						</button>
 					</div>
 

@@ -16,6 +16,7 @@
 	import { idb } from '$lib/idb';
 	import { goto } from '$app/navigation';
 	import StickerPicker from './StickerPicker.svelte';
+	import { t } from 'svelte-i18n';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
@@ -244,7 +245,7 @@
 				attachmentPaths: filePaths
 			});
 		} catch (error) {
-			modalStore.alert('Error', 'Failed to send message: ' + error);
+			modalStore.error(error, $t('chat.chat-input.error-sending-message'));
 		}
 
 		messageReplying = null;
@@ -322,7 +323,7 @@
 		const items: ContextMenuItem[] = [
 			{
 				id: 'add-files',
-				label: 'Add Files',
+				label: $t('chat.chat-input.add-files'),
 				icon: 'mdi:attach-file',
 				action: () => {
 					openFileSelector();
@@ -336,7 +337,7 @@
 			// },
 			{
 				id: 'sticker',
-				label: 'Sticker',
+				label: $t('chat.chat-input.add-sticker'),
 				icon: 'mdi:sticker-emoji',
 				action: () => {
 					stickerPicker.open();
@@ -363,7 +364,11 @@
 {#if socketStore.typing.length > 0}
 	<div class="p-2 text-sm font-bold text-gray-400">
 		{socketStore.typing.map((user) => user.username).join(', ')}
-		{socketStore.typing.length === 1 ? 'is' : 'are'} typing
+		{#if socketStore.typing.length === 1}
+			{$t('chat.chat-input.is-typing')}
+		{:else}
+			{$t('chat.chat-input.are-typing')}
+		{/if}
 
 		<!-- Wave animation dots with enhanced movement -->
 		<span class="ml-1 inline-flex space-x-1">
@@ -386,15 +391,17 @@
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseReply}>✕</button>
 			{#await decryptMessage({ message: messageReplying })}
 				<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
-					loading...
+					{$t('common.loading')}
 				</p>
 			{:then decryptedContent}
 				<p class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100">
-					<span class="font-semibold text-gray-400">Replying to:</span>
+					<span class="font-semibold text-gray-400">{$t('chat.chat-input.reply-to')}</span>
 					{decryptedContent}
 				</p>
 			{:catch error}
-				<p class="pr-9 whitespace-pre-line text-red-300">Failed to load message</p>
+				<p class="pr-9 whitespace-pre-line text-red-300">
+					{$t('chat.chat-input.failed-to-load-message')}
+				</p>
 			{/await}
 		</div>
 	</svelte:boundary>
@@ -404,10 +411,13 @@
 	<svelte:boundary>
 		<div class="flex items-center justify-start p-2 text-sm font-bold text-gray-400">
 			<button class="mr-2 text-gray-400 hover:text-white" onclick={handleCloseEdit}>✕</button>
-			<span>Editing message: {await decryptMessage({ message: messageEditing })}</span>
+			<span
+				>{$t('chat.chat-input.edit-message')}
+				{await decryptMessage({ message: messageEditing })}</span
+			>
 		</div>
 		{#snippet pending()}
-			<p class="p-2 text-sm font-bold text-gray-400">loading...</p>
+			<p class="p-2 text-sm font-bold text-gray-400">{$t('common.loading')}</p>
 		{/snippet}
 	</svelte:boundary>
 {/if}
@@ -459,7 +469,9 @@
 				</button>
 				{#if isCompressible(file)}
 					<button
-						title={compressFiles[index] ? 'Disable compression' : 'Enable compression'}
+						data-tooltip={compressFiles[index]
+							? $t('chat.chat-input.disable-compression')
+							: $t('chat.chat-input.enable-compression')}
 						onclick={() => (compressFiles[index] = !compressFiles[index])}
 						class="absolute top-10 right-1 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-200 transition-colors hover:bg-gray-500/70 hover:text-white"
 						aria-label="Close modal"
@@ -538,7 +550,11 @@
 				<Icon icon="mdi:check-circle-outline" class="mb-2 size-12 text-gray-400" />
 
 				<div class="text-center font-semibold text-gray-100">
-					+{remainingCount} File{remainingCount === 1 ? '' : 's'}
+					{#if remainingCount === 1}
+						+{remainingCount} {$t('chat.chat-input.file')}
+					{:else}
+						+{remainingCount} {$t('chat.chat-input.files')}
+					{/if}
 				</div>
 				{#if uploadingFile && !visibleFiles.includes(uploadingFile)}
 					<div
@@ -546,7 +562,8 @@
 					>
 						<LoadingSpinner />
 						<p class="mb-5 text-center text-sm font-semibold text-gray-100">
-							Remaining {uploadedFiles.length - visibleFiles.length}/{remainingCount}
+							{$t('chat.chat-input.remaining')}
+							{uploadedFiles.length - visibleFiles.length}/{remainingCount}
 						</p>
 					</div>
 				{/if}
@@ -571,7 +588,7 @@
 		onInput={handleInput}
 		onKeydown={handleKeydown}
 		onFileSelected={(file) => handleFileSelect(file, true)}
-		placeholder="Type your message here..."
+		placeholder={$t('chat.chat-input.placeholder')}
 		disabled={false}
 	/>
 

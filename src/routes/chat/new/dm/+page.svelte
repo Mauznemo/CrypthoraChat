@@ -14,6 +14,7 @@
 	import type { PageProps } from './$types';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
+	import { t } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 	let selectedUser: SafeUser | null = $state(null);
@@ -27,14 +28,13 @@
 
 			if (!userUnverified) {
 				modalStore.open({
-					title: 'User not verified',
-					content:
-						'User @' +
-						selectedUser!.username +
-						' is not verified. You need to verify with them once before creating a chat with them.',
+					title: $t('chat.new.dm.not-verified'),
+					content: $t('chat.new.dm.not-verified-content', {
+						values: { username: selectedUser!.username }
+					}),
 					buttons: [
 						{
-							text: 'Verify Now',
+							text: $t('chat.verify-now'),
 							variant: 'primary',
 							onClick: () => {
 								verifyUser(selectedUser!, true);
@@ -63,7 +63,7 @@
 				});
 			} catch (err) {
 				console.error(err);
-				modalStore.alert('Error', 'Failed to save chat key: ' + err);
+				modalStore.error(err, $t('chat.new.failed-to-save-chat-key'));
 			}
 
 			if (result.success) {
@@ -77,9 +77,7 @@
 			}
 		} catch (err: any) {
 			loading = false;
-			if (err?.body.message) {
-				modalStore.alert('Error', 'Failed to create chat: ' + err.body.message);
-			}
+			modalStore.error(err, $t('chat.new.failed-to-create-chat'));
 		}
 	}
 </script>
@@ -90,7 +88,7 @@
 	>
 		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
 			<BackButton backPath="/chat" />
-			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">New Direct Message</h1>
+			<h1 class="mx-5 text-center text-2xl font-bold lg:text-4xl">{$t('chat.new-dm')}</h1>
 		</div>
 
 		<UserSelector
@@ -108,7 +106,7 @@
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				Start Chat
+				{$t('chat.new.dm.create-dm')}
 			{/if}
 		</button>
 	</div>

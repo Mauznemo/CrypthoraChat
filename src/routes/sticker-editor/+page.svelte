@@ -9,6 +9,7 @@
 	import { saveUserSticker } from './stickerEditor.remote';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
+	import { t } from 'svelte-i18n';
 
 	interface CanvasObject {
 		type: 'image' | 'text';
@@ -343,7 +344,7 @@
 	}
 
 	function handleAddText() {
-		const text = prompt('Enter text:');
+		const text = prompt($t('utils.sticker-editor.enter-text'));
 		if (!text) return;
 
 		const fontSize = 24;
@@ -397,8 +398,8 @@
 			return;
 		}
 		modalStore.confirm(
-			'Download Model',
-			'This will download an around 80MB model, so it may take a while. Also keep in mind that in browser background removal will be slow. You might want to use an external app and select the png file. Do you want to proceed?',
+			$t('utils.sticker-editor.download-model'),
+			$t('utils.sticker-editor.download-model-confirm'),
 			() => {
 				localStorage.setItem('showedBgDownloadNotice', 'true');
 				removeBg();
@@ -488,7 +489,7 @@
 
 		if (result.success) {
 			await saveUserSticker(result.filePath);
-			toastStore.success('Sticker saved successfully');
+			toastStore.success($t('utils.sticker-editor.sticker-saved'));
 			goto('/chat');
 		}
 	}
@@ -522,34 +523,36 @@
 	<div class="mx-auto max-w-4xl">
 		<div class="my-5 flex w-full items-center justify-center gap-2 lg:my-8">
 			<BackButton backPath="/chat" />
-			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">Create Sticker</h1>
+			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">
+				{$t('utils.sticker-editor.create-sticker')}
+			</h1>
 		</div>
 
 		<div class="mb-10 flex w-full flex-wrap items-center justify-center gap-2">
 			<button
 				onclick={handleImportClick}
-				data-tooltip="Add Image"
+				data-tooltip={$t('utils.sticker-editor.add-image')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:image-plus" class="size-6" />
 			</button>
 			<button
 				onclick={handleImportClick}
-				data-tooltip="Add Sticker"
+				data-tooltip={$t('utils.sticker-editor.add-sticker')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:sticker-plus-outline" class="size-6" />
 			</button>
 			<button
 				onclick={handleAddText}
-				data-tooltip="Add Text"
+				data-tooltip={$t('utils.sticker-editor.add-text')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
 				<Icon icon="mdi:format-text" class="size-6" />
 			</button>
 			<button
 				onclick={handleDuplicate}
-				data-tooltip="Duplicate"
+				data-tooltip={$t('utils.sticker-editor.duplicate')}
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
@@ -557,7 +560,7 @@
 			</button>
 			<button
 				onclick={handleRemoveBackground}
-				data-tooltip="Remove Background"
+				data-tooltip={$t('utils.sticker-editor.remove-background')}
 				disabled={!selectedObj || removingBackground || selectedObj.backgroundRemoved}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
@@ -565,7 +568,9 @@
 			</button>
 			<button
 				onclick={handleToggleAspectRatio}
-				data-tooltip={aspectRatioLocked ? 'Unlock Aspect Ratio' : 'Lock Aspect Ratio'}
+				data-tooltip={aspectRatioLocked
+					? $t('utils.sticker-editor.unlock-aspect-ratio')
+					: $t('utils.sticker-editor.lock-aspect-ratio')}
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
@@ -573,7 +578,7 @@
 			</button>
 			<button
 				onclick={handleDelete}
-				data-tooltip="Delete"
+				data-tooltip={$t('common.delete')}
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
@@ -648,9 +653,9 @@
 					class="absolute inset-0 flex items-center justify-center rounded-lg bg-gray-500/50 text-center backdrop-blur-lg"
 				>
 					<div>
-						<p class="text-lg font-semibold">Removing Background</p>
+						<p class="text-lg font-semibold">{$t('utils.sticker-editor.removing-background')}</p>
 						<p class="text-xs font-thin text-gray-200">
-							This may take a while depending on your device
+							{$t('utils.sticker-editor.removing-background-description')}
 						</p>
 					</div>
 				</div>
@@ -662,7 +667,7 @@
 				disabled={objects.length === 0}
 				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 			>
-				Save Sticker
+				{$t('utils.sticker-editor.save-sticker')}
 			</button>
 		</div>
 	</div>

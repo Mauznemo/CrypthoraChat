@@ -8,6 +8,7 @@
 	import { saveUserSticker } from '../sticker-editor/stickerEditor.remote';
 	import { tryUploadUserSticker } from '$lib/fileUpload/upload';
 	import { tick } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 
@@ -39,9 +40,7 @@
 			goto('/chat');
 		} catch (err: any) {
 			loading = false;
-			if (err?.body.message) {
-				modalStore.alert('Error', 'Failed to import ' + err.body.message);
-			}
+			modalStore.error(err, $t('chat.new.failed-to-import-stickers'));
 		}
 	}
 
@@ -73,26 +72,32 @@
 	>
 		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
 			<BackButton backPath="/chat" />
-			<h1 class="mx-5 text-center text-2xl font-bold lg:mx-14 lg:text-4xl">Import Stickers</h1>
+			<h1 class="mx-5 text-center text-2xl font-bold lg:text-4xl">
+				{$t('utils.sticker-importer.import-stickers')}
+			</h1>
 		</div>
 
 		<div class="m-10 flex flex-col items-center gap-4 text-center">
 			{#if selectedFiles.length > 0}
-				<p class="text-xl font-bold">{selectedFiles.length} Stickers Selected</p>
+				<p class="text-xl font-bold">
+					{$t('utils.sticker-importer.stickers-selected', {
+						values: { count: selectedFiles.length }
+					})}
+				</p>
 			{:else}
-				<p class="text-xl font-bold">No Stickers Selected</p>
+				<p class="text-xl font-bold">{$t('utils.sticker-importer.no-stickers-selected')}</p>
 			{/if}
 			{#if failedSelections > 0}
 				<p class="text-lg font-bold text-red-300">
-					Failed to select {failedSelections} stickers that where larger than 1MB or the wrong format
+					{$t('utils.sticker-importer.stickers-failed', { values: { count: failedSelections } })}
 				</p>
 			{/if}
-			<p class="text-lg text-gray-300">You can select any <code>.webp</code> sticker</p>
+			<p class="text-lg text-gray-300">{@html $t('utils.sticker-importer.select-description')}</p>
 			<button
 				onclick={() => fileInput.click()}
 				class="cursor-pointer rounded-full bg-accent-700/60 px-8 py-2 font-semibold frosted-glass transition-colors hover:bg-accent-600/50"
 			>
-				Select
+				{$t('utils.sticker-importer.select-stickers')}
 			</button>
 		</div>
 
@@ -101,7 +106,7 @@
 			disabled={selectedFiles.length < 1}
 			style={percentage === -1
 				? ''
-				: `background: linear-gradient(to right, oklch(43.7% 0.078 188.216 / 0.6) 0%, oklch(43.7% 0.078 188.216 / 0.6) ${percentage}%, oklch(44.6% 0.03 256.802 / 0.6) ${percentage}%, oklch(44.6% 0.03 256.802 / 0.6) 100%);`}
+				: `background: linear-gradient(to right, oklch(from var(--color-accent-700) l c h / 0.6) 0%, oklch(from var(--color-accent-700) l c h / 0.6) ${percentage}%, oklch(from var(--color-neutral-700) l c h / 0.6) ${percentage}%, oklch(from var(--color-neutral-700) l c h / 0.6) 100%);`}
 			class="{percentage === -1
 				? 'bg-accent-700/60 hover:bg-accent-600/50'
 				: ''} m-10 mt-7 cursor-pointer rounded-full px-8 py-4 font-semibold frosted-glass transition-colors hover:brightness-110 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:brightness-100"
@@ -109,7 +114,7 @@
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				Start Import
+				{$t('utils.sticker-importer.start-import')}
 			{/if}
 		</button>
 	</div>

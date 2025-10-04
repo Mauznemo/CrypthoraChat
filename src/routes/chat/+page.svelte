@@ -24,6 +24,8 @@
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 	import Icon from '@iconify/svelte';
 	import { browser } from '$app/environment';
+	import { t } from 'svelte-i18n';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -82,11 +84,13 @@
 		socketStore.onUserVerifyRequested((d) => {
 			console.log('User @' + d.requestorUsername + ' requested a verification');
 			modalStore.open({
-				title: 'Verify User Request',
-				content: 'User @' + d.requestorUsername + ' requested a verification',
+				title: $t('chat.verification-request-title'),
+				content: $t('chat.verification-request-content', {
+					values: { username: d.requestorUsername }
+				}),
 				buttons: [
 					{
-						text: 'Verify Now',
+						text: $t('chat.verify-now'),
 						variant: 'primary',
 						onClick: async () => {
 							const user = await getUserById(d.requestorId);
@@ -94,7 +98,7 @@
 						}
 					},
 					{
-						text: 'Decline',
+						text: $t('common.decline'),
 						variant: 'secondary',
 						onClick: () => {}
 					}
@@ -103,7 +107,7 @@
 		});
 		socketStore.onKeyRotated(chats.handleKeyRotated);
 		socketStore.onMessageError((error) => {
-			modalStore.alert('Error', error.error);
+			modalStore.error(error.error);
 			console.error('Socket error:', error);
 		});
 	});
@@ -164,7 +168,7 @@
 		const chat = await getChatById(chatId);
 
 		if (!chat) {
-			modalStore.alert('Error', 'Failed to load you last selected chat');
+			toastStore.error($t('chat.failed-to-select-last-chat'));
 			chatStore.loadingChat = false;
 			return;
 		}
@@ -176,11 +180,11 @@
 		socketStore.tryLeaveChat(chatStore.activeChat);
 
 		modalStore.open({
-			title: 'New Chat',
-			content: 'What type of chat would you like to create?',
+			title: $t('chat.create-chat-title'),
+			content: $t('chat.create-chat-content'),
 			buttons: [
-				{ text: 'New Direct Message', variant: 'primary', onClick: () => goto('/chat/new/dm') },
-				{ text: 'New Group', variant: 'primary', onClick: () => goto('/chat/new/group') }
+				{ text: $t('chat.new-dm'), variant: 'primary', onClick: () => goto('/chat/new/dm') },
+				{ text: $t('chat.new-group'), variant: 'primary', onClick: () => goto('/chat/new/group') }
 			]
 		});
 	}
@@ -248,10 +252,10 @@
 						<p class="px-3 py-2 text-3xl font-extrabold text-white">{chatName || 'Chat'}</p>
 					{:else}
 						<p class="px-3 pt-3 text-3xl font-extrabold text-white">
-							{chatName || 'Chat'} - Offline
+							{chatName || 'Chat'} - {$t('common.offline')}
 						</p>
 						<p class="font-semi px-3 pb-1 text-sm text-white/60">
-							You may not see all messages in this chat
+							{$t('chat.offline-message')}
 						</p>
 					{/if}
 				</div>
@@ -267,7 +271,7 @@
 
 		{#if !chatStore.activeChat && !chatStore.loadingChat}
 			<div class="flex h-full items-center justify-center">
-				<p class="text-2xl font-bold">No chat selected</p>
+				<p class="text-2xl font-bold">{$t('chat.no-selected-chat')}</p>
 			</div>
 		{/if}
 

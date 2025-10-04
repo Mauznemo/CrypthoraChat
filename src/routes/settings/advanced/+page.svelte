@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from 'svelte-i18n';
+
 	async function resetServiceWorkers(): Promise<void> {
 		if ('serviceWorker' in navigator) {
 			const registrations = await navigator.serviceWorker.getRegistrations();
@@ -22,15 +24,15 @@
 </script>
 
 <div class="flex flex-col items-start gap-2">
-	<p class="mt-4 mb-1 text-lg font-bold">Service Worker</p>
+	<p class="mt-4 mb-1 text-lg font-bold">{$t('settings.advanced.service-worker')}</p>
 	<button
 		onclick={resetServiceWorkers}
 		class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
-		>Reset Service Workers</button
+		>{$t('settings.advanced.reset-sw')}</button
 	>
 	<button
 		onclick={clearCaches}
 		class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
-		>Clear Caches</button
+		>{$t('settings.advanced.clear-cache')}</button
 	>
 </div>

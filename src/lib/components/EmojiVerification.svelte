@@ -6,6 +6,7 @@
 	import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
 	import Icon from '@iconify/svelte';
 	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
+	import { t } from 'svelte-i18n';
 
 	type EmojiDataType = typeof emojiData;
 
@@ -61,7 +62,12 @@
 		const hours = Math.floor(diffMinutes / 60);
 		const minutes = diffMinutes % 60;
 
-		return `${hours.toString().padStart(1, '0')} hours and ${minutes.toString().padStart(2, '0')} minutes`;
+		return $t('utils.emoji-key-converter.time-remaining', {
+			values: {
+				hours: hours.toString().padStart(1, '0'),
+				minutes: minutes.toString().padStart(2, '0')
+			}
+		});
 	}
 
 	async function base64ToEmojiSequence(base64: string): Promise<void> {
@@ -203,17 +209,19 @@
 				<button
 					onclick={() => emojiVerificationStore.onMatch?.()}
 					class="mb-5 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass transition-colors hover:bg-accent-600/50 focus:ring-blue-500"
-					>They match</button
+					>{$t('utils.emoji-key-verification.match')}</button
 				>
 				<button
 					onclick={() => emojiVerificationStore.onFail?.()}
 					class="w-full cursor-pointer rounded-full bg-red-800/40 py-3 text-white frosted-glass transition-colors hover:bg-red-600/40 focus:ring-blue-500"
-					>They don't match</button
+					>{$t('utils.emoji-key-verification.fail')}</button
 				>
 			</div>
 
 			<p class=" text-center text-sm text-gray-400">
-				This sequence will expire in {getSaltTimeRemaining()}
+				{$t('utils.emoji-key-converter.expires-in-date', {
+					values: { time: getSaltTimeRemaining() }
+				})}
 			</p>
 		</div>
 	</div>

@@ -1,4 +1,6 @@
 import type { Snippet } from 'svelte';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 interface ModalButton {
 	text: string;
@@ -81,7 +83,7 @@ class ModalStore {
 				content,
 				buttons: [
 					{
-						text: 'Cancel',
+						text: get(t)('common.cancel'),
 						variant: 'secondary',
 						onClick: () => {
 							onCancel?.();
@@ -89,7 +91,7 @@ class ModalStore {
 						}
 					},
 					{
-						text: 'Confirm',
+						text: get(t)('common.confirm'),
 						variant: 'primary',
 						onClick: () => {
 							onConfirm?.();
@@ -116,7 +118,7 @@ class ModalStore {
 			id: options?.id,
 			buttons: [
 				{
-					text: 'OK',
+					text: get(t)('common.ok'),
 					variant: 'primary',
 					onClick: () => {
 						options?.onOk?.();
@@ -137,10 +139,10 @@ class ModalStore {
 		unknownMessage: string = 'Something went wrong'
 	) {
 		if (typeof errorOrMessage === 'string' && message === 'An error occurred:') {
-			this.alert('Error', errorOrMessage);
+			this.alert(get(t)('common.error'), errorOrMessage);
 		} else {
 			this.alert(
-				'Error',
+				get(t)('common.error'),
 				message +
 					' ' +
 					(errorOrMessage?.body?.message ||

@@ -3,6 +3,7 @@
 	import { getQuota, getUsage, idb } from '$lib/idb';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	let usedStorage = $state(0);
 	let freeStorage = $state(0);
@@ -16,7 +17,7 @@
 
 	async function handleClearCachedMedia() {
 		await idb!.clear('files');
-		toastStore.success('Cached media cleared');
+		toastStore.success($t('settings.storage.clear-media-success'));
 		totalStorage = await getQuota();
 		usedStorage = await getUsage();
 		freeStorage = totalStorage - usedStorage;
@@ -24,14 +25,17 @@
 </script>
 
 <p class="mt-4 mb-5 text-lg font-bold">
-	Used {fileUtils.formatFileSize(usedStorage)} from {fileUtils.formatFileSize(totalStorage)} ({(
-		(usedStorage / totalStorage) *
-		100
-	).toFixed(2)}% used)
+	{$t('settings.storage.used', {
+		values: {
+			usedStorage: fileUtils.formatFileSize(usedStorage),
+			totalStorage: fileUtils.formatFileSize(totalStorage),
+			percentage: ((usedStorage / totalStorage) * 100).toFixed(2)
+		}
+	})}
 </p>
 
 <button
 	onclick={handleClearCachedMedia}
 	class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
-	>Clear cached media</button
+	>{$t('settings.storage.clear-media')}</button
 >

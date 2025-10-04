@@ -12,6 +12,7 @@
 	import { cursorStore } from '$lib/stores/cursor.svelte';
 	import { scale } from 'svelte/transition';
 	import { expoInOut } from 'svelte/easing';
+	import { t } from 'svelte-i18n';
 
 	interface ToolbarPosition {
 		x: number;
@@ -348,7 +349,7 @@
 	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}
 			<LoadingSpinner />
-			<div class="py-2 text-center text-sm text-gray-500">Loading older messages...</div>
+			<div class="py-2 text-center text-sm text-gray-500">{$t('chat.loading-older')}</div>
 		{/if}
 	</div>
 
@@ -425,7 +426,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleReply}
-			data-tooltip="Reply"
+			data-tooltip={$t('chat.reply')}
 			aria-label="Reply to message"
 			type="button"
 		>
@@ -435,7 +436,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleReaction}
-			data-tooltip="Add Reaction"
+			data-tooltip={$t('chat.add-reaction')}
 			aria-label="Add Reaction"
 			type="button"
 		>
@@ -446,7 +447,7 @@
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 				onclick={handleEdit}
-				data-tooltip="Edit"
+				data-tooltip={$t('chat.edit')}
 				aria-label="Edit message"
 				type="button"
 			>
@@ -457,7 +458,7 @@
 			<button
 				class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-900/30 hover:text-red-400"
 				onclick={handleDelete}
-				data-tooltip="Delete"
+				data-tooltip={$t('chat.delete')}
 				aria-label="Delete message"
 				type="button"
 			>
@@ -467,7 +468,7 @@
 		<button
 			class="cursor-pointer rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 			onclick={handleInfo}
-			data-tooltip="Show info"
+			data-tooltip={$t('chat.show-info')}
 			aria-label="Show info"
 			type="button"
 		>

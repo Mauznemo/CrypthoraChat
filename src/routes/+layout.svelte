@@ -8,6 +8,9 @@
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
+	import { browser } from '$app/environment';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { t } from 'svelte-i18n';
 
 	let { children } = $props();
 </script>
@@ -52,9 +55,15 @@
 	{/if}
 
 	<!-- Content area -->
-	<div class="relative z-10 min-h-dvh text-white">
-		{@render children?.()}
-	</div>
+	{#if browser}
+		<div class="relative z-10 min-h-dvh text-white">
+			{@render children?.()}
+		</div>
+	{:else}
+		<div class="flex min-h-dvh w-full items-center justify-center">
+			<LoadingSpinner size="4.5rem" />
+		</div>
+	{/if}
 </div>
 
 <AddUserToChat />

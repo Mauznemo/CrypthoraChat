@@ -13,6 +13,7 @@
 	import { saveUserSticker } from '../../../routes/sticker-editor/stickerEditor.remote';
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from 'svelte-i18n';
 
 	const {
 		attachmentPath,
@@ -137,7 +138,7 @@
 		const items: ContextMenuItem[] = [
 			{
 				id: 'download',
-				label: 'Download',
+				label: $t('common.download'),
 				icon: 'mdi:download',
 				action: () => {
 					handleDownloadFile(name);
@@ -162,7 +163,7 @@
 
 					if (result.success) {
 						await saveUserSticker(result.filePath);
-						toastStore.success('Sticker added to your stickers successfully');
+						toastStore.success($t('chat.attachment.sticker-added-to-my-stickers'));
 					}
 				}
 			});
@@ -219,7 +220,7 @@
 				>
 					{#if !isSmallPreview()}
 						<p class="text-md text-center font-bold whitespace-pre-line text-gray-400">
-							Loading...
+							{$t('common.loading')}
 						</p>
 					{/if}
 				</div>
@@ -257,7 +258,9 @@
 						<p
 							class="text-md absolute bottom-1/8 text-center font-bold whitespace-pre-line text-gray-400"
 						>
-							Loading image ({fileUtils.formatFileSize(fileSizeBytes)})
+							{$t('chat.attachment.loading-image', {
+								values: { size: fileUtils.formatFileSize(fileSizeBytes) }
+							})}
 						</p>
 					{/if}
 				</div>
@@ -281,7 +284,7 @@
 							onclick={() => {
 								fileUtils.downloadFileFromUrl(previewUrl!, name);
 							}}
-							data-tooltip="Download"
+							data-tooltip={$t('common.download')}
 							class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 							aria-label="Download"
 						>
@@ -292,7 +295,9 @@
 			{/if}
 		{:catch error}
 			{console.error(error)}
-			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt image</p>
+			<p class="text-center whitespace-pre-line text-red-400">
+				{$t('chat.attachment.decrypt-failed-image')}
+			</p>
 		{/await}
 	{/if}
 {/snippet}
@@ -312,7 +317,9 @@
 				<p
 					class="text-md absolute bottom-1/8 text-center font-bold whitespace-pre-line text-gray-400"
 				>
-					Loading video ({fileUtils.formatFileSize(fileSizeBytes)})
+					{$t('chat.attachment.loading-video', {
+						values: { size: fileUtils.formatFileSize(fileSizeBytes) }
+					})}
 				</p>
 			</div>
 		{:then previewUrl}
@@ -328,7 +335,7 @@
 						onclick={() => {
 							fileUtils.downloadFileFromUrl(previewUrl!, name);
 						}}
-						data-tooltip="Download"
+						data-tooltip={$t('common.download')}
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
@@ -338,7 +345,9 @@
 			{/if}
 		{:catch error}
 			{console.error(error)}
-			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt video</p>
+			<p class="text-center whitespace-pre-line text-red-400">
+				{$t('chat.attachment.decrypt-failed-video')}
+			</p>
 		{/await}
 	{/if}
 {/snippet}
@@ -356,7 +365,9 @@
 				<p
 					class="text-md absolute bottom-1/8 text-center font-bold whitespace-pre-line text-gray-400"
 				>
-					Loading audio ({fileUtils.formatFileSize(fileSizeBytes)})
+					{$t('chat.attachment.loading-audio', {
+						values: { size: fileUtils.formatFileSize(fileSizeBytes) }
+					})}
 				</p>
 			</div>
 		{:then previewUrl}
@@ -367,7 +378,7 @@
 						onclick={() => {
 							fileUtils.downloadFileFromUrl(previewUrl!, name);
 						}}
-						data-tooltip="Download"
+						data-tooltip={$t('common.download')}
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
@@ -377,7 +388,9 @@
 			{/if}
 		{:catch error}
 			{console.error(error)}
-			<p class="text-center whitespace-pre-line text-red-400">Failed to decrypt audio</p>
+			<p class="text-center whitespace-pre-line text-red-400">
+				{$t('chat.attachment.decrypt-failed-audio')}
+			</p>
 		{/await}
 	{/if}
 {/snippet}
@@ -421,7 +434,7 @@
 		</div>
 		<button
 			onclick={() => handleDownloadFile(name)}
-			data-tooltip="Download"
+			data-tooltip={$t('common.download')}
 			class="absolute right-6 cursor-pointer text-gray-100 hover:text-gray-300"
 			aria-label="Download"
 		>
@@ -444,7 +457,7 @@
 				onclick={() => {
 					ignoreLimit = true;
 				}}
-				data-tooltip="Download and load preview"
+				data-tooltip={$t('chat.attachment.ignore-limit')}
 				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
@@ -455,7 +468,7 @@
 			{name} ({fileUtils.formatFileSize(fileSizeBytes)})
 		</p>
 		<button
-			data-tooltip="Download"
+			data-tooltip={$t('common.download')}
 			onclick={() => {
 				handleDownloadFile(name);
 			}}

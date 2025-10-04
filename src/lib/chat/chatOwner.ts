@@ -4,9 +4,11 @@ import { encryptKeyForStorage } from '$lib/crypto/utils';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatWithoutMessages } from '$lib/types';
+import { t } from 'svelte-i18n';
 import { getCurrentChatKeyVersion, saveEncryptedChatKey } from './chat.remote';
 import { removeUserFromChat, rotateChatKey } from './chatOwner.remote';
 import { chats } from './chats';
+import { get } from 'svelte/store';
 
 export const chatOwner = {
 	/** Tries to rotate the chat key and shows an error modal if it fails */
@@ -20,16 +22,23 @@ export const chatOwner = {
 				modalStore.open({
 					title:
 						users.length === unverifiedUsers.length
-							? 'All users no longer verified'
-							: 'Some users no longer verified',
+							? get(t)('chat.chat-owner.all-no-longer-verified')
+							: get(t)('chat.chat-owner.some-no-longer-verified'),
 					content:
-						(unverifiedUsers.length === 1 ? 'User ' : 'Users ') +
-						unverifiedUsers.map((u) => '@' + u.user.username).join(', ') +
-						(unverifiedUsers.length === 1 ? ' is' : ' are') +
-						' no longer verified. This can happen if they had to regenerate their public key. You need to re-verify with them before rotating the chat key.',
+						unverifiedUsers.length === 1
+							? get(t)('chat.chat-owner.user-no-longer-verified', {
+									values: { username: unverifiedUsers[0].user.username }
+								})
+							: get(t)('chat.chat-owner.users-no-longer-verified', {
+									values: {
+										usernames: unverifiedUsers.map((u) => '@' + u.user.username).join(', ')
+									}
+								}),
 					buttons: [
 						{
-							text: 'Verify @' + unverifiedUsers[0].user.username,
+							text: get(t)('chat.new.group.verify-user', {
+								values: { username: unverifiedUsers[0].user.username }
+							}),
 							variant: 'primary',
 							onClick: () => {
 								verifyUser(unverifiedUsers[0].user, true);
@@ -70,14 +79,14 @@ export const chatOwner = {
 				});
 			} catch (err) {
 				console.error(err);
-				modalStore.error(err, 'Failed to save chat key:');
+				modalStore.error(err, get(t)('chat.chat-owner.failed-to-save-chat-key'));
 			}
 
 			chats.handleKeyRotated();
 
 			return true;
 		} catch (error: any) {
-			modalStore.error(error, 'Failed to rotate chat key:');
+			modalStore.error(error, get(t)('chat.chat-owner.failed-to-rotate-chat-key'));
 			return false;
 		}
 	},
@@ -87,7 +96,7 @@ export const chatOwner = {
 			await removeUserFromChat({ chatId, userId });
 			return true;
 		} catch (error: any) {
-			modalStore.error(error, 'Failed to remove user:');
+			modalStore.error(error, get(t)('chat.chat-owner.failed-to-remove-user'));
 			return false;
 		}
 	}

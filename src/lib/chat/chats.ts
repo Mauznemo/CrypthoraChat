@@ -6,6 +6,8 @@ import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatParticipant, ChatWithoutMessages, SafeUser } from '$lib/types';
 import { developer } from '$lib/utils/debug';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 import {
 	getChatById,
@@ -162,7 +164,7 @@ export const chats = {
 			chatStore.loadingChat = false;
 			return { success: true };
 		} else {
-			modalStore.error('Failed to select chat, make sure you are online.');
+			modalStore.error(get(t)('chat.chats.failed-to-select-chat'));
 			chatStore.resetChatKey();
 			chatStore.activeChat = null;
 			chatStore.loadingChat = false;
@@ -192,25 +194,22 @@ export const chats = {
 				chatKeys.push({ keyVersion: keyVersion.keyVersion, key: chatKey });
 			}
 			return { success: true, keyVersions: chatKeys };
-		} catch (error) {
+		} catch (error: any) {
 			modalStore.open({
 				title: 'Error',
 				id: 'decryption-chat-key-error',
-				content:
-					'Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: ' +
-					error +
-					')',
+				content: get(t)('chat.chats.failed-to-decrypt-chat-key', { values: { error } }),
 
 				buttons: [
 					{
-						text: 'Re-enter',
+						text: get(t)('chat.chats.re-import-master-key'),
 						variant: 'primary',
 						onClick: () => {
 							showMasterKeyImport();
 						}
 					},
 					{
-						text: 'OK',
+						text: get(t)('common.ok'),
 						variant: 'primary'
 					}
 				]
@@ -240,15 +239,13 @@ export const chats = {
 				console.log('Getting chat keys from public key');
 				const publicEncryptedChatKeys = await getPublicEncryptedChatKeys(chat.id);
 				if (publicEncryptedChatKeys.length === 0) {
-					modalStore.error(
-						'Failed to get chat key from public key. Try restarting the App or leaving the chat and re-joining if the problem persists.'
-					);
+					modalStore.error(get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key'));
 					return { success: false, keyVersions: [] };
 				}
 
 				if (!publicEncryptedChatKeys.some((key) => key.keyVersion === chat.currentKeyVersion)) {
 					modalStore.error(
-						'Failed to get chat key from public key: Key Version mismatch. Try restarting the App or leaving the chat and re-joining if the problem persists.'
+						get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-version')
 					);
 					return { success: false, keyVersions: [] };
 				}
@@ -291,7 +288,10 @@ export const chats = {
 				return { success: true, keyVersions: keyVersions };
 			} catch (e: any) {
 				console.error(e);
-				modalStore.error(e, 'Failed to get chat key from public key:');
+				modalStore.error(
+					e,
+					get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-error')
+				);
 			}
 
 			return { success: false, keyVersions: [] };

@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import type { PageProps } from './$types';
 	import Icon from '@iconify/svelte';
+	import { t } from 'svelte-i18n';
 
 	let { data }: PageProps = $props();
 
@@ -11,22 +12,22 @@
 
 	let categories = [
 		{
-			label: 'Appearance',
+			label: 'settings.categories.appearance',
 			path: '/settings/appearance',
 			icon: 'mdi:color'
 		},
 		{
-			label: 'Sessions',
+			label: 'settings.categories.sessions',
 			path: '/settings/sessions',
 			icon: 'mdi:important-devices'
 		},
 		{
-			label: 'Storage',
+			label: 'settings.categories.storage',
 			path: '/settings/storage',
 			icon: 'mdi:storage'
 		},
 		{
-			label: 'Advanced',
+			label: 'settings.categories.advanced',
 			path: '/settings/advanced',
 			icon: 'mdi:gear'
 		}
@@ -37,8 +38,8 @@
 	<button
 		class="flex w-full cursor-pointer items-center gap-5 rounded-full p-3 py-2 text-2xl text-gray-300 transition-colors hover:bg-gray-300/30 hover:text-gray-200"
 		onclick={() => {
-			settingsTitle.set(category.label);
+			settingsTitle.set($t(category.label));
 			goto(category.path);
-		}}><Icon icon={category.icon} class="size-8" /> {category.label}</button
+		}}><Icon icon={category.icon} class="size-8" /> {$t(category.label)}</button
 	>
 {/each}

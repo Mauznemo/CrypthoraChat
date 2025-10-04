@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Lädt...",
+    "download": "Herunterladen",
+    "are-you-sure": "Sind Sie sicher?",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "error": "Fehler",
+    "ok": "OK",
+    "decline": "Ablehen",
+    "offline": "Offline",
+    "done": "Fertig",
+    "delete": "Löschen",
+    "warning": "Warnung"
+  },
+  "chat": {
+    "add-reaction": "Reaktion hinzufügen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "loading-older": "Lädt älterer Nachrichten...",
+    "reply": "Antworten",
+    "show-info": "Info anzeigen",
+    "attachments": "{count, plural, one {# anhang} other {# anhänge}}",
+    "decryption-error": {
+      "base": "Entschlüsseln der Nachricht fehlgeschlagen",
+      "own-key-incorrect": "Entschlüsseln der Nachricht fehlgeschlagen (Ihr Schlüssel ist falsch)",
+      "their-key-incorrect": "Die Nachricht nicht entschlüsselt (der Benutzer hat einen falschen Schlüssel)"
+    },
+    "edited": "Bearbeitet",
+    "failed-to-decrypt-message": "Entschlüsseln der Nachricht fehlgeschlagen",
+    "react-with": "Reagiere mit {reaction}",
+    "remove-reaction": "Reaktion entfernen",
+    "attachment": {
+      "decrypt-failed-audio": "Entschlüsselung der Audiodatei fehlgeschlagen",
+      "decrypt-failed-image": "Entschlüsselung des Bildes fehlgeschlagen",
+      "decrypt-failed-video": "Entschlüsselung des Videos fehlgeschlagen",
+      "loading-audio": "Audio lädt {size}",
+      "loading-image": "Bild lädt {size}",
+      "ignore-limit": "Herunterladen und Vorschau laden",
+      "loading-video": "Video lädt {size}",
+      "sticker-added-to-my-stickers": "Sticker erfolgreich zu Ihren Stickern hinzugefügt"
+    },
+    "chat-list": {
+      "new-chat": "+ Neuer Chat",
+      "others": "andere",
+      "add-user": "Benutzer hinzufügen",
+      "chats": "Chats",
+      "delete-chat": "Chat löschen",
+      "edit-group": "Grupper bearbeiten",
+      "leave-group": "Gruppe verlassen",
+      "rotate-key": "Taste drehen",
+      "leave-failed": "Verlassen des Chates fehlgeschlagen",
+      "rotate-key-confirm": "Sind Sie sicher, dass Sie den Schlüssel rotiern möchten?",
+      "rotate-key-confirm-title": "Schlüssel rotiern?"
+    },
+    "chat-input": {
+      "add-files": "Dateien hinzufügen",
+      "add-sticker": "Sticker",
+      "are-typing": "schreiben",
+      "disable-compression": "Komprimierung deaktivieren",
+      "edit-message": "Bearbeitungsnachricht:",
+      "enable-compression": "Komprimierung aktivieren",
+      "error-sending-message": "Feheler beim Senden der Nachricht:",
+      "failed-to-load-message": "Fehler beim Laden der Nachricht",
+      "file": "Datei",
+      "files": "Dateien",
+      "is-typing": "tippt",
+      "placeholder": "Nachricht eingeben...",
+      "remaining": "Übrig",
+      "reply-to": "Antwort auf:"
+    },
+    "info-bar": {
+      "confirm-remove-user": "Sind Sie sicher, dass Sie @{username} aus der Gruppe entfernen möchten?",
+      "failed-to-update": "Aktualisiern des Chates fehlgeschlagen:",
+      "group-info": "Gruppeninfo",
+      "members": "Mitglieder:",
+      "owner": "Inhaber",
+      "remove-user": "Aus Gruppe entfernen",
+      "updated-successfully": "Erfolgreich aktualisiert!",
+      "user-info": "Benutzerinfo"
+    },
+    "create-chat-content": "Welche Art von Chat möchten Sie erstellen?",
+    "create-chat-title": "Neuer Chat",
+    "failed-to-select-last-chat": "Laden des zuletzt ausgewählten Chates fehlgeschlagen",
+    "new-dm": "Neue Direktnachricht",
+    "new-group": "Neue Gruppe",
+    "no-selected-chat": "Kein Chat ausgewählt",
+    "offline-message": "Möglicherweise sehen Sie nicht alle Nachrichten in diesem Chat",
+    "verification-request-content": "Benutzer @{username} fordert eine Verifizierung an",
+    "verification-request-title": "Benutzer verifiziern",
+    "verify-now": "Jetzt verifiziern",
+    "new": {
+      "dm": {
+        "create-dm": "Chat Starten",
+        "not-verified": "Benutzer nicht verifiziert",
+        "not-verified-content": "Benutzer @{username} ist nicht verifiziert. Sie müssen ihn einmal verifizieren, bevor Sie einen Chat mit ihm erstellen können."
+      },
+      "failed-to-create-chat": "Fehler beim Erstellen des Chates:",
+      "failed-to-save-chat-key": "Fehler beim speichern des Chat-Schlüssels:",
+      "group": {
+        "create-group": "Gruppe erstellen",
+        "not-verified-content": "Die Benutzer @{usernames} sind nicht verifiziert. Sie müssen sie einmal verifizieren, bevor Sie einen Chat mit ihnen erstellen können.",
+        "verify-user": "@{username} verifizieren",
+        "group-name": "Gruppenname..."
+      },
+      "failed-to-import-stickers": "Fehler beim importieren:"
+    },
+    "user-select": {
+      "no-users-found": "Keine Benutzer gefunden",
+      "search-users-placeholder": "Benutzername...",
+      "select-user": "Benutzer auswählen",
+      "select-users": "Benutzer auswählen"
+    },
+    "sticker-picker": {
+      "create": "Erstellen",
+      "failed-to-delete-sticker": "Fehler beim löschen des Stickers",
+      "failed-to-load-stickers": "Fehler beim laden des Stickers",
+      "failed-to-send-sticker": "Senden des Sticker fehlgeschlagen: Kein Chat ausgewählt",
+      "failed-to-send-sticker-message": "Senden des Stickers fehlgeschlagen:",
+      "failed-to-upload-sticker": "Fehler beim Hochladen des Stickers",
+      "favorite": "Favorisieren",
+      "import": "Importiern",
+      "unfavorite": "Entfavorisieren"
+    },
+    "messages": {
+      "delete-message-confirm": "Sind Sie sicher, dass Sie diese Nachricht löschen möchten?",
+      "failed-to-decrypt-message": "Fehler beim entschlüsseln, Sie oder der andere Benutzer haben möglicherweise einen falschen Chat-Schlüssel. Wenn Sie sich nicht sicher sind, fragen Sie bitte den Chatbesitzer, er hat immer den richtigen Schlüssel.",
+      "failed-to-decrypt-message-by-owner": "Fehler beim entschlüsseln einer Nachricht des Chat-Besitzers @{username} ihr Schlüssel ist falsch.",
+      "failed-to-delete-message": "Fehler beim löschen der Nachricht: Kein Chat ausgewählt",
+      "message-info": "Nachrichteninfo",
+      "none": "Niemand",
+      "read-by": "Gelesen von:",
+      "sent-by": "Gesendet von:",
+      "used-key-version": "Verwendete Schlüsselversion:"
+    },
+    "chat-owner": {
+      "all-no-longer-verified": "Alle Benutzer sind nicht mehr verifiziert",
+      "failed-to-remove-user": "Entfernen des Benutzers fehlgeschlagen:",
+      "failed-to-rotate-chat-key": "Fehler beim rotiern des Chat-Schlüssels",
+      "failed-to-save-chat-key": "Fehler beim Speichern des Chat-Schlüssels:",
+      "some-no-longer-verified": "Einige Benutzer sind nicht mehr verifiziert",
+      "user-no-longer-verified": "Benutzer @{username} ist nicht mehr verifiziert.  Dies kann passieren, wenn er seinen öffentlichen Schlüssel regenerieren musste. Sie müssen ihn erneut verifizieren, bevor Sie den Chat-Schlüssel rotieren können.",
+      "users-no-longer-verified": "Die Benutzer @{usernames} sind nicht mehr verifiziert.  Dies kann passieren, wenn sie ihren öffentlichen Schlüssel regenerieren mussten. Sie müssen sie erneut verifizieren, bevor Sie den Chat-Schlüssel rotieren können."
+    },
+    "chats": {
+      "failed-to-decrypt-chat-key": "Fehler beim entschlüsseln des Chat-Schlüssels, Sie haben möglicherweise einen falschen Master-Schlüssel eingegeben. \n(Fehler: {error})",
+      "failed-to-get-encrypted-chat-keys-from-public-key": "Fehler beim erhalten des Chat Schlüssels vom öffentlichen Schlüssel. Versuchen Sie, die App neu zu starten oder dem Chat neu beizutreten, wenn das Problem bestehen bleibt.",
+      "failed-to-get-encrypted-chat-keys-from-public-key-error": "Fehler beim erhalten des Chat-Schlüssels vom öffentlichen Schlüssel:",
+      "failed-to-get-encrypted-chat-keys-from-public-key-version": "Fehler beim erhalten des Chat-Schlüssels vom öffentlichen Schlüssel: Falsche Schlüsselversion. Versuchen Sie, die App neu zu starten oder dem Chat newu beizutreten, wenn das Problem bestehen bleibt.",
+      "failed-to-select-chat": "Fehler beim auswählen des Chates, stellen Sie sicher, dass Sie online sind.",
+      "re-import-master-key": "Neueingeben"
+    },
+    "master-key": {
+      "failed-to-import": "Fehler beim importieren des Master-Schlüssels:",
+      "generate-new": "Neu generieren",
+      "generate-new-warning": "Sie werden keinen Zugriff mehr auf Ihre aktuellen Chats und Sticker haben, nur neue, die nach der neu generierung Ihres Master-Schlüssels erstellt wurden.",
+      "import-existing": "Bestehenden importieren",
+      "import-master-key": "Master-Schlüssel importieren",
+      "no-master-key-found": "Master-Schlüssel nicht gefunden."
+    }
+  },
+  "profile": {
+    "change-confirm": "Dadurch werden alle Ihre anderen Geräte abgemeldet und Sie müssen den Master-Schlüssel erneut eingeben.",
+    "change-confirm-title": "Ändern?",
+    "change-password": "Passwort ändern",
+    "change-password-failed": "Ändern des Passwortes fehlgeschlagen:",
+    "change-password-success": "Passwort erfolgreich geändert!",
+    "confirm-password": "Neues Passwort bestätigen:",
+    "created": "Erstellt:",
+    "current-password": "Aktuelles Passwort:",
+    "display-name": "Anzeigename:",
+    "error-empty-display-name": "Anzeigename kann nicht leer sein!",
+    "go-to-admin-panel": "Zum Admin-Dashboard gehen",
+    "logout": "Abmelden",
+    "logout-failed": "Abmelden fehlgeschlagen",
+    "master-key": "Master-Schlüssel (mit niemanden teilen)",
+    "new-password": "Neues Passwort:",
+    "re-import-master-key": "Master-Schlüssel reimportieren",
+    "show-master-key": "Master-Schlüssel anzeigen",
+    "user-id": "Benutzer-ID:",
+    "username": "Benutzername:",
+    "you-are-admin": "Sie sind Administrator dieses Servers"
+  },
+  "settings": {
+    "categories": {
+      "advanced": "Fortgeschrittene",
+      "appearance": "Aussehen",
+      "sessions": "Sitzungen",
+      "storage": "Speicher"
+    },
+    "advanced": {
+      "clear-cache": "Caches löschen",
+      "reset-sw": "Service Workers zurücksetzen",
+      "service-worker": "Service Worker"
+    },
+    "appearance": {
+      "background": "Hintergrund",
+      "accent-color": "Akzentfarbe",
+      "background-tint": "Farbe",
+      "bottom-right": "Unten rechts",
+      "preview": "Vorschau",
+      "preview-message-1": "Hallo",
+      "preview-message-2": "So sieht eine Nachricht aus!",
+      "top-left": "Oben links"
+    },
+    "sessions": {
+      "created": "Erstellt:",
+      "current": "Aktuelle Sitzung",
+      "expires": "Läuft ab:",
+      "logout": "Abmelden",
+      "logout-confirm": "Sind Sie sicher, dass Sie dieses Gerät abmelden möchten?"
+    },
+    "storage": {
+      "clear-media": "Zwischengespeicherte Medien löschen",
+      "clear-media-success": "Zwischengespeicherte Medien gelöscht",
+      "used": "Verwendet {usedStorage} aus {totalStorage} ({percentage}% verwendet)"
+    }
+  },
+  "utils": {
+    "color-picker": {
+      "hex-code": "Hex Code",
+      "presets": "Farben"
+    },
+    "emoji-picker": {
+      "no-results": "Keine Emojis gefunden",
+      "search-placeholder": "Emojis suchen..."
+    },
+    "sticker-importer": {
+      "import-stickers": "Sticker importieren",
+      "no-stickers-selected": "Keine Sticker ausgewählt",
+      "select-description": "Sie können beliebige <code>.webp</code> Sticker auswählen",
+      "select-stickers": "Auswählen",
+      "start-import": "Import beginnen",
+      "stickers-failed": "Feheler beim auswählen von {count} Stickern, da diese größer als 1 MB oder das falsche Format sind",
+      "stickers-selected": "{count} Sticker ausgewählt"
+    },
+    "sticker-editor": {
+      "add-image": "Bild hinzufügen",
+      "add-sticker": "Sticker hinzufügen",
+      "add-text": "Text hinzufügen",
+      "create-sticker": "Sticker erstellen",
+      "download-model": "Model herunterladen",
+      "download-model-confirm": "Dies wird ein Model von rund 80 MB heruntergeladen, was eine Weile dauern kann. Denken Sie auch daran, dass die Entfernung des Hintergrunds in Browseranwendungen langsam sein wird.  Sie können auch eine externe App zum Erstellen von Stickern verwenden und die .webp-Datei importieren. Möchten Sie fortfahren?",
+      "duplicate": "Duplizieren",
+      "enter-text": "Text eingeben:",
+      "lock-aspect-ratio": "Verhältnis verriegeln",
+      "remove-background": "Hintergrund entfernen",
+      "removing-background": "Hintergrund wird entfernt",
+      "removing-background-description": "Dies kann eine Weile dauern, abhängig von Ihrem Gerät",
+      "save-sticker": "Sticker speichern",
+      "unlock-aspect-ratio": "Verhältnis entriegeln",
+      "sticker-saved": "Sticker erfolgreich gespeichert",
+      "model-downloading": "Model wird heruntergeladen",
+      "model-downloading-progress": "{current} von {total} ({progress}% heruntergeladen)"
+    },
+    "emoji-key-converter": {
+      "add-emoji": "Emoji hinzufügen",
+      "clear": "Alle Entferenen",
+      "expires-in-date": "Dieser Schlüssel verfällt in {time}",
+      "failed-to-generate-key": "Fehler beim generriern des Schlüssels aus der Emoji-Sequenz:",
+      "input-progress": "{index}/16 Emojis eingegeben",
+      "remove-last": "Letzten entfernen",
+      "time-remaining": "{hours} Stunden und {minute} Minuten"
+    },
+    "emoji-key-verification": {
+      "fail": "Sie stimmen nicht überein",
+      "match": "Sie stimmen überein"
+    }
+  },
+  "login": {
+    "confirm-password": "Passwort bestätigen:",
+    "login": "Anmelden",
+    "login-link": "Haben Sie bereits ein Konto? Anmelden",
+    "password": "Passwort:",
+    "register": "Registrieren",
+    "register-link": "Sie haben kein Konto? Registrieren",
+    "username": "Benutzername:"
+  }
+}

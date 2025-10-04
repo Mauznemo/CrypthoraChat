@@ -6,6 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import { register } from './data.remote';
 	import { getDeviceInfo } from '$lib/utils/device';
+	import { t } from 'svelte-i18n';
 
 	let { data } = $props();
 
@@ -22,7 +23,7 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div class="m-4 w-[400px] rounded-4xl bg-gray-800/60 p-5 frosted-glass">
-		<h1 class="mb-4 text-2xl">Register</h1>
+		<h1 class="mb-4 text-2xl">{$t('login.register')}</h1>
 
 		<form
 			{...register.enhance(async ({ form, data, submit }) => {
@@ -45,7 +46,7 @@
 			})}
 		>
 			<div class="mb-4">
-				<label class="mb-2" for="username">Username:</label>
+				<label class="mb-2" for="username">{$t('login.username')}</label>
 				<input
 					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type="text"
@@ -56,7 +57,7 @@
 			</div>
 
 			<div class="relative mb-4">
-				<label class="mb-2" for="password">Password:</label>
+				<label class="mb-2" for="password">{$t('login.password')}</label>
 				<input
 					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
@@ -78,7 +79,7 @@
 			</div>
 
 			<div class="relative mb-10">
-				<label class="mb-2" for="password">Confirm Password:</label>
+				<label class="mb-2" for="password">{$t('login.confirm-password')}</label>
 				<input
 					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
@@ -101,12 +102,12 @@
 
 			<button
 				class="mb-4 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass hover:bg-accent-600/50 focus:ring-blue-500"
-				type="submit">Register</button
+				type="submit">{$t('login.register')}</button
 			>
 
 			<p class="text-center text-red-500">{errorText}</p>
 		</form>
 
-		<p><a href="/login">Already have an account? Login</a></p>
+		<p><a href="/login">{$t('login.login-link')}</a></p>
 	</div>
 </div>

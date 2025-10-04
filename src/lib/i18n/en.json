@@ -1,0 +1,280 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "download": "Download",
+    "are-you-sure": "Are you sure?",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "ok": "OK",
+    "error": "Error",
+    "offline": "Offline",
+    "decline": "Decline",
+    "done": "Done",
+    "delete": "Delete",
+    "warning": "Warning"
+  },
+  "chat": {
+    "loading-older": "Loading older messages...",
+    "edited": "edited",
+    "reply": "Reply",
+    "add-reaction": "Add Reaction",
+    "edit": "Edit",
+    "delete": "Delete",
+    "show-info": "Show info",
+    "attachments": "{count, plural, one {# attachment} other {# attachments}}",
+    "decryption-error": {
+      "own-key-incorrect": "Failed to decrypt message (Your key is incorrect)",
+      "their-key-incorrect": "Failed to decrypt message (They have an incorrect key)",
+      "base": "Failed to decrypt message"
+    },
+    "remove-reaction": "Remove reaction",
+    "react-with": "React with {reaction}",
+    "failed-to-decrypt-message": "Failed to decrypt message",
+    "attachment": {
+      "sticker-added-to-my-stickers": "Sticker added to your stickers successfully",
+      "loading-image": "Loading image {size}",
+      "decrypt-failed-image": "Failed to decrypt image",
+      "loading-video": "Loading video {size}",
+      "decrypt-failed-video": "Failed to decrypt video",
+      "loading-audio": "Loading audio {size}",
+      "decrypt-failed-audio": "Failed to decrypt audio",
+      "ignore-limit": "Download and load preview"
+    },
+    "chat-list": {
+      "new-chat": "+ New Chat",
+      "others": "others",
+      "edit-group": "edit-group",
+      "rotate-key": "Rotate Key",
+      "add-user": "Add User",
+      "chats": "Chats",
+      "delete-chat": "Delete Chat",
+      "leave-group": "Leave Group",
+      "rotate-key-confirm-title": "Rotate Key?",
+      "rotate-key-confirm": "Are you sure you want to rotate the key?",
+      "leave-failed": "Failed to leave chat:"
+    },
+    "chat-input": {
+      "error-sending-message": "Failed to send message:",
+      "add-files": "Add Files",
+      "add-sticker": "Sticker",
+      "reply-to": "Replying to:",
+      "edit-message": "Editing message:",
+      "failed-to-load-message": "Failed to load message",
+      "is-typing": "is typing",
+      "are-typing": "are typing",
+      "disable-compression": "Disable compression",
+      "enable-compression": "Enable compression",
+      "file": "File",
+      "files": "Files",
+      "remaining": "Remaining",
+      "placeholder": "Type your message here..."
+    },
+    "info-bar": {
+      "remove-user": "Remove from group",
+      "confirm-remove-user": "Are you sure you want to remove @{username} from the group?",
+      "user-info": "User Info",
+      "group-info": "Group Info",
+      "updated-successfully": "Updated successfully!",
+      "failed-to-update": "Failed update chat:",
+      "owner": "Owner",
+      "members": "Members:"
+    },
+    "offline-message": "You may not see all messages in this chat",
+    "no-selected-chat": "No chat selected",
+    "failed-to-select-last-chat": "Failed to load you last selected chat",
+    "create-chat-title": "New Chat",
+    "create-chat-content": "What type of chat would you like to create?",
+    "new-dm": "New Direct Message",
+    "new-group": "New Group",
+    "verification-request-title": "Verify User Request",
+    "verification-request-content": "User @{username} requested a verification",
+    "verify-now": "Verify Now",
+    "new": {
+      "dm": {
+        "not-verified": "User not verified",
+        "not-verified-content": "User @{username} is not verified. You need to verify with them once before creating a chat with them.",
+        "create-dm": "Start Chat"
+      },
+      "failed-to-save-chat-key": "Failed to save chat key:",
+      "failed-to-create-chat": "Failed to create chat:",
+      "group": {
+        "create-group": "Create Group",
+        "not-verified-content": "Users @{usernames} are not verified. You need to verify with them once before creating a chat with them.",
+        "verify-user": "Verify @{username}",
+        "group-name": "Group Name..."
+      },
+      "failed-to-import-stickers": "Failed to import:"
+    },
+    "user-select": {
+      "no-users-found": "No users found",
+      "search-users-placeholder": "Username...",
+      "select-users": "Select Users",
+      "select-user": "Select User"
+    },
+    "sticker-picker": {
+      "failed-to-load-stickers": "Failed to fetch stickers",
+      "failed-to-send-sticker": "Failed to send sticker: No chat selected",
+      "failed-to-upload-sticker": "Failed to upload sticker",
+      "failed-to-send-sticker-message": "Failed to send sticker:",
+      "failed-to-delete-sticker": "Failed to delete sticker",
+      "unfavorite": "Unfavorite",
+      "favorite": "Favorite",
+      "import": "Import",
+      "create": "Create"
+    },
+    "messages": {
+      "delete-message-confirm": "Are you sure you want to delete this message?",
+      "failed-to-delete-message": "Failed to delete message: No chat selected",
+      "none": "No one",
+      "message-info": "Message Info",
+      "sent-by": "Sent by:",
+      "read-by": "Read by:",
+      "used-key-version": "Used Key Version:",
+      "failed-to-decrypt-message-by-owner": "Failed to decrypt message by chat owner @{username} Something is wrong with your key.",
+      "failed-to-decrypt-message": "Failed to decrypt, you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key."
+    },
+    "chat-owner": {
+      "all-no-longer-verified": "All users no longer verified",
+      "some-no-longer-verified": "Some users no longer verified",
+      "user-no-longer-verified": "User @{username} is no longer verified. This can happen if they had to regenerate their public key. You need to re-verify with them before rotating the chat key.",
+      "users-no-longer-verified": "Users {usernames} are  no longer verified. This can happen if they had to regenerate their public key. You need to re-verify with them before rotating the chat key.",
+      "failed-to-save-chat-key": "Failed to save chat key:",
+      "failed-to-rotate-chat-key": "Failed to rotate chat key:",
+      "failed-to-remove-user": "Failed to remove user:"
+    },
+    "chats": {
+      "failed-to-select-chat": "Failed to select chat, make sure you are online.",
+      "failed-to-decrypt-chat-key": "Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: {error})",
+      "re-import-master-key": "Re-enter",
+      "failed-to-get-encrypted-chat-keys-from-public-key": "Failed to get chat key from public key. Try restarting the App or leaving the chat and re-joining if the problem persists.",
+      "failed-to-get-encrypted-chat-keys-from-public-key-version": "Failed to get chat key from public key: Key Version mismatch. Try restarting the App or leaving the chat and re-joining if the problem persists.",
+      "failed-to-get-encrypted-chat-keys-from-public-key-error": "Failed to get chat key from public key:"
+    },
+    "master-key": {
+      "failed-to-import": "Failed to import master key:",
+      "import-existing": "Import Existing",
+      "generate-new": "Generate New",
+      "generate-new-warning": "You will no longer have access to your current chats and stickers, only new ones created after re-generating your master key.",
+      "no-master-key-found": "Could not find your maser key.",
+      "import-master-key": "Import Master Key"
+    }
+  },
+  "profile": {
+    "display-name": "Display Name:",
+    "username": "Username:",
+    "user-id": "User ID:",
+    "created": "Created:",
+    "you-are-admin": "You are Admin of this Server",
+    "go-to-admin-panel": "Go to Admin Dashboard",
+    "change-password": "Change Password",
+    "master-key": "Master Key (Don't share with anyone)",
+    "show-master-key": "Show Master Key",
+    "re-import-master-key": "Re-import Master Key",
+    "current-password": "Current Password:",
+    "new-password": "New Password:",
+    "confirm-password": "Confirm New Password:",
+    "change-confirm-title": "Change?",
+    "change-confirm": "This will log all your other devices out and you will need to re-share the master key with them.",
+    "change-password-failed": "Failed to change password:",
+    "change-password-success": "Password changed successfully!",
+    "error-empty-display-name": "Display name cannot be empty!",
+    "logout-failed": "Failed to logout",
+    "logout": "Logout"
+  },
+  "settings": {
+    "categories": {
+      "appearance": "Appearance",
+      "sessions": "Sessions",
+      "storage": "Storage",
+      "advanced": "Advanced"
+    },
+    "appearance": {
+      "accent-color": "Accent Color",
+      "preview": "Preview",
+      "preview-message-1": "Hello",
+      "preview-message-2": "This is what a message looks like!",
+      "background": "Background",
+      "top-left": "Top Left",
+      "bottom-right": "Bottom Right",
+      "background-tint": "Tint Color"
+    },
+    "sessions": {
+      "current": "Current Session",
+      "logout": "Logout",
+      "created": "Created:",
+      "expires": "Expires:",
+      "logout-confirm": "Are you sure you want to logout this device?"
+    },
+    "storage": {
+      "used": "Used {usedStorage} from {totalStorage} ({percentage}% used)",
+      "clear-media": "Clear cached media",
+      "clear-media-success": "Cached media cleared"
+    },
+    "advanced": {
+      "reset-sw": "Reset Service Workers",
+      "service-worker": "Service Worker",
+      "clear-cache": "Clear Caches"
+    }
+  },
+  "utils": {
+    "color-picker": {
+      "hex-code": "Hex Code",
+      "presets": "Preset Colors"
+    },
+    "emoji-picker": {
+      "no-results": "No emojis found",
+      "search-placeholder": "Search emojis..."
+    },
+    "sticker-importer": {
+      "start-import": "Start Import",
+      "select-stickers": "Select",
+      "select-description": "You can select any <code>.webp</code> sticker",
+      "no-stickers-selected": "No Stickers Selected",
+      "stickers-selected": "{count} Stickers Selected",
+      "stickers-failed": "Failed to select {count} stickers that where larger than 1MB or the wrong format",
+      "import-stickers": "Import Stickers"
+    },
+    "sticker-editor": {
+      "save-sticker": "Save Sticker",
+      "removing-background-description": "This may take a while depending on your device",
+      "removing-background": "Removing Background",
+      "unlock-aspect-ratio": "Unlock Aspect Ratio",
+      "lock-aspect-ratio": "Lock Aspect Ratio",
+      "remove-background": "Remove Background",
+      "duplicate": "Duplicate",
+      "add-text": "Add Text",
+      "add-sticker": "Add Sticker",
+      "add-image": "Add Image",
+      "create-sticker": "Create Sticker",
+      "download-model": "Download Model",
+      "download-model-confirm": "This will download an around 80MB model, so it may take a while. Also keep in mind that in browser background removal will be slow. You might want to use an external sticker creator app and import the .webp file. Do you want to proceed?",
+      "enter-text": "Enter text:",
+      "sticker-saved": "Sticker saved successfully",
+      "model-downloading": "Downloading Model",
+      "model-downloading-progress": "{current} of {total} ({progress}% downloaded)"
+    },
+    "emoji-key-converter": {
+      "expires-in-date": "This Key will expire in {time}",
+      "input-progress": "{index}/16 emojis entered",
+      "remove-last": "Remove Last",
+      "clear": "Clear All",
+      "add-emoji": "Add Emoji",
+      "failed-to-generate-key": "Failed to generate key from emoji sequence:",
+      "time-remaining": "{hours} hours and {minute} minutes"
+    },
+    "emoji-key-verification": {
+      "match": "They match",
+      "fail": "They don't match"
+    }
+  },
+  "login": {
+    "username": "Username:",
+    "password": "Password:",
+    "register-link": "Don't have an account? Register",
+    "login": "Login",
+    "register": "Register",
+    "confirm-password": "Confirm Password:",
+    "login-link": "Already have an account? Login"
+  }
+}

@@ -15,6 +15,7 @@
 	import GroupPicture from './GroupPicture.svelte';
 	import { deleteFilesNotContaining, deleteFilesThatContain } from '$lib/idb';
 	import Icon from '@iconify/svelte';
+	import { t } from 'svelte-i18n';
 
 	let {
 		onChatSelected,
@@ -67,19 +68,23 @@
 		if (isChatOwner) {
 			items.push({
 				id: 'rotate-key',
-				label: 'Rotate Key',
+				label: $t('chat.chat-list.rotate-key'),
 				icon: 'mdi:rotate-clockwise',
 				action: async () => {
-					modalStore.confirm('Rotate Key?', 'Are you sure you want to rotate the key?', () => {
-						chatOwner.tryRotateChatKey(chat);
-					});
+					modalStore.confirm(
+						$t('common.are-you-sure'),
+						$t('chat.chat-list.rotate-key-confirm'),
+						() => {
+							chatOwner.tryRotateChatKey(chat);
+						}
+					);
 				}
 			});
 
 			if (chat.type === 'group') {
 				items.push({
 					id: 'add-user',
-					label: 'Add User',
+					label: $t('chat.chat-list.add-user'),
 					icon: 'mdi:account-multiple-add-outline',
 					action: () => {
 						addUserToChatStore.open(chat);
@@ -91,7 +96,7 @@
 		if (chat.type === 'group' && isChatOwner) {
 			items.push({
 				id: 'edit',
-				label: 'Edit Group',
+				label: $t('chat.chat-list.edit-group'),
 				icon: 'mdi:edit-outline',
 				action: () => {}
 			});
@@ -99,7 +104,8 @@
 
 		items.push({
 			id: 'leave',
-			label: chat.type === 'group' ? 'Leave Group' : 'Delete Chat',
+			label:
+				chat.type === 'group' ? $t('chat.chat-list.leave-group') : $t('chat.chat-list.delete-chat'),
 			icon: 'mdi:account-arrow-left-outline',
 			action: async () => {
 				try {
@@ -108,7 +114,7 @@
 					chats.tryDeselectChat(chat);
 					chatList.removeChat(chat.id);
 				} catch (error) {
-					modalStore.error(error, 'Failed to leave chat:');
+					modalStore.error(error, $t('chat.chat-list.leave-failed'));
 				}
 			}
 		});
@@ -126,7 +132,7 @@
 </script>
 
 <div class="mt-5">
-	<p class="px-2 text-sm font-semibold text-gray-300">Chats</p>
+	<p class="px-2 text-sm font-semibold text-gray-300">{$t('chat.chat-list.chats')}</p>
 
 	{#if loadingChats}
 		<div class="flex h-full items-center justify-center p-10">
@@ -177,7 +183,7 @@
 				{@const remainingCount = chat.participants.length - 2}
 				{@const participants =
 					remainingCount > 0
-						? firstTwoParticipants.join(', ') + ` +${remainingCount} others`
+						? firstTwoParticipants.join(', ') + ` +${remainingCount} ${$t('chat.chat-list.others')}`
 						: firstTwoParticipants.join(', ')}
 
 				<GroupPicture class="mr-2" {chat} size="3rem" />
@@ -221,7 +227,7 @@
 			onclick={() => onCreateChat()}
 			disabled={!socketStore.connected}
 			class="cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 text-sm font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
-			>+ New chat</button
+			>{$t('chat.chat-list.new-chat')}</button
 		>
 	</div>
 </div>

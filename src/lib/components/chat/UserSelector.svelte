@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SafeUser } from '$lib/types';
+	import { t } from 'svelte-i18n';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { findUsers } from './userSelector.remote';
 
@@ -60,7 +61,9 @@
 
 <div>
 	<div class="flex h-[500px] flex-col border-y border-gray-600 bg-transparent p-4">
-		<p class="mb-1 text-lg font-bold">{selectMultiple ? 'Select Users' : 'Select User'}</p>
+		<p class="mb-1 text-lg font-bold">
+			{selectMultiple ? $t('chat.user-select.select-users') : $t('chat.user-select.select-user')}
+		</p>
 		{#if selectedUsers}
 			<ul class="mini-scrollbar max-h-50 overflow-y-auto">
 				{#each selectedUsers as user}
@@ -90,12 +93,12 @@
 			oninput={filterUsers}
 			bind:value={searchValue}
 			type="text"
-			class="frosted-glass my-2 w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-			placeholder="Username..."
+			class="my-2 w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+			placeholder={$t('chat.user-select.search-users-placeholder')}
 		/>
 		<ul class="mini-scrollbar overflow-y-auto">
 			{#if searchValue.trim().length > 0 && !foundUsers}
-				<p class="text-white">No users found</p>
+				<p class="text-white">{$t('chat.user-select.no-users-found')}</p>
 			{/if}
 			{#each users as user}
 				{@const isSelected =

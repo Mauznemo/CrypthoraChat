@@ -12,11 +12,11 @@
 	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import { showMasterKeyImport } from '$lib/chat/masterKey';
+	import { t } from 'svelte-i18n';
 
 	let { data } = $props();
 
 	let displayName: string = $state(data.user?.displayName || '');
-	let logoutButtonText: string = $state('Logout');
 
 	let showChangePassword = $state(false);
 	let currentPassword: string = $state('');
@@ -87,42 +87,46 @@
 				<Icon icon="mdi:image-edit-outline" class="size-6" />
 			</button>
 		</div>
-		<p><strong>Display Name:</strong></p>
+		<p><strong>{$t('profile.display-name')}</strong></p>
 		<input class="mb-2 rounded-full bg-gray-800 p-2 px-4" type="text" bind:value={displayName} />
-		<p><strong>Username:</strong> @{data.user?.username}</p>
-		<p><strong>User ID:</strong> {data.user?.id}</p>
-		<p><strong>Created:</strong> {new Date(data.user?.createdAt || 0).toLocaleDateString()}</p>
+		<p><strong>{$t('profile.username')}</strong> @{data.user?.username}</p>
+		<p><strong>{$t('profile.user-id')}</strong> {data.user?.id}</p>
+		<p>
+			<strong>{$t('profile.created')}</strong>
+			{new Date(data.user?.createdAt || 0).toLocaleDateString()}
+		</p>
 		{#if data.user?.isAdmin}
 			<p>
-				<strong>You are Admin of this Server</strong>
+				<strong>{$t('profile.you-are-admin')}</strong>
 				<a class="text-blue-400 underline hover:text-blue-300" href="/admin"
-					>Go to Admin Dashboard</a
+					>{$t('profile.go-to-admin-panel')}</a
 				>
 			</p>
 		{/if}
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
-			onclick={() => (showChangePassword = !showChangePassword)}>Change Password</button
+			onclick={() => (showChangePassword = !showChangePassword)}
+			>{$t('profile.change-password')}</button
 		>
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
 			onclick={async () => {
 				emojiKeyConverterStore.openDisplay(
-					"Master Key (Don't share with anyone)",
+					$t('profile.master-key'),
 					false,
 					await getMasterSeedForSharing()
 				);
-			}}>Show Master Key</button
+			}}>{$t('profile.show-master-key')}</button
 		>
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
-			onclick={() => showMasterKeyImport()}>Re-import Master Key</button
+			onclick={() => showMasterKeyImport()}>{$t('profile.re-import-master-key')}</button
 		>
 		<br />
 
 		{#if showChangePassword}
 			<div class="flex gap-2">
-				<p><strong>Current Password:</strong></p>
+				<p><strong>{$t('profile.current-password')}</strong></p>
 				<button
 					type="button"
 					class=" cursor-pointer text-gray-300 hover:text-white"
@@ -140,13 +144,13 @@
 				type={showPassword ? 'text' : 'password'}
 				bind:value={currentPassword}
 			/>
-			<p><strong>New Password:</strong></p>
+			<p><strong>{$t('profile.new-password')}</strong></p>
 			<input
 				class="rounded-full bg-gray-800 p-2 px-4"
 				type={showPassword ? 'text' : 'password'}
 				bind:value={newPassword}
 			/>
-			<p><strong>Confirm New Password:</strong></p>
+			<p><strong>{$t('profile.confirm-password')}</strong></p>
 			<input
 				class="rounded-full bg-gray-800 p-2 px-4"
 				type={showPassword ? 'text' : 'password'}
@@ -156,24 +160,24 @@
 			<button
 				onclick={async () => {
 					modalStore.confirm(
-						'Change?',
-						'This will log all your other devices out and you will need to re-share the master key with them.',
+						$t('profile.change-confirm-title'),
+						$t('profile.change-confirm'),
 						async () => {
 							try {
 								await changePassword({ currentPassword, newPassword, confirmNewPassword });
 							} catch (error: any) {
-								modalStore.error(error, 'Failed to change password:');
+								modalStore.error(error, $t('profile.change-password-failed'));
 								return;
 							}
 							currentPassword = '';
 							newPassword = '';
 							confirmNewPassword = '';
-							modalStore.alert('Success', 'Password changed successfully!');
+							toastStore.success($t('profile.change-password-success'));
 						}
 					);
 				}}
 				class="mt-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
-				>Change</button
+				>{$t('profile.change-password')}</button
 			>
 		{/if}
 
@@ -182,7 +186,7 @@
 				onclick={async () => {
 					displayName = displayName.trim();
 					if (displayName === '') {
-						modalStore.alert('Error', 'Display name cannot be empty!');
+						modalStore.error($t('profile.error-empty-display-name'));
 						return;
 					}
 
@@ -213,7 +217,7 @@
 				{#if loadingSave}
 					<LoadingSpinner size="1.5rem" />
 				{:else}
-					Save
+					{$t('common.save')}
 				{/if}
 			</button>
 		{/if}
@@ -221,18 +225,17 @@
 		<button
 			onclick={async () => {
 				modalStore.confirm('Logout?', 'Are you sure you want to logout?', async () => {
-					logoutButtonText = 'Loading...';
 					try {
 						await logout();
 						await invalidateAll();
 						goto('/login');
 					} catch (error) {
-						logoutButtonText = 'Failed: ' + error;
+						modalStore.error(error, $t('profile.logout-failed'));
 					}
 				});
 			}}
 			class="mb-2 cursor-pointer rounded-full bg-red-800/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
-			>{logoutButtonText}</button
+			>{$t('profile.logout')}</button
 		>
 	</div>
 </div>

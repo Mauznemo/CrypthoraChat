@@ -9,12 +9,12 @@ import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
 import { showChatNotification } from '$lib/stores/notifications.svelte';
 import { chatList } from './chatList';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 function updateMessages() {
 	//chatStore.messages = chatStore.messages;
 }
-
-// let messages: ClientMessage[] = [];
 
 let unreadMessages: ClientMessage[] = [];
 
@@ -22,11 +22,11 @@ let unreadMessages: ClientMessage[] = [];
 export function handleDeleteMessage(message: ClientMessage): void {
 	console.log('Delete message:', message.id);
 	modalStore.confirm(
-		'Delete Message',
-		'Are you sure you want to delete this message?',
+		get(t)('common.are-you-sure'),
+		get(t)('chat.messages.delete-message-confirm'),
 		async () => {
 			if (!chatStore.activeChat) {
-				modalStore.alert('Error', 'Failed to delete message: No chat selected');
+				modalStore.error(get(t)('chat.messages.failed-to-delete-message'));
 				return;
 			}
 			console.log('Message deleted:', message.id);
@@ -41,14 +41,19 @@ export function handleInfoMessage(message: ClientMessage): void {
 	const readerNames =
 		message.readBy.length > 0
 			? message.readBy.map((user) => '@' + user.username).join(', ')
-			: 'No one';
+			: get(t)('chat.messages.none');
 	modalStore.alert(
-		'Message Info',
-		'Sent by: @' +
+		get(t)('chat.messages.message-info'),
+		get(t)('chat.messages.sent-by') +
+			' @' +
 			message.user.username +
-			'\nRead by: ' +
+			'\n' +
+			get(t)('chat.messages.read-by') +
+			' ' +
 			readerNames +
-			'\nUsed Key Version: ' +
+			'\n' +
+			get(t)('chat.messages.used-key-version') +
+			' ' +
 			message.usedKeyVersion
 	);
 }
@@ -199,10 +204,10 @@ export function handleDecryptError(
 
 	if (myKeyWrong) {
 		modalStore.alert(
-			'Error',
-			'Failed to decrypt message by chat owner @' +
-				message.user.username +
-				'. Something is wrong with your key.',
+			get(t)('common.error'),
+			get(t)('chat.messages.failed-to-decrypt-message-by-owner', {
+				values: { username: message.user.username }
+			}),
 			{
 				onClose: () => modalStore.removeFromQueue('decryption-chat-key-error'),
 				id: 'decryption-chat-key-error'
@@ -211,9 +216,7 @@ export function handleDecryptError(
 		return;
 	}
 
-	modalStore.error(
-		'Failed to decrypt you or the other user might have a wrong chat key. If you are unsure please ask the chat owner, they always have the correct key.'
-	);
+	modalStore.error(get(t)('chat.messages.failed-to-decrypt-message'));
 }
 
 /** Sets the messages array */

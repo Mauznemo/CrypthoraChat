@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { t } from 'svelte-i18n';
+
 	let {
 		initialColor = '#3b82f6',
 		onColorChange = (color: string) => {}
@@ -104,7 +106,7 @@
 			/>
 
 			<div class="mb-4">
-				<p class="mb-2 block text-sm font-medium text-white">Hex Code</p>
+				<p class="mb-2 block text-sm font-medium text-white">{$t('utils.color-picker.hex-code')}</p>
 				<input
 					type="text"
 					value={color}
@@ -115,7 +117,7 @@
 			</div>
 
 			<div>
-				<p class="mb-2 block text-sm font-medium text-white">Preset Colors</p>
+				<p class="mb-2 block text-sm font-medium text-white">{$t('utils.color-picker.presets')}</p>
 				<div class="grid grid-cols-5 gap-2">
 					{#each presetColors as presetColor}
 						<button
@@ -139,7 +141,7 @@
 				}}
 				class="mt-4 w-full cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50"
 			>
-				Done
+				{$t('common.done')}
 			</button>
 		</div>
 	{/if}

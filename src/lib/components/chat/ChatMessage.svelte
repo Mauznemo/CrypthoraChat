@@ -7,6 +7,7 @@
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import Attachment from './Attachment.svelte';
+	import { t } from 'svelte-i18n';
 
 	const {
 		message,
@@ -109,7 +110,9 @@
 			<Reply replyToMessage={message} />
 
 			{#if message.attachmentPaths.length > 0}
-				<p class="text-sm text-gray-400">{message.attachmentPaths.length} attachments</p>
+				<p class="text-sm text-gray-400">
+					{$t('chat.attachments', { values: { count: message.attachmentPaths.length } })}
+				</p>
 				<div class="mt-2 flex max-w-full flex-col items-end">
 					{#each message.attachmentPaths as attachmentPath}
 						<Attachment {attachmentPath} keyVersion={message.usedKeyVersion} />
@@ -120,7 +123,7 @@
 			<svelte:boundary>
 				{#await decryptMessage({ message })}
 					{#if message.attachmentPaths.length === 0}
-						<p class="pr-9 whitespace-pre-line text-white">loading...</p>
+						<p class="pr-9 whitespace-pre-line text-white">{$t('common.loading')}</p>
 					{/if}
 				{:then decryptedContent}
 					<p class="pr-9 break-all whitespace-pre-line text-white">
@@ -129,11 +132,13 @@
 				{:catch error}
 					{handleDecryptError(error)}
 					<p class="pr-9 whitespace-pre-line text-red-400">
-						Failed to decrypt message {message.chat.ownerId === message.user.id
-							? ' (Your Key is incorrect)'
-							: ''}{message.chat.ownerId === chatStore.user?.id
-							? ' (They have an incorrect key)'
-							: ''}
+						{#if message.chat.ownerId === message.user.id}
+							{$t('chat.decryption-error.own-key-incorrect')}
+						{:else if message.chat.ownerId === chatStore.user?.id}
+							{$t('chat.decryption-error.their-key-incorrect')}
+						{:else}
+							{$t('chat.decryption-error.base')}
+						{/if}
 					</p>
 					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
 				{/await}
@@ -143,7 +148,7 @@
 				{new Date(message.timestamp).toLocaleTimeString([], {
 					hour: '2-digit',
 					minute: '2-digit'
-				})}{message.isEdited ? ' edited' : ''}
+				})}{message.isEdited ? ` ${$t('chat.edited')}` : ''}
 			</div>
 		</div>
 		{#if message.encryptedReactions.length > 0}
@@ -164,7 +169,9 @@
 								onUpdateReaction(typedData.encryptedReaction, 'add');
 							}
 						}}
-						data-tooltip="{userReacted ? 'Remove reaction' : 'React with'} {reaction}"
+						data-tooltip={userReacted
+							? $t('chat.remove-reaction')
+							: $t('chat.react-with', { values: { reaction } })}
 						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
 							? 'bg-accent-800/90 ring-1 ring-accent-400 hover:bg-accent-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-accent-700/90'}"

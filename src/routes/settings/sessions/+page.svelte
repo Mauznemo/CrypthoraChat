@@ -4,6 +4,7 @@
 	import { getCurrentSessionId, getSessions, logoutSession } from './data.remote';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from 'svelte-i18n';
 
 	let sessions: Session[] = $state([]);
 	let currentSessionId = $state('');
@@ -18,17 +19,21 @@
 			return;
 		}
 
-		modalStore.confirm('Logout?', 'Are you sure you want to logout this device?', async () => {
-			try {
-				await logoutSession(sessionId);
-			} catch (error: any) {
-				console.error(error);
-				toastStore.error('Failed to logout: ' + error.body.message);
-			} finally {
-				sessions = sessions.filter((s) => s.id !== sessionId);
-				toastStore.success('Successfully logged out session!');
+		modalStore.confirm(
+			$t('common.are-you-sure'),
+			$t('settings.sessions.logout-confirm'),
+			async () => {
+				try {
+					await logoutSession(sessionId);
+				} catch (error: any) {
+					console.error(error);
+					toastStore.error('Failed to logout: ' + error.body.message);
+				} finally {
+					sessions = sessions.filter((s) => s.id !== sessionId);
+					toastStore.success('Successfully logged out session!');
+				}
 			}
-		});
+		);
 	}
 </script>
 
@@ -41,14 +46,16 @@
 					<div class="mb-2 flex items-center justify-start">
 						<p class="mr-5 text-xl font-bold">{session.deviceOs || 'Unknown OS'}</p>
 						{#if isActive}
-							<p class="text-md font-bold text-green-300">Current Session</p>
+							<p class="text-md font-bold text-green-300">{$t('settings.sessions.current')}</p>
 						{/if}
 					</div>
 					<p class="text-md text-gray-200">
-						Created: {new Date(session.createdAt).toLocaleString()}
+						{$t('settings.sessions.created')}
+						{new Date(session.createdAt).toLocaleString()}
 					</p>
 					<p class="text-md text-gray-200">
-						Expires: {new Date(session.expiresAt).toLocaleString()}
+						{$t('settings.sessions.expires')}
+						{new Date(session.expiresAt).toLocaleString()}
 					</p>
 				</div>
 				<div class="flex items-center">
@@ -56,7 +63,7 @@
 						<button
 							onclick={() => handleLogout(session.id)}
 							class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
-							>Logout</button
+							>{$t('settings.sessions.logout')}</button
 						>
 					{/if}
 				</div>

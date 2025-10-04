@@ -5,10 +5,8 @@ import {
 	preload as imglyPreload,
 	type Config as ImglyConfig
 } from '@imgly/background-removal';
-
-interface RemoveBgOptions {
-	model?: 'small' | 'medium';
-}
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 function showProgressModal(currentBytes: number, totalBytes: number) {
 	const progress = (currentBytes / totalBytes) * 100;
@@ -20,8 +18,10 @@ function showProgressModal(currentBytes: number, totalBytes: number) {
 	const current = fileUtils.formatFileSize(currentBytes);
 	const total = fileUtils.formatFileSize(totalBytes);
 
-	const title = 'Downloading Model';
-	const content = current + ' of ' + total + ' (' + progress.toFixed(2) + '%) downloaded';
+	const title = get(t)('utils.sticker-editor.model-downloading');
+	const content = get(t)('utils.sticker-editor.model-downloading-progress', {
+		values: { current, total, progress: progress.toFixed(2) }
+	});
 	if (!modalStore.isModalOpen('model-download-progress-modal')) {
 		modalStore.open({
 			title,

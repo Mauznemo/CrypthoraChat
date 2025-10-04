@@ -13,6 +13,7 @@
 	import { chatList } from '$lib/chat/chatList';
 	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from 'svelte-i18n';
 
 	let groupName: string = $state('');
 
@@ -65,12 +66,12 @@
 		const items: ContextMenuItem[] = [
 			{
 				id: 'remove-user',
-				label: 'Remove from group',
+				label: $t('chat.info-bar.remove-user'),
 				icon: 'mdi:user-remove-outline',
 				action: async () => {
 					modalStore.confirm(
-						'Are you sure?',
-						'Are you sure you want to remove @' + user.username + ' from the group?',
+						$t('common.are-you-sure'),
+						$t('chat.info-bar.confirm-remove-user', { values: { username: user.username } }),
 						() => {
 							chatOwner.tryRemoveUser(chatStore.activeChat!.id, user.id);
 						}
@@ -97,7 +98,7 @@
 		</button>
 		{#if infoBarStore.userToShow}
 			<div>
-				<p class="mb-5 text-2xl font-bold">User Info</p>
+				<p class="mb-5 text-2xl font-bold">{$t('chat.info-bar.user-info')}</p>
 				<div class="flex flex-col items-center space-x-2">
 					<ProfilePicture class="mb-5" user={infoBarStore.userToShow} size="5rem" />
 					<p class="line-clamp-1 text-xl font-bold break-all">
@@ -112,7 +113,7 @@
 			{@const chatOwnerId = chatStore.activeChat.ownerId}
 			{@const isOwner = chatStore.activeChat.ownerId === chatStore.user?.id}
 			<div class="flex flex-col items-start space-y-2">
-				<p class="mb-5 text-2xl font-bold">Group Info</p>
+				<p class="mb-5 text-2xl font-bold">{$t('chat.info-bar.group-info')}</p>
 
 				{#if chatStore.activeChat.type === 'group'}
 					<div class="flex w-full flex-col items-stretch space-x-2">
@@ -126,7 +127,7 @@
 							<button
 								onclick={openFileSelector}
 								class="absolute -right-6 -bottom-5 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
-								data-tooltip="Edit"
+								data-tooltip={$t('chat.edit')}
 								aria-label="Edit message"
 								type="button"
 							>
@@ -164,19 +165,19 @@
 											previewUrl = null;
 										}
 									} catch (error) {
-										modalStore.error(error, 'Failed update chat:');
+										modalStore.error(error, $t('chat.info-bar.failed-to-update'));
 										return;
 									}
 
-									toastStore.success('Updated successfully!');
+									toastStore.success($t('chat.info-bar.updated-successfully'));
 								}}
 								class="mb-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
-								>Save</button
+								>{$t('common.save')}</button
 							>
 						{/if}
 					</div>
 				{/if}
-				<p>Participants:</p>
+				<p>{$t('chat.info-bar.members')}</p>
 				{#each chatStore.activeChat.participants as participant}
 					<div class="flex items-center space-x-2">
 						<ProfilePicture user={participant.user} />
@@ -187,7 +188,7 @@
 								</p>
 								{#if participant.user.id === chatOwnerId}
 									<p data-tooltip="Owner of the group" class="text-sm text-gray-400 select-none">
-										Owner
+										{$t('chat.info-bar.owner')}
 									</p>
 								{/if}
 							</div>

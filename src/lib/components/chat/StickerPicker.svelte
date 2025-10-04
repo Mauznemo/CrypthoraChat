@@ -18,6 +18,7 @@
 	import type { Prisma } from '$prisma';
 	import Icon from '@iconify/svelte';
 	import { tick } from 'svelte';
+	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
 	import { scale } from 'svelte/transition';
 	type ServerSticker = Prisma.UserStickerGetPayload<{
@@ -50,7 +51,7 @@
 			stickersPaths = await getUserStickers();
 		} catch (error) {
 			console.error(error);
-			toastStore.error('Failed to fetch stickers');
+			toastStore.error($t('chat.sticker-picker.failed-to-load-stickers'));
 			return;
 		}
 
@@ -86,7 +87,7 @@
 		if (uploadingFile || !chatStore.user) return;
 
 		if (!chatStore.activeChat) {
-			modalStore.alert('Error', 'Failed to send sticker message: No chat selected');
+			modalStore.error($t('chat.sticker-picker.failed-to-send-sticker'));
 			return;
 		}
 
@@ -97,7 +98,7 @@
 		const result = await tryUploadFile(fileToUpload, chatStore.activeChat.id, null);
 
 		if (!result.success) {
-			modalStore.error('Failed to upload sticker');
+			modalStore.error($t('chat.sticker-picker.failed-to-upload-sticker'));
 			return;
 		}
 
@@ -113,7 +114,7 @@
 				attachmentPaths: ['sticker:' + result.filePath]
 			});
 		} catch (error) {
-			modalStore.error(error, 'Failed to send sticker message:');
+			modalStore.error(error, $t('chat.sticker-picker.failed-to-send-sticker-message'));
 		}
 	}
 
@@ -155,14 +156,14 @@
 		const items: ContextMenuItem[] = [
 			{
 				id: 'delete',
-				label: 'Delete',
+				label: $t('common.delete'),
 				icon: 'mdi:delete',
 				action: async () => {
 					try {
 						await deleteUserSticker(sticker.id);
 						stickers = stickers.filter((s) => s.id !== sticker.id);
 					} catch (error) {
-						toastStore.error('Failed to delete sticker');
+						toastStore.error($t('chat.sticker-picker.failed-to-delete-sticker'));
 					}
 				}
 			}
@@ -170,7 +171,7 @@
 		if (sticker.favorited) {
 			items.unshift({
 				id: 'unfavorite',
-				label: 'Unfavorite',
+				label: $t('chat.sticker-picker.unfavorite'),
 				icon: 'mdi:star-outline',
 				action: () => {
 					favoriteSticker(sticker, false);
@@ -179,7 +180,7 @@
 		} else {
 			items.unshift({
 				id: 'favorite',
-				label: 'Favorite',
+				label: $t('chat.sticker-picker.favorite'),
 				icon: 'mdi:star',
 				action: () => {
 					favoriteSticker(sticker, true);
@@ -222,7 +223,7 @@
 				>
 					<Icon icon="mdi:sticker-plus-outline" class="size-6" />
 				</div>
-				<p>Create</p>
+				<p>{$t('chat.sticker-picker.create')}</p>
 			</button>
 			<button
 				onclick={() => goto('/sticker-importer')}
@@ -233,7 +234,7 @@
 				>
 					<Icon icon="mdi:import" class="size-6" />
 				</div>
-				<p>Import</p>
+				<p>{$t('chat.sticker-picker.import')}</p>
 			</button>
 			{#each stickers as sticker}
 				<button
