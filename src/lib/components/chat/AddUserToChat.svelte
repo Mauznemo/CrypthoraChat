@@ -11,6 +11,7 @@
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
 	import Icon from '@iconify/svelte';
+	import { developer } from '$lib/utils/debug';
 
 	let selectedUsers: SafeUser[] = $state([]);
 
@@ -64,10 +65,15 @@
 			const decryptResult = await chats.tryDecryptChatKeys(chatKeyResult.keyVersions);
 
 			if (!decryptResult.success) {
+				modalStore.error('Failed to decrypt chat key so cannot be shared with users.');
 				return;
 			}
 
-			const chatKey = decryptResult.keyVersions[addUserToChatStore.chat.currentKeyVersion].key;
+			const chatKey = decryptResult.keyVersions.filter(
+				(k) => k.keyVersion === addUserToChatStore.chat?.currentKeyVersion
+			)[0].key;
+
+			developer.logSymmetricCryptoKey(chatKey, 'Sharing chat key with users:');
 
 			const encryptedUserChatKeys = await encryptChatKeyForUsers(
 				chatKey,

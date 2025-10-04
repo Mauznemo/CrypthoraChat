@@ -5,6 +5,7 @@ import { chatStore } from '$lib/stores/chat.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatParticipant, ChatWithoutMessages, SafeUser } from '$lib/types';
+import { developer } from '$lib/utils/debug';
 
 import {
 	getChatById,
@@ -339,13 +340,19 @@ export const chats = {
 				addMessagesAtBeginning(messages);
 				console.log('got older system messages', systemMessages);
 				if (systemMessages.length > 0) {
-					setSystemMessages([...systemMessages, ...chatStore.systemMessages]);
+					let newSystemMessages = systemMessages.filter(
+						(message) => !chatStore.systemMessages.some((m) => m.id === message.id)
+					);
+					setSystemMessages([...newSystemMessages, ...chatStore.systemMessages]);
 				}
 			} else if (loadMore === 'newer') {
 				addMessages(messages);
 				console.log('got newer system messages', systemMessages);
 				if (systemMessages.length > 0) {
-					setSystemMessages([...chatStore.systemMessages, ...systemMessages]);
+					let newSystemMessages = systemMessages.filter(
+						(message) => !chatStore.systemMessages.some((m) => m.id === message.id)
+					);
+					setSystemMessages([...chatStore.systemMessages, ...newSystemMessages]);
 				}
 			} else {
 				// Initial load
