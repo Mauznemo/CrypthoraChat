@@ -35,15 +35,15 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			selectedFile = file;
-
 			if (file.type.startsWith('image/')) {
+				selectedFile = file;
 				if (previewUrl) {
 					URL.revokeObjectURL(previewUrl);
 				}
 				// Create new preview URL
 				previewUrl = URL.createObjectURL(file);
 			} else {
+				toastStore.error($t('chat.info-bar.invalid-file-type'));
 				previewUrl = null;
 			}
 		}
@@ -224,5 +224,5 @@
 	type="file"
 	bind:this={fileInput}
 	onchange={handleFileSelect}
-	accept=".jpg,.jpeg,.png"
+	accept="image/*"
 />

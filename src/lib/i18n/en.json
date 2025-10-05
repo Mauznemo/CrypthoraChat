@@ -80,7 +80,8 @@
       "updated-successfully": "Updated successfully!",
       "failed-to-update": "Failed update chat:",
       "owner": "Owner",
-      "members": "Members:"
+      "members": "Members:",
+      "invalid-file-type": "Selected file is not an image"
     },
     "offline-message": "You may not see all messages in this chat",
     "no-selected-chat": "No chat selected",
@@ -206,7 +207,12 @@
     "change-password-success": "Password changed successfully!",
     "error-empty-display-name": "Display name cannot be empty!",
     "logout-failed": "Failed to logout",
-    "logout": "Logout"
+    "logout": "Logout",
+    "update-failed": "Failed update profile:",
+    "update-success": "Updated successfully!",
+    "profile": "Profile",
+    "logout-confirm": "Logout?",
+    "logout-confirm-content": "Are you sure you want to logout?"
   },
   "settings": {
     "categories": {

@@ -25,7 +25,7 @@
 	let showPassword = $state(false);
 
 	let fileInput: HTMLInputElement;
-	let selectedFile: File | null = null;
+	let selectedFile: File | null = $state(null);
 	let previewUrl: string | null = $state(null);
 
 	let loadingSave = $state(false);
@@ -38,15 +38,15 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			selectedFile = file;
-
 			if (file.type.startsWith('image/')) {
+				selectedFile = file;
 				if (previewUrl) {
 					URL.revokeObjectURL(previewUrl);
 				}
 				// Create new preview URL
 				previewUrl = URL.createObjectURL(file);
 			} else {
+				toastStore.error($t('chat.info-bar.invalid-file-type'));
 				previewUrl = null;
 			}
 		}
@@ -64,7 +64,7 @@
 	type="file"
 	bind:this={fileInput}
 	onchange={handleFileSelect}
-	accept=".jpg,.jpeg,.png"
+	accept="image/*"
 />
 
 <div class="flex flex-col items-center p-8">
@@ -73,14 +73,14 @@
 	>
 		<div class="flex gap-2">
 			<BackButton backPath="/chat" />
-			<h1 class="pb-2 text-2xl font-bold">Profile</h1>
+			<h1 class="pb-2 text-2xl font-bold">{$t('profile.profile')}</h1>
 		</div>
 		<div class="relative mb-2 size-16">
 			<ProfilePicture user={data.user} size="4rem" customUrl={previewUrl} />
 			<button
 				onclick={openFileSelector}
 				class="absolute -right-3 -bottom-2 cursor-pointer rounded-full bg-gray-600/80 p-1.5 text-white transition-colors hover:bg-gray-600/80 hover:text-gray-200"
-				data-tooltip="Edit"
+				data-tooltip={$t('chat.edit')}
 				aria-label="Edit message"
 				type="button"
 			>
@@ -181,7 +181,7 @@
 			>
 		{/if}
 
-		{#if data.user?.displayName !== displayName || previewUrl}
+		{#if data.user?.displayName !== displayName || selectedFile}
 			<button
 				onclick={async () => {
 					displayName = displayName.trim();
@@ -205,12 +205,13 @@
 						}
 					} catch (error) {
 						loadingSave = false;
-						modalStore.error(error, 'Failed update profile:');
+						modalStore.error(error, $t('profile.update-failed'));
 						return;
 					}
 					loadingSave = false;
 					await invalidateAll();
-					toastStore.success('Updated successfully!');
+					selectedFile = null;
+					toastStore.success($t('profile.update-success'));
 				}}
 				class="mt-5 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
 			>
@@ -224,15 +225,19 @@
 
 		<button
 			onclick={async () => {
-				modalStore.confirm('Logout?', 'Are you sure you want to logout?', async () => {
-					try {
-						await logout();
-						await invalidateAll();
-						goto('/login');
-					} catch (error) {
-						modalStore.error(error, $t('profile.logout-failed'));
+				modalStore.confirm(
+					$t('profile.logout-confirm'),
+					$t('profile.logout-confirm-content'),
+					async () => {
+						try {
+							await logout();
+							await invalidateAll();
+							goto('/login');
+						} catch (error) {
+							modalStore.error(error, $t('profile.logout-failed'));
+						}
 					}
-				});
+				);
 			}}
 			class="mb-2 cursor-pointer rounded-full bg-red-800/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
 			>{$t('profile.logout')}</button

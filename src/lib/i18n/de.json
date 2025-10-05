@@ -80,7 +80,8 @@
       "owner": "Inhaber",
       "remove-user": "Aus Gruppe entfernen",
       "updated-successfully": "Erfolgreich aktualisiert!",
-      "user-info": "Benutzerinfo"
+      "user-info": "Benutzerinfo",
+      "invalid-file-type": "Die ausgewählte Datei ist kein Bild"
     },
     "create-chat-content": "Welche Art von Chat möchten Sie erstellen?",
     "create-chat-title": "Neuer Chat",
@@ -206,7 +207,12 @@
     "show-master-key": "Master-Schlüssel anzeigen",
     "user-id": "Benutzer-ID:",
     "username": "Benutzername:",
-    "you-are-admin": "Sie sind Administrator dieses Servers"
+    "you-are-admin": "Sie sind Administrator dieses Servers",
+    "logout-confirm": "Abmelden?",
+    "logout-confirm-content": "Sind Sie sicher, dass Sie sich abmelden möchten?",
+    "profile": "Profil",
+    "update-failed": "Fehler beim aktualisieren des Profils:",
+    "update-success": "Erfolgreich aktualisiert!"
   },
   "settings": {
     "categories": {

@@ -304,6 +304,11 @@
 		const file = target.files?.[0];
 		if (!file) return;
 
+		if (!file.type.startsWith('image/')) {
+			toastStore.error($t('chat.info-bar.invalid-file-type'));
+			return;
+		}
+
 		const reader = new FileReader();
 		reader.onload = (event) => {
 			const img = new Image();
