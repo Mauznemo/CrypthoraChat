@@ -144,10 +144,12 @@
 							<button
 								onclick={async () => {
 									try {
-										await updateGroupName({
-											chatId: chatStore.activeChat!.id,
-											groupName
-										});
+										if (groupName !== chatStore.activeChat?.name) {
+											await updateGroupName({
+												chatId: chatStore.activeChat!.id,
+												groupName
+											});
+										}
 
 										if (selectedFile) {
 											const result = await tryUploadProfilePicture(selectedFile);
@@ -187,7 +189,10 @@
 									{participant.user.displayName}
 								</p>
 								{#if participant.user.id === chatOwnerId}
-									<p data-tooltip="Owner of the group" class="text-sm text-gray-400 select-none">
+									<p
+										data-tooltip={$t('chat.info-bar.owner-tooltip')}
+										class="text-sm text-gray-400 select-none"
+									>
 										{$t('chat.info-bar.owner')}
 									</p>
 								{/if}

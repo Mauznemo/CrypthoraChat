@@ -81,7 +81,8 @@
       "failed-to-update": "Failed update chat:",
       "owner": "Owner",
       "members": "Members:",
-      "invalid-file-type": "Selected file is not an image"
+      "invalid-file-type": "Selected file is not an image",
+      "owner-tooltip": "Owner of the group"
     },
     "offline-message": "You may not see all messages in this chat",
     "no-selected-chat": "No chat selected",

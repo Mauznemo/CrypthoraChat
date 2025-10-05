@@ -81,7 +81,8 @@
       "remove-user": "Aus Gruppe entfernen",
       "updated-successfully": "Erfolgreich aktualisiert!",
       "user-info": "Benutzerinfo",
-      "invalid-file-type": "Die ausgewählte Datei ist kein Bild"
+      "invalid-file-type": "Die ausgewählte Datei ist kein Bild",
+      "owner-tooltip": "Inhaber der Gruppe"
     },
     "create-chat-content": "Welche Art von Chat möchten Sie erstellen?",
     "create-chat-title": "Neuer Chat",
