@@ -12,6 +12,7 @@ declare global {
 		interface Locals {
 			user?: User;
 			sessionId?: string;
+			locale?: string;
 		}
 		interface Error {
 			message?: string;

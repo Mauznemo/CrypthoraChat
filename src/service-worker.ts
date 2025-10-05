@@ -1,5 +1,21 @@
 /// <reference lib="webworker" />
 import { build, files, version } from '$service-worker';
+import i18next from 'i18next';
+
+const translations = {
+	en: {
+		translation: {
+			'push.new-message-group': 'New Message from {username} in {chatName}',
+			'push.new-message-dm': 'New Message from {username}'
+		}
+	},
+	de: {
+		translation: {
+			'push.new-message-group': 'Neue Nachricht von {username} in {chatName}',
+			'push.new-message-dm': 'Neue Nachricht von {username}'
+		}
+	}
+};
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -8,10 +24,22 @@ const ASSETS_TO_CACHE = [...build, ...files];
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(
-		caches.open(CACHE_NAME).then((cache) => {
-			console.log('Opened cache and caching assets');
-			return cache.addAll(ASSETS_TO_CACHE);
-		})
+		i18next
+			.init({
+				lng: 'en',
+				fallbackLng: 'en',
+				resources: translations,
+				interpolation: {
+					prefix: '{',
+					suffix: '}'
+				}
+			})
+			.then(() => {
+				caches.open(CACHE_NAME).then((cache) => {
+					console.log('Opened cache and caching assets');
+					return cache.addAll(ASSETS_TO_CACHE);
+				});
+			})
 	);
 });
 
@@ -28,6 +56,15 @@ self.addEventListener('activate', (event) => {
 			);
 		})
 	);
+});
+
+let currentLocale = 'en';
+
+self.addEventListener('message', (event) => {
+	if (event.data?.type === 'SET_LOCALE') {
+		console.log('SW Received SET_LOCALE event');
+		currentLocale = event.data.locale;
+	}
 });
 
 self.addEventListener('fetch', (event) => {
@@ -124,12 +161,12 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(respond());
 });
 
-self.addEventListener('push', (event) => {
+self.addEventListener('push', async (event) => {
 	console.log('Push notification received');
 
 	let notificationData = null;
 	let title = 'New Message';
-	let body = 'You have a new message!';
+	let body = 'Failed to load translation, local: ' + currentLocale;
 	let chatId = '';
 
 	if (event.data) {
@@ -144,11 +181,16 @@ self.addEventListener('push', (event) => {
 				const username = notificationData.username || '';
 				const chatName = notificationData.chatName || '';
 				chatId = notificationData.chatId || '';
+				title = groupType === 'group' ? chatName : username;
+
+				if (i18next.language !== currentLocale) {
+					await i18next.changeLanguage(currentLocale);
+				}
 
 				if (groupType === 'group') {
-					body = `New Message from ${username} in ${chatName}`;
+					body = i18next.t('push.new-message-group', { username, chatName });
 				} else {
-					body = `New Message from ${username}`;
+					body = i18next.t('push.new-message-dm', { username });
 				}
 			}
 		} catch (error) {

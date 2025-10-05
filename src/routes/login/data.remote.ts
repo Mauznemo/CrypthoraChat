@@ -1,10 +1,12 @@
 import { form, getRequestEvent } from '$app/server';
+import { getServerTranslator } from '$lib/i18n/server';
 import { createSession, validateUser } from '$lib/utils/auth';
 import { collectErrorMessagesString, LoginSchema } from '$lib/utils/validation';
 import { error, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const login = form(async (data) => {
+	const { locals } = getRequestEvent();
 	const username = data.get('username');
 	const password = data.get('password');
 	const deviceOs = data.get('device-os');
@@ -14,6 +16,10 @@ export const login = form(async (data) => {
 		password: typeof password === 'string' ? password : '',
 		deviceOs: typeof deviceOs === 'string' ? deviceOs : ''
 	};
+
+	console.log('locale', locals.locale);
+
+	const t = await getServerTranslator(locals.locale || 'en');
 
 	const result = v.safeParse(LoginSchema, input);
 
@@ -26,7 +32,7 @@ export const login = form(async (data) => {
 	const user = await validateUser(result.output.username, result.output.password);
 
 	if (!user) {
-		error(400, 'Invalid username or password');
+		error(400, t('login.server.invalid-credentials'));
 	}
 
 	const session = await createSession(user.id, result.output.deviceOs);

@@ -26,6 +26,10 @@ function isAdminRoute(pathname: string): boolean {
 export const handle: Handle = async ({ event, resolve }) => {
 	const sessionId = event.cookies.get('session');
 
+	const headerLocale = event.request.headers.get('accept-language')?.split(',')[0]?.split('-')[0];
+	const locale = headerLocale || 'en';
+	event.locals.locale = locale;
+
 	// Validate session if it exists
 	if (sessionId) {
 		const session = await validateSession(sessionId);

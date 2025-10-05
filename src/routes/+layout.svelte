@@ -10,9 +10,21 @@
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { browser } from '$app/environment';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import { t } from 'svelte-i18n';
+	import { locale } from 'svelte-i18n';
+	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 
 	let { children } = $props();
+
+	onMount(() => {
+		navigator.serviceWorker?.ready.then((registration) => {
+			const currentLocale = get(locale);
+			registration.active?.postMessage({
+				type: 'SET_LOCALE',
+				locale: currentLocale
+			});
+		});
+	});
 </script>
 
 <svelte:head>
