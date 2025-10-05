@@ -152,7 +152,7 @@
 			</div>
 		</div>
 		{#if message.encryptedReactions.length > 0}
-			<div class="absolute -bottom-4 left-2 flex gap-1 select-none">
+			<div class="absolute -bottom-5 left-2 flex gap-1 select-none">
 				{#each Object.entries(reactionData) as [reaction, data]}
 					{@const typedData = data as {
 						count: number;
@@ -172,7 +172,7 @@
 						data-tooltip={userReacted
 							? $t('chat.remove-reaction')
 							: $t('chat.react-with', { values: { reaction } })}
-						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
+						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-[16px] {userReacted
 							? 'bg-accent-800/90 ring-1 ring-accent-400 hover:bg-accent-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-accent-700/90'}"
 					>

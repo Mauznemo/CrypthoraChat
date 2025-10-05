@@ -142,7 +142,7 @@
 			{@const offset = isLast ? clamp(readers.length - 1, 0, 4) : 0}
 
 			<div
-				class="absolute -bottom-4 flex gap-1 select-none"
+				class="absolute -bottom-5 flex gap-1 select-none"
 				style="right: {offset * 12 + (isLast ? 36 : 8)}px;"
 			>
 				{#each Object.entries(reactionData) as [reaction, data]}
@@ -164,7 +164,7 @@
 						data-tooltip={userReacted
 							? $t('chat.remove-reaction')
 							: $t('chat.react-with', { values: { reaction } })}
-						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-sm {userReacted
+						class="flex cursor-pointer items-center rounded-full px-2 py-0.5 text-[16px] {userReacted
 							? 'bg-accent-800/90 ring-1 ring-accent-400 hover:bg-accent-900/90'
 							: 'bg-gray-600/90 ring-1 ring-gray-400 hover:bg-accent-700/90'}"
 					>

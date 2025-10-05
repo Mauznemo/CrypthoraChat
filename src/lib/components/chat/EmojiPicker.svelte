@@ -200,7 +200,7 @@
 				<div class="grid grid-cols-8 gap-1">
 					{#each filteredEmojis as emoji}
 						<button
-							class="flex h-8 w-8 items-center justify-center rounded text-lg transition-colors hover:bg-gray-700"
+							class="flex size-10 items-center justify-center rounded text-2xl transition-colors hover:bg-gray-700"
 							onclick={() => handleEmojiSelect(emoji)}
 							title={emoji}
 						>
