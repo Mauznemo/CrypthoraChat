@@ -22,24 +22,32 @@ declare const self: ServiceWorkerGlobalScope;
 const CACHE_NAME = `cache-${version}`;
 const ASSETS_TO_CACHE = [...build, ...files];
 
+async function saveLocale(locale: string) {
+	const cache = await caches.open('locale');
+	await cache.put(
+		new Request('/locale'),
+		new Response(JSON.stringify({ locale }), {
+			headers: { 'Content-Type': 'application/json' }
+		})
+	);
+}
+
+async function getLocale() {
+	const cache = await caches.open('locale');
+	const response = await cache.match('/locale');
+	if (response) {
+		const data = await response.json();
+		return data.locale;
+	}
+	return 'en';
+}
+
 self.addEventListener('install', (event) => {
 	event.waitUntil(
-		i18next
-			.init({
-				lng: 'en',
-				fallbackLng: 'en',
-				resources: translations,
-				interpolation: {
-					prefix: '{',
-					suffix: '}'
-				}
-			})
-			.then(() => {
-				caches.open(CACHE_NAME).then((cache) => {
-					console.log('Opened cache and caching assets');
-					return cache.addAll(ASSETS_TO_CACHE);
-				});
-			})
+		caches.open(CACHE_NAME).then((cache) => {
+			console.log('Opened cache and caching assets');
+			return cache.addAll(ASSETS_TO_CACHE);
+		})
 	);
 });
 
@@ -58,12 +66,14 @@ self.addEventListener('activate', (event) => {
 	);
 });
 
-let currentLocale = 'en';
-
 self.addEventListener('message', (event) => {
 	if (event.data?.type === 'SET_LOCALE') {
-		console.log('SW Received SET_LOCALE event');
-		currentLocale = event.data.locale;
+		let currentLocale = event.data.locale || 'en';
+		if (currentLocale.indexOf('-') !== -1) {
+			currentLocale = currentLocale.split('-')[0];
+		}
+		console.log('SW Received SET_LOCALE event', currentLocale);
+		saveLocale(currentLocale);
 	}
 });
 
@@ -161,56 +171,66 @@ self.addEventListener('fetch', (event) => {
 	event.respondWith(respond());
 });
 
-self.addEventListener('push', async (event) => {
+self.addEventListener('push', (event) => {
 	console.log('Push notification received');
 
-	let notificationData = null;
-	let title = 'New Message';
-	let body = 'Failed to load translation, local: ' + currentLocale;
-	let chatId = '';
+	event.waitUntil(
+		(async () => {
+			let currentLocale = await getLocale();
 
-	if (event.data) {
-		try {
-			const pushData = event.data.json();
-			console.log('Push notification data:', pushData);
+			let notificationData = null;
+			let title = 'New Message';
+			let body = 'Failed to load translation, local: ' + currentLocale;
+			let chatId = '';
 
-			notificationData = pushData.data;
+			if (event.data) {
+				try {
+					const pushData = event.data.json();
+					console.log('Push notification data:', pushData);
 
-			if (notificationData) {
-				const groupType = notificationData.groupType || '';
-				const username = notificationData.username || '';
-				const chatName = notificationData.chatName || '';
-				chatId = notificationData.chatId || '';
-				title = groupType === 'group' ? chatName : username;
+					notificationData = pushData.data;
 
-				if (i18next.language !== currentLocale) {
-					await i18next.changeLanguage(currentLocale);
-				}
+					if (notificationData) {
+						const instance = i18next.createInstance();
+						await instance.init({
+							lng: currentLocale || 'en',
+							fallbackLng: 'en',
+							resources: translations,
+							interpolation: { prefix: '{', suffix: '}' }
+						});
 
-				if (groupType === 'group') {
-					body = i18next.t('push.new-message-group', { username, chatName });
-				} else {
-					body = i18next.t('push.new-message-dm', { username });
+						const groupType = notificationData.groupType || '';
+						const username = notificationData.username || '';
+						const chatName = notificationData.chatName || '';
+						chatId = notificationData.chatId || '';
+						title = groupType === 'group' ? chatName : username;
+
+						if (groupType === 'group') {
+							body = instance.t('push.new-message-group', { username, chatName });
+						} else {
+							body = instance.t('push.new-message-dm', { username });
+						}
+					}
+				} catch (error) {
+					console.error('Error parsing push notification data:', error);
 				}
 			}
-		} catch (error) {
-			console.error('Error parsing push notification data:', error);
-		}
-	}
 
-	const options = {
-		body: body,
-		// icon: '/icon-192x192.png', // maybe change to group or dm pic
-		badge: '/icon-badge-96x96.png',
-		// vibrate: [100, 50, 100],
-		data: {
-			dateOfArrival: Date.now(),
-			chatId: chatId,
-			notificationData: notificationData
-		}
-	};
+			const options = {
+				body: body,
+				// icon: '/icon-192x192.png', // maybe change to group or dm pic
+				badge: '/icon-badge-96x96.png',
+				// vibrate: [100, 50, 100],
+				data: {
+					dateOfArrival: Date.now(),
+					chatId: chatId,
+					notificationData: notificationData
+				}
+			};
 
-	event.waitUntil(self.registration.showNotification(title, options));
+			await self.registration.showNotification(title, options);
+		})()
+	);
 });
 
 self.addEventListener('notificationclick', (event) => {

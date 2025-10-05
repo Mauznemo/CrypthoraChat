@@ -311,7 +311,7 @@ export function handleNewMessageNotify(data: {
 	if (!document.hidden || data.username === chatStore.user?.username) return;
 
 	showChatNotification(
-		chat.type === 'group' ? data.chatName : data.username,
+		data.username,
 		data.chatId,
 		chat.type === 'group' ? 'group' : 'dm',
 		data.chatName || ''
