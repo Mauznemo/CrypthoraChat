@@ -3,8 +3,10 @@ import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
 import type { SafeUser } from '$lib/types';
-import { regenerateAndStoreKeyPair, tryGetPublicKey, verifyPublicKeyHmac } from './keyPair';
-import { getUserKeyPair, getUserPublicKey } from './keyPair.remote';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
+import { tryGetPublicKey } from './keyPair';
+import { getUserPublicKey } from './keyPair.remote';
 import { arrayBufferToBase64, base64ToArrayBuffer, concatArrayBuffers } from './utils';
 
 /** Checks if we already have a verified public key for the user */
@@ -62,7 +64,7 @@ export async function verifyUser(user: SafeUser, isMeRequesting: boolean): Promi
 		if (isMeRequesting) socketStore.requestUserVerify({ userId: user.id });
 
 		emojiVerificationStore.openDisplay(
-			'Verify @' + user.username + ', make sure the emojis match',
+			get(t)('chat.emoji-verification.verify-user', { values: { username: user.username } }),
 			fingerprintBase64,
 			() => {
 				idb!.put('verifiedUsers', { userId: user.id, publicKey: userPublicKeyBase64 }, user.id);
@@ -73,6 +75,6 @@ export async function verifyUser(user: SafeUser, isMeRequesting: boolean): Promi
 			}
 		);
 	} catch (e) {
-		modalStore.error(e, 'Failed to verify user:');
+		modalStore.error(e, get(t)('chat.emoji-verification.failed-to-verify-user'));
 	}
 }

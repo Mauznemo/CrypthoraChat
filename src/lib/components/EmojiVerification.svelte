@@ -48,7 +48,7 @@
 		return encoder.encode(dateString);
 	}
 
-	function getSaltTimeRemaining(): string {
+	function getSaltTimeRemaining() {
 		const now = new Date();
 
 		const nextMidnight = new Date(
@@ -62,12 +62,10 @@
 		const hours = Math.floor(diffMinutes / 60);
 		const minutes = diffMinutes % 60;
 
-		return $t('utils.emoji-key-converter.time-remaining', {
-			values: {
-				hours: hours.toString().padStart(1, '0'),
-				minutes: minutes.toString().padStart(2, '0')
-			}
-		});
+		return {
+			hours: hours.toString().padStart(1, '0'),
+			minutes: minutes.toString().padStart(2, '0')
+		};
 	}
 
 	async function base64ToEmojiSequence(base64: string): Promise<void> {
@@ -165,6 +163,7 @@
 </script>
 
 {#if emojiVerificationStore.isOpen}
+	{@const timeRemaining = getSaltTimeRemaining()}
 	<div
 		in:fade={{ duration: 200 }}
 		out:fade={{ duration: 200 }}
@@ -219,8 +218,11 @@
 			</div>
 
 			<p class=" text-center text-sm text-gray-400">
-				{$t('utils.emoji-key-converter.expires-in-date', {
-					values: { time: getSaltTimeRemaining() }
+				{$t('utils.emoji-key-converter.time-remaining', {
+					values: {
+						hours: timeRemaining.hours,
+						minutes: timeRemaining.minutes
+					}
 				})}
 			</p>
 		</div>

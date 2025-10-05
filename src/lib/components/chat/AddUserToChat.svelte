@@ -12,6 +12,8 @@
 	import { chats } from '$lib/chat/chats';
 	import Icon from '@iconify/svelte';
 	import { developer } from '$lib/utils/debug';
+	import { t } from 'svelte-i18n';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let selectedUsers: SafeUser[] = $state([]);
 
@@ -32,16 +34,21 @@
 				modalStore.open({
 					title:
 						selectedUsers.length === unverifiedUsers.length
-							? 'All users not verified'
-							: 'Some users not verified',
+							? $t('chat.new.group.all-not-verified')
+							: $t('chat.new.group.some-not-verified'),
 					content:
-						(unverifiedUsers.length === 1 ? 'User ' : 'Users ') +
-						unverifiedUsers.map((u) => '@' + u.username).join(', ') +
-						(unverifiedUsers.length === 1 ? ' is' : ' are') +
-						' not verified. You need to verify with them once before creating a chat with them.',
+						unverifiedUsers.length === 1
+							? $t('chat.new.dm.not-verified-content', {
+									values: { username: unverifiedUsers[0].username }
+								})
+							: $t('chat.new.group.not-verified-content', {
+									values: { usernames: unverifiedUsers.map((u) => '@' + u.username).join(', ') }
+								}),
 					buttons: [
 						{
-							text: 'Verify @' + unverifiedUsers[0].username,
+							text: $t('chat.new.group.verify-user', {
+								values: { username: unverifiedUsers[0].username }
+							}),
 							variant: 'primary',
 							onClick: () => {
 								verifyUser(unverifiedUsers[0], true);
@@ -58,14 +65,14 @@
 			const chatKeyResult = await chats.tryGetEncryptedChatKeys(addUserToChatStore.chat);
 
 			if (!chatKeyResult.success) {
-				modalStore.error('Failed to get chat key so cannot be shared with users.');
+				modalStore.error($t('chat.add-user-to-chat.failed-to-get-key'));
 				return;
 			}
 
 			const decryptResult = await chats.tryDecryptChatKeys(chatKeyResult.keyVersions);
 
 			if (!decryptResult.success) {
-				modalStore.error('Failed to decrypt chat key so cannot be shared with users.');
+				modalStore.error($t('chat.add-user-to-chat.failed-to-decrypt-key'));
 				return;
 			}
 
@@ -86,6 +93,8 @@
 				encryptedUserChatKeys
 			});
 
+			toastStore.success($t('chat.add-user-to-chat.successfully-added-users'));
+
 			socketStore.notifyNewChat({
 				chatId: addUserToChatStore.chat.id,
 				userIds: selectedUsers.map((u) => u.id),
@@ -94,7 +103,7 @@
 
 			addUserToChatStore.close();
 		} catch (err: any) {
-			modalStore.error(err, 'Failed to add users:');
+			modalStore.error(err, $t('chat.add-user-to-chat.failed-to-add-users'));
 		}
 	}
 </script>
@@ -115,7 +124,9 @@
 			class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 text-white frosted-glass-shadow"
 		>
 			<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
-				Add users to {addUserToChatStore.chat?.name}
+				{$t('chat.add-user-to-chat.add-users-to', {
+					values: { name: addUserToChatStore.chat?.name }
+				})}
 			</h1>
 
 			<button
@@ -137,7 +148,9 @@
 				onclick={handleAddUser}
 				disabled={selectedUsers.length < 1}
 				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
-				>{selectedUsers.length === 1 ? 'Add User' : 'Add Users'}</button
+				>{selectedUsers.length === 1
+					? $t('chat.add-user-to-chat.add-user')
+					: $t('chat.add-user-to-chat.add-users')}</button
 			>
 		</div>
 	</div>

@@ -9,6 +9,7 @@ import { getCurrentChatKeyVersion, saveEncryptedChatKey } from './chat.remote';
 import { removeUserFromChat, rotateChatKey } from './chatOwner.remote';
 import { chats } from './chats';
 import { get } from 'svelte/store';
+import { toastStore } from '$lib/stores/toast.svelte';
 
 export const chatOwner = {
 	/** Tries to rotate the chat key and shows an error modal if it fails */
@@ -94,6 +95,7 @@ export const chatOwner = {
 	async tryRemoveUser(chatId: string, userId: string): Promise<boolean> {
 		try {
 			await removeUserFromChat({ chatId, userId });
+			toastStore.success(get(t)('chat.chat-owner.user-removed'));
 			return true;
 		} catch (error: any) {
 			modalStore.error(error, get(t)('chat.chat-owner.failed-to-remove-user'));

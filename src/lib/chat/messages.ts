@@ -253,13 +253,6 @@ export function markReadIfVisible(message: ClientMessage): void {
 			markReadAfterDelay([message]);
 		} else {
 			unreadMessages.push(message);
-			//TODO: Call this from "new message" even that will be called on ANY new message in a chat the user is in
-			showChatNotification(
-				chatStore.user.username, //TODO: This should be the username of the person that sent the message not the logged in user
-				chatStore.activeChat!.id,
-				message.chat.type === 'group' ? 'group' : 'dm',
-				message.chat.name || ''
-			);
 		}
 	}
 }
@@ -314,6 +307,15 @@ export function handleNewMessageNotify(data: {
 		chat.unreadMessages += 1;
 	}
 	chatList.updateChat(chat);
+
+	if (!document.hidden || data.username === chatStore.user?.username) return;
+
+	showChatNotification(
+		chat.type === 'group' ? data.chatName : data.username,
+		data.chatId,
+		chat.type === 'group' ? 'group' : 'dm',
+		data.chatName || ''
+	);
 }
 
 export function handleNewSystemMessage(message: SystemMessage): void {

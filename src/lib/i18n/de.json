@@ -8,11 +8,12 @@
     "confirm": "Bestätigen",
     "error": "Fehler",
     "ok": "OK",
-    "decline": "Ablehen",
+    "decline": "Ablehnen",
     "offline": "Offline",
     "done": "Fertig",
     "delete": "Löschen",
-    "warning": "Warnung"
+    "warning": "Warnung",
+    "success": "Erfolg"
   },
   "chat": {
     "add-reaction": "Reaktion hinzufügen",
@@ -39,7 +40,8 @@
       "loading-image": "Bild lädt {size}",
       "ignore-limit": "Herunterladen und Vorschau laden",
       "loading-video": "Video lädt {size}",
-      "sticker-added-to-my-stickers": "Sticker erfolgreich zu Ihren Stickern hinzugefügt"
+      "sticker-added-to-my-stickers": "Sticker erfolgreich zu Ihren Stickern hinzugefügt",
+      "add-to-my-stickers": "Zu meinen Stickern hinzufügen"
     },
     "chat-list": {
       "new-chat": "+ Neuer Chat",
@@ -47,9 +49,9 @@
       "add-user": "Benutzer hinzufügen",
       "chats": "Chats",
       "delete-chat": "Chat löschen",
-      "edit-group": "Grupper bearbeiten",
+      "edit-group": "Gruppe bearbeiten",
       "leave-group": "Gruppe verlassen",
-      "rotate-key": "Taste drehen",
+      "rotate-key": "Schlüssel rotieren",
       "leave-failed": "Verlassen des Chates fehlgeschlagen",
       "rotate-key-confirm": "Sind Sie sicher, dass Sie den Schlüssel rotiern möchten?",
       "rotate-key-confirm-title": "Schlüssel rotiern?"
@@ -102,7 +104,9 @@
         "create-group": "Gruppe erstellen",
         "not-verified-content": "Die Benutzer @{usernames} sind nicht verifiziert. Sie müssen sie einmal verifizieren, bevor Sie einen Chat mit ihnen erstellen können.",
         "verify-user": "@{username} verifizieren",
-        "group-name": "Gruppenname..."
+        "group-name": "Gruppenname...",
+        "all-not-verified": "Alle Benutzer nicht verifiziert",
+        "some-not-verified": "Einige Benutzer nicht verifiziert"
       },
       "failed-to-import-stickers": "Fehler beim importieren:"
     },
@@ -141,7 +145,8 @@
       "failed-to-save-chat-key": "Fehler beim Speichern des Chat-Schlüssels:",
       "some-no-longer-verified": "Einige Benutzer sind nicht mehr verifiziert",
       "user-no-longer-verified": "Benutzer @{username} ist nicht mehr verifiziert.  Dies kann passieren, wenn er seinen öffentlichen Schlüssel regenerieren musste. Sie müssen ihn erneut verifizieren, bevor Sie den Chat-Schlüssel rotieren können.",
-      "users-no-longer-verified": "Die Benutzer @{usernames} sind nicht mehr verifiziert.  Dies kann passieren, wenn sie ihren öffentlichen Schlüssel regenerieren mussten. Sie müssen sie erneut verifizieren, bevor Sie den Chat-Schlüssel rotieren können."
+      "users-no-longer-verified": "Die Benutzer @{usernames} sind nicht mehr verifiziert.  Dies kann passieren, wenn sie ihren öffentlichen Schlüssel regenerieren mussten. Sie müssen sie erneut verifizieren, bevor Sie den Chat-Schlüssel rotieren können.",
+      "user-removed": "Benutzer erfolgreich aus Chat entfernt"
     },
     "chats": {
       "failed-to-decrypt-chat-key": "Fehler beim entschlüsseln des Chat-Schlüssels, Sie haben möglicherweise einen falschen Master-Schlüssel eingegeben. \n(Fehler: {error})",
@@ -158,6 +163,27 @@
       "import-existing": "Bestehenden importieren",
       "import-master-key": "Master-Schlüssel importieren",
       "no-master-key-found": "Master-Schlüssel nicht gefunden."
+    },
+    "key-pair": {
+      "failed-to-get-public-key": "Fehler beim holen des öffentlichen Schlüssels:",
+      "public-key-integrity-error": "Öffentliche Schlüsselintegritätsprüfung ist fehlgeschlagen!\nIhr öffentlicher Schlüssel, der in der Datenbank gespeichert ist, stimmt nicht mehr mit dem von Ihrem Gerät generierten überein.\nEntweder ist der Master-Schlüssel auf diesem Gerät falsch, etwas ist beschädigt oder jemand hat die Datenbank manipuliert.",
+      "re-generate-key-pair": "Öffentlichen Schlüssel neu generieren",
+      "re-generate-key-pair-confirm": "Nachdem Sie Ihren öffentlichen Schlüssel neu generiert haben, müssen Sie beim erstellen eines neuen Chats den anderen Benutzern erneut verifizieren.",
+      "re-generate-key-pair-success": "Ihr Schlüsselpaar wurde regeneriert.\nWenn Sie einen neuen Chat erstellen oder einem beitreten, müssen Sie die anderen Benutzern erneut verifizieren.",
+      "re-import-master-key": "Master-Schlüssel neu eingeben"
+    },
+    "emoji-verification": {
+      "failed-to-verify-user": "Fehler beim verifiziern des Benutzers",
+      "verify-user": "Verifiziere @{username}, stellen Sie sicher, dass die Emojis übereinstimmung"
+    },
+    "add-user-to-chat": {
+      "add-user": "Benutzer hinzufügen",
+      "add-users": "Benutzer hinzufügen",
+      "add-users-to": "Benutzer zu {name} hinzufügen",
+      "failed-to-add-users": "Fehler beim hinzufügen:",
+      "failed-to-decrypt-key": "Der Chat-Schlüssel konnte nicht entschlüsselt werden und kann daher nicht mit den Benutzern geteilt werden.",
+      "failed-to-get-key": "Fehler beim holen des Chat-Schlüssels, kann daher nicht mit Benutzern geteilt werden.",
+      "successfully-added-users": "Benutzer erfolgreich zu Chat hinzugefügt"
     }
   },
   "profile": {
@@ -257,11 +283,10 @@
     "emoji-key-converter": {
       "add-emoji": "Emoji hinzufügen",
       "clear": "Alle Entferenen",
-      "expires-in-date": "Dieser Schlüssel verfällt in {time}",
       "failed-to-generate-key": "Fehler beim generriern des Schlüssels aus der Emoji-Sequenz:",
       "input-progress": "{index}/16 Emojis eingegeben",
       "remove-last": "Letzten entfernen",
-      "time-remaining": "{hours} Stunden und {minute} Minuten"
+      "time-remaining": "Dieser Schlüssel verfällt in {hours} Stunden und {minutes} Minuten"
     },
     "emoji-key-verification": {
       "fail": "Sie stimmen nicht überein",
@@ -275,6 +300,13 @@
     "password": "Passwort:",
     "register": "Registrieren",
     "register-link": "Sie haben kein Konto? Registrieren",
-    "username": "Benutzername:"
+    "username": "Benutzername:",
+    "server": {
+      "invalid-credentials": "Ungültiger Benutzername oder Passwort"
+    }
+  },
+  "notifications": {
+    "new-message-dm": "Neue Nachricht von {username}",
+    "new-message-group": "Neue Nachricht von {username} in {chatName}"
   }
 }

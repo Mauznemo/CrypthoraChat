@@ -1,5 +1,7 @@
 import { browser } from '$app/environment';
 import { goto } from '$app/navigation';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
 
 class NotificationStore {
 	isSupported = $state(false);
@@ -105,10 +107,10 @@ export async function showChatNotification(
 	let body: string;
 
 	if (groupType === 'group') {
-		body = `New Message from ${username} in ${chatName}`;
+		body = get(t)('notifications.new-message-group', { values: { username, chatName } });
 	} else {
-		body = `New Message from ${username}`;
+		body = get(t)('notifications.new-message-dm', { values: { username } });
 	}
 
-	await notificationStore.showNotification('New Message', body, chatId, groupType);
+	await notificationStore.showNotification(username, body, chatId, groupType);
 }

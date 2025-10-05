@@ -34,8 +34,8 @@
 				modalStore.open({
 					title:
 						selectedUsers.length === unverifiedUsers.length
-							? 'All users not verified'
-							: 'Some users not verified',
+							? $t('chat.new.group.all-not-verified')
+							: $t('chat.new.group.some-not-verified'),
 					content:
 						unverifiedUsers.length === 1
 							? $t('chat.new.dm.not-verified-content', {

@@ -149,7 +149,7 @@
 		if (fileType === 'image' && subType === 'sticker') {
 			items.unshift({
 				id: 'add',
-				label: 'Add to my stickers',
+				label: $t('chat.attachment.add-to-my-stickers'),
 				icon: 'mdi:plus',
 				action: async () => {
 					const getResult = await tryGetFile(attachmentPath);
