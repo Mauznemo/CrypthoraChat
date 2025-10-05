@@ -13,41 +13,18 @@
 	let customEmojiSet: string[] = $state([]);
 	let searchInput: HTMLInputElement | null = $state(null);
 
-	// prettier-ignore
-	const emojiCategories = {
-		'😀':
-		[
-		'😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','🫠','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😙','🥲','😋','😛','😜','🤪',
-		'😝','🤑','🤗','🤭','🫢','🫣','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','🫥','😶‍🌫️','😏','😒','🙄','😬','😮‍💨','🤥','🫨','😌','😔','😪','🤤',
-		'😴','😷','🤒','🤕','🤢','🤮'
-		],
-		'🐱': 
-		[
-			'🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🐣',
-			'🐥','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪱','🐛','🦋','🐌','🐞','🐜','🪰','🪲','🪳','🦟','🦗','🕷️','🕸️','🦂'
-		],
-		'🍎': 
-		[
-			'🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕',
-			'🫒','🧄','🧅','🥔','🍠','🫘','🥐','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟'
-		],
-		'⚽':
-		 [
-			'⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋',
-			'🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤸','🤺','⛹️','🤾','🏌️','🏇','🧘','🏃','🚶','🧎','🧍','👫','👬'
-		],
-		'💻': 
-		[
-			'⌚','📱','📲','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠',
-			'📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🪫','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵'
-		],
-		'❤️': [
-			'❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️',
-			'🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴'
-		]
-	};
+	const emojiCategories: Record<string, string[]> = {};
 
-	let activeCategory = $state('😀');
+	for (const [emoji, data] of Object.entries(emojiData)) {
+		const category = data.group || 'Other';
+		if (!emojiCategories[category]) {
+			emojiCategories[category] = [];
+		}
+		emojiCategories[category].push(emoji);
+	}
+
+	const firstCategory = Object.keys(emojiCategories)[0] || '';
+	let activeCategory = $state(firstCategory);
 	let searchTerm = $state('');
 	type EmojiDataType = typeof emojiData;
 
@@ -141,7 +118,7 @@
 			}
 			// Reset search when opening
 			searchTerm = '';
-			activeCategory = '😀';
+			activeCategory = firstCategory;
 
 			console.log('Emoji picker opened');
 		} else {
@@ -187,7 +164,16 @@
 							category
 								? 'bg-blue-600 text-white'
 								: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
-							onclick={() => (activeCategory = category)}
+							onclick={(e) => {
+								activeCategory = category;
+								const el = e.target as HTMLElement;
+
+								el.scrollIntoView({
+									behavior: 'smooth',
+									block: 'nearest',
+									inline: 'center'
+								});
+							}}
 						>
 							{category}
 						</button>
@@ -202,7 +188,6 @@
 						<button
 							class="flex size-10 items-center justify-center rounded text-2xl transition-colors hover:bg-gray-700"
 							onclick={() => handleEmojiSelect(emoji)}
-							title={emoji}
 						>
 							{emoji}
 						</button>
