@@ -184,7 +184,8 @@ export const getUserChats = query(async () => {
 									readBy: {
 										where: { id: locals.user!.id },
 										select: { id: true }
-									}
+									},
+									user: { select: { id: true } }
 								}
 							}
 						}
@@ -199,7 +200,10 @@ export const getUserChats = query(async () => {
 			const chat = participation.chat as ClientChat;
 
 			let unreadCount = 0;
-			for (const message of participation.chat.messages || []) {
+			const messagesByOthers = participation.chat?.messages.filter(
+				(message) => message.user.id !== locals.user!.id
+			);
+			for (const message of messagesByOthers || []) {
 				const isRead = message.readBy && message.readBy.length > 0;
 				if (isRead) {
 					break;
