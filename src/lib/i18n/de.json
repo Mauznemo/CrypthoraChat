@@ -293,17 +293,23 @@
       "model-downloading": "Model wird heruntergeladen",
       "model-downloading-progress": "{current} von {total} ({progress}% heruntergeladen)"
     },
-    "emoji-key-converter": {
+    "emoji-key-verification": {
+      "fail": "Sie stimmen nicht überein",
+      "match": "Sie stimmen überein"
+    },
+    "key-sharer": {
+      "qr-code": "QR-Code",
       "add-emoji": "Emoji hinzufügen",
       "clear": "Alle Entferenen",
       "failed-to-generate-key": "Fehler beim generriern des Schlüssels aus der Emoji-Sequenz:",
       "input-progress": "{index}/16 Emojis eingegeben",
       "remove-last": "Letzten entfernen",
-      "time-remaining": "Dieser Schlüssel verfällt in {hours} Stunden und {minutes} Minuten"
-    },
-    "emoji-key-verification": {
-      "fail": "Sie stimmen nicht überein",
-      "match": "Sie stimmen überein"
+      "time-remaining": "Dieser Schlüssel verfällt in {hours} Stunden und {minutes} Minuten",
+      "emoji-sequence": "Emoji-Sequenz",
+      "key-imported-successfully": "Schlüssel erfolgreich importiert",
+      "select-mode": "Modus auswählen",
+      "select-mode-export-content": "Was möchten Sie den Schlüssel exportieren/anzeigen?",
+      "select-mode-import-content": "Was möchten Sie den Schlüssel importieren?"
     }
   },
   "login": {

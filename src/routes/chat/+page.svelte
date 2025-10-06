@@ -10,7 +10,7 @@
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/pushNotifications';
-	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+	import { keySharerStore } from '$lib/stores/keySharer.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import ChatInput from '$lib/components/chat/ChatInput.svelte';
 	import * as messages from '$lib/chat/messages';

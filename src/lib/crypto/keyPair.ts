@@ -175,6 +175,7 @@ export async function tryGetPublicKey(): Promise<{ success: boolean; publicKey: 
 
 		const isValid = await verifyPublicKeyHmac(myPublicKeyBase64, myKeyPair.publicKeyHmac);
 		if (!isValid) {
+			console.error('Public key integrity error');
 			modalStore.open({
 				title: get(t)('common.error'),
 				content: get(t)('chat.key-pair.public-key-integrity-error'),

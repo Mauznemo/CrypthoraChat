@@ -3,14 +3,14 @@ import {
 	hasMasterKey,
 	importAndSaveMasterSeed
 } from '$lib/crypto/master';
-import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+import { keySharerStore } from '$lib/stores/keySharer.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
 export function showMasterKeyImport(): void {
 	modalStore.removeFromQueue('decryption-chat-key-error');
-	emojiKeyConverterStore.openInput(
+	keySharerStore.openInput(
 		get(t)('chat.master-key.import-master-key'),
 		false,
 		async (base64Seed) => {
@@ -22,21 +22,21 @@ export function showMasterKeyImport(): void {
 					get(t)('chat.master-key.failed-to-import') + ' ' + error,
 					{
 						onOk: () => {
-							emojiKeyConverterStore.clearInput();
+							keySharerStore.clearInput();
 						}
 					}
 				);
 				console.error(error);
 			}
 
-			emojiKeyConverterStore.close();
+			keySharerStore.close();
 		}
 	);
 }
 
 /** Checks if the user has a master key and if not, shows a warning */
 export async function checkForMasterKey(): Promise<void> {
-	if (!(await hasMasterKey()) && !emojiKeyConverterStore.isOpen) {
+	if (!(await hasMasterKey()) && !keySharerStore.isOpen) {
 		modalStore.open({
 			title: get(t)('common.warning'),
 			content: get(t)('chat.master-key.no-master-key-found'),

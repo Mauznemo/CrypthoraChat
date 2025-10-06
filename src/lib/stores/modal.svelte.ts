@@ -51,10 +51,9 @@ class ModalStore {
 
 		this.config.onClose?.();
 
-		// Show next modal in queue if exists
 		if (this.modalQueue.length > 0) {
 			const nextModal = this.modalQueue.shift();
-			// Small delay to ensure smooth transition
+
 			setTimeout(() => {
 				if (nextModal) this.open(nextModal);
 			}, 100);

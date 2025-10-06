@@ -1,4 +1,4 @@
-class EmojiKeyConverterStore {
+class KeySharerStore {
 	isOpen = $state(false);
 	title = $state('');
 	base64Seed?: string = $state('');
@@ -8,18 +8,18 @@ class EmojiKeyConverterStore {
 	private clearEmojiInput?: () => void;
 
 	openInput(title: string, useDateSalt: boolean, onDone: (base64Seed: string) => void) {
-		this.isOpen = true;
 		this.title = title;
 		this.useDateSalt = useDateSalt;
 		this.base64Seed = undefined;
 		this.onDone = onDone;
+		this.isOpen = true;
 	}
 
 	openDisplay(title: string, useDateSalt: boolean, base64Seed: string) {
-		this.isOpen = true;
 		this.title = title;
 		this.base64Seed = base64Seed;
 		this.useDateSalt = useDateSalt;
+		this.isOpen = true;
 	}
 
 	clearInput() {
@@ -33,4 +33,4 @@ class EmojiKeyConverterStore {
 	}
 }
 
-export const emojiKeyConverterStore = new EmojiKeyConverterStore();
+export const keySharerStore = new KeySharerStore();

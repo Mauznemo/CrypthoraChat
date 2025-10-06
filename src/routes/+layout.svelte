@@ -2,7 +2,7 @@
 	import '../app.css';
 	import Modal from '$lib/components/Modal.svelte';
 	import EmojiPicker from '$lib/components/chat/EmojiPicker.svelte';
-	import EmojiKeyConverter from '$lib/components/EmojiKeyConverter.svelte';
+	import KeySharer from '$lib/components/KeySharer.svelte';
 	import ContextMenu from '$lib/components/ContextMenu.svelte';
 	import EmojiVerification from '$lib/components/EmojiVerification.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
@@ -79,7 +79,7 @@
 </div>
 
 <AddUserToChat />
-<EmojiKeyConverter />
+<KeySharer />
 <EmojiVerification />
 <EmojiPicker />
 <ContextMenu />

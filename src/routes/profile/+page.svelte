@@ -9,7 +9,7 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { emojiKeyConverterStore } from '$lib/stores/emojiKeyConverter.svelte';
+	import { keySharerStore } from '$lib/stores/keySharer.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import { showMasterKeyImport } from '$lib/chat/masterKey';
 	import { t } from 'svelte-i18n';
@@ -111,7 +111,7 @@
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
 			onclick={async () => {
-				emojiKeyConverterStore.openDisplay(
+				keySharerStore.openDisplay(
 					$t('profile.master-key'),
 					false,
 					await getMasterSeedForSharing()
