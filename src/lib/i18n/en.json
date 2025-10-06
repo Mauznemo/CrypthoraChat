@@ -54,7 +54,9 @@
       "leave-group": "Leave Group",
       "rotate-key-confirm-title": "Rotate Key?",
       "rotate-key-confirm": "Are you sure you want to rotate the key?",
-      "leave-failed": "Failed to leave chat:"
+      "leave-failed": "Failed to leave chat:",
+      "other-left-dm": "Other User left DM",
+      "leave-dm-confirm": "Are you sure you want to leave this DM? You can not re-join it (only create a new one) and the other user will still be able to see all old messages"
     },
     "chat-input": {
       "error-sending-message": "Failed to send message:",

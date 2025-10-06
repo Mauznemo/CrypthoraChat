@@ -28,43 +28,24 @@
 
 	let loadingChats = $state(true);
 
+	async function _leaveChat(chat: ClientChat): Promise<void> {
+		try {
+			await leaveChat(chat.id);
+			await deleteFilesThatContain(chat.id);
+			chats.tryDeselectChat(chat);
+			chatList.removeChat(chat.id);
+		} catch (error) {
+			modalStore.error(error, $t('chat.chat-list.leave-failed'));
+		}
+	}
+
 	async function handleShowContextMenu(event: Event, chat: ClientChat): Promise<void> {
 		console.log('showContextMenu');
 		event.stopPropagation();
 		event.preventDefault();
 
-		// const encryptedChatKey = await getEncryptedChatKey(chat.id);
-
 		const items: ContextMenuItem[] = [];
 		const isChatOwner = chat.ownerId === chatStore.user?.id;
-
-		// if (encryptedChatKey && (chat.type === 'group' || isChatOwner)) {
-		// 	items.push({
-		// 		id: 'share-key',
-		// 		label: 'Share Key',
-		// 		iconSvg:
-		// 			'M17.5 3a3.5 3.5 0 0 0-3.456 4.06L8.143 9.704a3.5 3.5 0 1 0-.01 4.6l5.91 2.65a3.5 3.5 0 1 0 .863-1.805l-5.94-2.662a3.53 3.53 0 0 0 .002-.961l5.948-2.667A3.5 3.5 0 1 0 17.5 3Z',
-		// 		action: async () => {
-		// 			if (!isChatOwner) {
-		// 				modalStore.alert(
-		// 					'Note',
-		// 					'You are not the chat owner, make sure your key is correct before sharing it with others.'
-		// 				);
-		// 			}
-		// 			try {
-		// 				const chatKeySeed = await decryptChatKeySeedFromStorage(encryptedChatKeySeed);
-		// 				const title =
-		// 					chat.type === 'dm'
-		// 						? 'Key for DM with ' +
-		// 							chat.participants.find((p) => p.id !== chatStore.user?.id)?.displayName
-		// 						: 'Key for group ' + chat.name;
-		// 				emojiKeyConverterStore.openDisplay(title, true, chatKeySeed);
-		// 			} catch (error) {
-		// 				modalStore.alert('Error', 'Failed to decrypt chat key: ' + error);
-		// 			}
-		// 		}
-		// 	});
-		// }
 
 		if (isChatOwner) {
 			items.push({
@@ -109,13 +90,14 @@
 				chat.type === 'group' ? $t('chat.chat-list.leave-group') : $t('chat.chat-list.delete-chat'),
 			icon: 'mdi:account-arrow-left-outline',
 			action: async () => {
-				try {
-					await leaveChat(chat.id);
-					await deleteFilesThatContain(chat.id);
-					chats.tryDeselectChat(chat);
-					chatList.removeChat(chat.id);
-				} catch (error) {
-					modalStore.error(error, $t('chat.chat-list.leave-failed'));
+				if (chat.type === 'dm') {
+					modalStore.confirm($t('common.are-you-sure'), $t('chat.chat-list.leave-dm-confirm'), {
+						onConfirm: () => {
+							_leaveChat(chat);
+						}
+					});
+				} else {
+					_leaveChat(chat);
 				}
 			}
 		});
@@ -161,12 +143,12 @@
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
 					<div data-tooltip={otherUser?.user.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
-							{otherUser?.user.displayName}
+							{otherUser?.user.displayName || chat.name}
 						</p>
 					</div>
 
 					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
-						@{otherUser?.user.username}
+						{otherUser ? '@' : ''}{otherUser?.user.username || $t('chat.chat-list.other-left-dm')}
 					</p>
 				</div>
 				<button

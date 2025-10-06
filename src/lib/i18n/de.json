@@ -54,7 +54,9 @@
       "rotate-key": "Schlüssel rotieren",
       "leave-failed": "Verlassen des Chates fehlgeschlagen",
       "rotate-key-confirm": "Sind Sie sicher, dass Sie den Schlüssel rotiern möchten?",
-      "rotate-key-confirm-title": "Schlüssel rotiern?"
+      "rotate-key-confirm-title": "Schlüssel rotiern?",
+      "leave-dm-confirm": "Sind Sie sicher, dass Sie diese DM verlassen möchten? Sie können sich nicht wieder beitreten (nur eine neue erstellen), und der andere Benutzer kann weiterhin alle alten Nachrichten sehen",
+      "other-left-dm": "Anderer Benutzer verließ DM"
     },
     "chat-input": {
       "add-files": "Dateien hinzufügen",
