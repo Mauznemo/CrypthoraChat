@@ -211,15 +211,17 @@
 			class="cursor-pointer p-1 text-slate-400 transition-colors hover:text-white"
 			aria-label={isMuted ? 'Unmute' : 'Mute'}
 		>
-			{#if isMuted || volume === 0}
-				<Icon icon="mdi:volume-mute" class="size-6" />
-			{:else if volume > 0.6}
-				<Icon icon="mdi:volume-high" class="size-6" />
-			{:else if volume > 0.3}
-				<Icon icon="mdi:volume-medium" class="size-6" />
-			{:else}
-				<Icon icon="mdi:volume-low" class="size-6" />
-			{/if}
+			<div class="size-6">
+				{#if isMuted || volume === 0}
+					<Icon icon="mdi:volume-mute" class="size-6" />
+				{:else if volume > 0.6}
+					<Icon icon="mdi:volume-high" class="size-6" />
+				{:else if volume > 0.3}
+					<Icon icon="mdi:volume-medium" class="size-6" />
+				{:else}
+					<Icon icon="mdi:volume-low" class="size-6" />
+				{/if}
+			</div>
 		</button>
 
 		<Slider
