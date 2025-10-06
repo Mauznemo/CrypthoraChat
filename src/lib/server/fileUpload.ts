@@ -18,6 +18,14 @@ export async function fileExists(filePath: string) {
 	}
 }
 
+export async function removeDir(dirPath: string) {
+	const absPath = path.resolve(dirPath);
+	try {
+		await fs.access(absPath);
+		await fs.rm(absPath, { recursive: true, force: true });
+	} catch {}
+}
+
 export async function removeFile(filePath: string) {
 	const absPath = path.resolve(filePath);
 	try {

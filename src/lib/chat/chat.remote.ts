@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { removeFile } from '$lib/server/fileUpload';
+import { removeDir, removeFile } from '$lib/server/fileUpload';
 import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
 import {
 	chatWithoutMessagesFields,
@@ -10,6 +10,7 @@ import {
 	type SafeUser
 } from '$lib/types';
 import { error } from '@sveltejs/kit';
+import path from 'node:path';
 import * as v from 'valibot';
 
 // Simple in-memory cache - might want to use Redis or another cache in production
@@ -305,6 +306,17 @@ export const addUserToChat = command(
 	}
 );
 
+const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
+
+async function deleteChat(chat: any) {
+	const mediaDir = path.join(UPLOAD_BASE_PATH, 'media', chat.id);
+	await removeDir(mediaDir);
+	if (chat.imagePath) {
+		await removeFile(chat.imagePath);
+	}
+	await db.chat.delete({ where: { id: chat.id } });
+}
+
 export const leaveChat = command(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
 
@@ -314,7 +326,7 @@ export const leaveChat = command(v.string(), async (chatId: string) => {
 
 	const chat = await db.chat.findUnique({
 		where: { id: chatId },
-		select: { participants: { select: { userId: true } } }
+		select: { id: true, ownerId: true, imagePath: true, participants: { select: { userId: true } } }
 	});
 
 	if (!chat) {
@@ -323,6 +335,30 @@ export const leaveChat = command(v.string(), async (chatId: string) => {
 
 	if (!chat.participants.some((participant) => participant.userId === locals.user!.id)) {
 		error(400, 'You are not in the chat.');
+	}
+
+	if (chat.ownerId === locals.user!.id) {
+		const participantsWithoutOwner = chat.participants.filter(
+			(participant) => participant.userId !== locals.user!.id
+		);
+		if (participantsWithoutOwner.length === 0) {
+			await deleteChat(chat);
+			sendEventToChat(chatId, 'chat-users-updated', {
+				user: locals.user! as SafeUser,
+				chatId,
+				action: 'remove'
+			});
+			return;
+		}
+
+		const firstParticipant = participantsWithoutOwner[0];
+
+		await db.chat.update({
+			where: { id: chatId },
+			data: {
+				ownerId: firstParticipant.userId
+			}
+		});
 	}
 
 	try {

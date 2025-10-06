@@ -79,8 +79,8 @@ model PublicUserChatKey {
   chatId       String
   keyVersion   Int
   encryptedKey String // base64, encrypted with users (verified) public key
-  user         User   @relation(fields: [userId], references: [id])
-  chat         Chat   @relation(fields: [chatId], references: [id])
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chat         Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@id([userId, chatId, keyVersion])
 }
@@ -115,7 +115,7 @@ model ChatParticipant {
   joinKeyVersion Int
   joinedAt       DateTime @default(now())
 
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
 
   @@id([chatId, userId])
@@ -133,7 +133,7 @@ model Message {
   isEdited           Boolean   @default(false)
   timestamp          DateTime  @default(now())
   user               User      @relation("SentMessages", fields: [senderId], references: [id])
-  chat               Chat      @relation(fields: [chatId], references: [id])
+  chat               Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
   replyTo            Message?  @relation("Replies", fields: [replyToId], references: [id])
   replyToId          String?
   replies            Message[] @relation("Replies")
@@ -145,7 +145,7 @@ model SystemMessage {
   chatId         String
   content        String
   timestamp      DateTime @default(now())
-  chat           Chat     @relation(fields: [chatId], references: [id])
+  chat           Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
 model ServerSettings {
