@@ -22,13 +22,19 @@
 	});
 
 	function handleBackdropClick(event: MouseEvent) {
-		if (open && !modalStore.config.dismissible) {
+		if (
+			open &&
+			(modalStore.config.dismissible === true || modalStore.config.dismissible === undefined)
+		) {
 			modalStore.close();
 		}
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && !modalStore.config.dismissible) {
+		if (
+			event.key === 'Escape' &&
+			(modalStore.config.dismissible === true || modalStore.config.dismissible === undefined)
+		) {
 			modalStore.close();
 		}
 	}

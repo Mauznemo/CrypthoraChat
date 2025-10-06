@@ -405,9 +405,11 @@
 		modalStore.confirm(
 			$t('utils.sticker-editor.download-model'),
 			$t('utils.sticker-editor.download-model-confirm'),
-			() => {
-				localStorage.setItem('showedBgDownloadNotice', 'true');
-				removeBg();
+			{
+				onConfirm: () => {
+					localStorage.setItem('showedBgDownloadNotice', 'true');
+					removeBg();
+				}
 			}
 		);
 	}

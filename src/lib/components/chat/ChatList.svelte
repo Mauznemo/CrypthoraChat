@@ -72,13 +72,11 @@
 				label: $t('chat.chat-list.rotate-key'),
 				icon: 'mdi:rotate-clockwise',
 				action: async () => {
-					modalStore.confirm(
-						$t('common.are-you-sure'),
-						$t('chat.chat-list.rotate-key-confirm'),
-						() => {
+					modalStore.confirm($t('common.are-you-sure'), $t('chat.chat-list.rotate-key-confirm'), {
+						onConfirm: () => {
 							chatOwner.tryRotateChatKey(chat);
 						}
-					);
+					});
 				}
 			});
 

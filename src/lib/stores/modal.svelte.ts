@@ -69,24 +69,27 @@ class ModalStore {
 		return this.config.id === id;
 	}
 
-	// Convenience methods for common modal types
 	confirm(
 		title: string,
 		content: string,
-		onConfirm?: () => void,
-		onCancel?: () => void,
-		onClose?: () => void
+		options?: {
+			onConfirm?: () => void;
+			onCancel?: () => void;
+			onClose?: () => void;
+			dismissible?: boolean;
+		}
 	) {
 		this.open(
 			{
 				title,
 				content,
+				dismissible: options?.dismissible ?? false,
 				buttons: [
 					{
 						text: get(t)('common.cancel'),
 						variant: 'secondary',
 						onClick: () => {
-							onCancel?.();
+							options?.onCancel?.();
 							this.close();
 						}
 					},
@@ -94,13 +97,13 @@ class ModalStore {
 						text: get(t)('common.confirm'),
 						variant: 'primary',
 						onClick: () => {
-							onConfirm?.();
+							options?.onConfirm?.();
 							this.close();
 						}
 					}
 				],
 				onClose: () => {
-					onClose?.();
+					options?.onClose?.();
 				}
 			},
 			true

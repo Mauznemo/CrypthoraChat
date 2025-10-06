@@ -196,9 +196,10 @@ export const chats = {
 			return { success: true, keyVersions: chatKeys };
 		} catch (error: any) {
 			modalStore.open({
-				title: 'Error',
+				title: get(t)('common.error'),
 				id: 'decryption-chat-key-error',
 				content: get(t)('chat.chats.failed-to-decrypt-chat-key', { values: { error } }),
+				dismissible: false,
 
 				buttons: [
 					{

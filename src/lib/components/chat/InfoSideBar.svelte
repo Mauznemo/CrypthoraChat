@@ -72,8 +72,10 @@
 					modalStore.confirm(
 						$t('common.are-you-sure'),
 						$t('chat.info-bar.confirm-remove-user', { values: { username: user.username } }),
-						() => {
-							chatOwner.tryRemoveUser(chatStore.activeChat!.id, user.id);
+						{
+							onConfirm: () => {
+								chatOwner.tryRemoveUser(chatStore.activeChat!.id, user.id);
+							}
 						}
 					);
 				}

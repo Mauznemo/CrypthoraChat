@@ -24,13 +24,15 @@ export function handleDeleteMessage(message: ClientMessage): void {
 	modalStore.confirm(
 		get(t)('common.are-you-sure'),
 		get(t)('chat.messages.delete-message-confirm'),
-		async () => {
-			if (!chatStore.activeChat) {
-				modalStore.error(get(t)('chat.messages.failed-to-delete-message'));
-				return;
+		{
+			onConfirm: async () => {
+				if (!chatStore.activeChat) {
+					modalStore.error(get(t)('chat.messages.failed-to-delete-message'));
+					return;
+				}
+				console.log('Message deleted:', message.id);
+				socketStore.deleteMessage({ messageId: message.id, chatId: chatStore.activeChat.id });
 			}
-			console.log('Message deleted:', message.id);
-			socketStore.deleteMessage({ messageId: message.id, chatId: chatStore.activeChat.id });
 		}
 	);
 }

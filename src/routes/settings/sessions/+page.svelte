@@ -19,10 +19,8 @@
 			return;
 		}
 
-		modalStore.confirm(
-			$t('common.are-you-sure'),
-			$t('settings.sessions.logout-confirm'),
-			async () => {
+		modalStore.confirm($t('common.are-you-sure'), $t('settings.sessions.logout-confirm'), {
+			onConfirm: async () => {
 				try {
 					await logoutSession(sessionId);
 				} catch (error: any) {
@@ -33,7 +31,7 @@
 					toastStore.success($t('settings.sessions.logout-success'));
 				}
 			}
-		);
+		});
 	}
 </script>
 

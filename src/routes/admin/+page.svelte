@@ -30,14 +30,12 @@
 	}
 
 	function handleRemoveUsername(username: string) {
-		modalStore.confirm(
-			'Remove Username',
-			`Are you sure you want to remove username ${username}?`,
-			async () => {
+		modalStore.confirm('Remove Username', `Are you sure you want to remove username ${username}?`, {
+			onConfirm: async () => {
 				await removeUsername(username);
 				getAvailableUsernames().refresh();
 			}
-		);
+		});
 	}
 
 	function handleAddUsername() {
@@ -45,14 +43,12 @@
 			modalStore.alert('Invalid Username', 'Username cannot be empty.');
 			return;
 		}
-		modalStore.confirm(
-			'Add Username',
-			`Are you sure you want to add username ${newUsername}?`,
-			async () => {
+		modalStore.confirm('Add Username', `Are you sure you want to add username ${newUsername}?`, {
+			onConfirm: async () => {
 				await addUsername(newUsername);
 				getAvailableUsernames().refresh();
 			}
-		);
+		});
 	}
 </script>
 

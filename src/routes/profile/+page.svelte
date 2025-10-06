@@ -159,10 +159,8 @@
 
 			<button
 				onclick={async () => {
-					modalStore.confirm(
-						$t('profile.change-confirm-title'),
-						$t('profile.change-confirm'),
-						async () => {
+					modalStore.confirm($t('profile.change-confirm-title'), $t('profile.change-confirm'), {
+						onConfirm: async () => {
 							try {
 								await changePassword({ currentPassword, newPassword, confirmNewPassword });
 							} catch (error: any) {
@@ -174,7 +172,7 @@
 							confirmNewPassword = '';
 							toastStore.success($t('profile.change-password-success'));
 						}
-					);
+					});
 				}}
 				class="mt-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
 				>{$t('profile.change-password')}</button
@@ -225,10 +223,8 @@
 
 		<button
 			onclick={async () => {
-				modalStore.confirm(
-					$t('profile.logout-confirm'),
-					$t('profile.logout-confirm-content'),
-					async () => {
+				modalStore.confirm($t('profile.logout-confirm'), $t('profile.logout-confirm-content'), {
+					onConfirm: async () => {
 						try {
 							await logout();
 							await invalidateAll();
@@ -237,7 +233,7 @@
 							modalStore.error(error, $t('profile.logout-failed'));
 						}
 					}
-				);
+				});
 			}}
 			class="mb-2 cursor-pointer rounded-full bg-red-800/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
 			>{$t('profile.logout')}</button

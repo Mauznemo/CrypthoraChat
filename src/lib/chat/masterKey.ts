@@ -40,6 +40,7 @@ export async function checkForMasterKey(): Promise<void> {
 		modalStore.open({
 			title: get(t)('common.warning'),
 			content: get(t)('chat.master-key.no-master-key-found'),
+			dismissible: false,
 			buttons: [
 				{
 					text: get(t)('chat.master-key.generate-new'),
@@ -49,8 +50,10 @@ export async function checkForMasterKey(): Promise<void> {
 						modalStore.confirm(
 							get(t)('common.are-you-sure'),
 							get(t)('chat.master-key.generate-new-warning'),
-							() => {
-								generateAndStoreMasterKey();
+							{
+								onConfirm: () => {
+									generateAndStoreMasterKey();
+								}
 							}
 						);
 					}

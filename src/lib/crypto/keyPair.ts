@@ -193,8 +193,10 @@ export async function tryGetPublicKey(): Promise<{ success: boolean; publicKey: 
 							modalStore.confirm(
 								get(t)('common.are-you-sure'),
 								get(t)('chat.key-pair.re-generate-key-pair-confirm'),
-								() => {
-									regenerateAndStoreKeyPair();
+								{
+									onConfirm: () => {
+										regenerateAndStoreKeyPair();
+									}
 								}
 							);
 						}
