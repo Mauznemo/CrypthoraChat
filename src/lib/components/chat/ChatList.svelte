@@ -16,6 +16,7 @@
 	import { deleteFilesNotContaining, deleteFilesThatContain } from '$lib/idb';
 	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
+	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 
 	let {
 		onChatSelected,
@@ -93,12 +94,14 @@
 			}
 		}
 
-		if (chat.type === 'group' && isChatOwner) {
+		if (chat.type === 'group') {
 			items.push({
 				id: 'edit',
 				label: $t('chat.chat-list.edit-group'),
 				icon: 'mdi:edit-outline',
-				action: () => {}
+				action: () => {
+					infoBarStore.openChatInfo();
+				}
 			});
 		}
 
