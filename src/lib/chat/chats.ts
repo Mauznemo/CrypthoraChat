@@ -14,6 +14,7 @@ import {
 	getEncryptedChatKeys,
 	getMessagesByChatId,
 	getPublicEncryptedChatKeys,
+	isUserInChat,
 	saveEncryptedChatKey
 } from './chat.remote';
 import { chatList } from './chatList';
@@ -69,7 +70,7 @@ export const chats = {
 		const chat = chatStore.activeChat;
 		chatStore.activeChat = null;
 		chatStore.resetChatKey();
-		chats.trySelectChat(chat);
+		chats.trySelectChat(chat.id);
 	},
 
 	handleChatUsersUpdated(data: {
@@ -107,16 +108,26 @@ export const chats = {
 	},
 
 	/** Tries to select a chat and get its messages, shows an error modal if it fails */
-	async trySelectChat(newChat: ChatWithoutMessages): Promise<{ success: boolean }> {
+	async trySelectChat(newChatId: string): Promise<{ success: boolean }> {
 		chatStore.loadingChat = true;
 		cancelAllDownloads();
 		console.log('Chat selected (leaving previous):', chatStore.activeChat?.id);
 		socketStore.tryLeaveChat(chatStore.activeChat);
-		localStorage.setItem('lastChatId', newChat.id);
+		localStorage.setItem('lastChatId', newChatId);
 
 		chatStore.resetMessages();
 
-		const currentNewChat = await getChatById(newChat.id);
+		const userInChat = await isUserInChat(newChatId);
+
+		if (!userInChat) {
+			chatStore.resetChatKey();
+			chatStore.activeChat = null;
+			chatStore.loadingChat = false;
+			localStorage.removeItem('lastChatId');
+			return { success: false };
+		}
+
+		const currentNewChat = await getChatById(newChatId);
 
 		if (!currentNewChat) {
 			chatStore.resetChatKey();

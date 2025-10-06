@@ -22,7 +22,7 @@
 		onChatSelected,
 		onCreateChat
 	}: {
-		onChatSelected: (chat: ClientChat) => void;
+		onChatSelected: (chatId: string) => void;
 		onCreateChat: () => void;
 	} = $props();
 
@@ -126,7 +126,7 @@
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			onclick={() => {
-				onChatSelected(chat);
+				onChatSelected(chat.id);
 			}}
 			role="button"
 			tabindex="0"

@@ -7,20 +7,19 @@ class Chat {
 	activeChat: ChatWithoutMessages | null = $state(null);
 	scrollView: ScrollView | null = $state(null);
 	versionedChatKey: Record<number, CryptoKey> = $state({});
-	// newestChatKey: CryptoKey | null = $derived.by(() => {
 
-	// 	// const keys = Object.keys(this.versionedChatKey);
-	// 	// if (keys.length === 0) return null;
-
-	// 	// // Convert string keys to numbers and find the highest version
-	// 	// const highestVersion = Math.max(...keys.map(Number));
-	// 	// return this.versionedChatKey[highestVersion];
-	// });
-	//chatKey: CryptoKey | null = $state(null);
 	combinedMessages = $derived.by(() => {
-		return [...this.messages, ...this.systemMessages].sort(
-			(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-		);
+		const allMessages = [...this.messages, ...this.systemMessages];
+		const seen = new Set();
+		const unique = allMessages.filter((msg) => {
+			if (seen.has(msg.id)) {
+				return false;
+			}
+			seen.add(msg.id);
+			return true;
+		});
+
+		return unique.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 	});
 	messages: ClientMessage[] = $state([]);
 	systemMessages: SystemMessage[] = $state([]);

@@ -177,15 +177,7 @@
 			return;
 		}
 
-		const chat = await getChatById(chatId);
-
-		if (!chat) {
-			toastStore.error($t('chat.failed-to-select-last-chat'));
-			chatStore.loadingChat = false;
-			return;
-		}
-
-		selectChat(chat);
+		selectChat(chatId);
 	}
 
 	function handleCreateChat(): void {
@@ -202,16 +194,15 @@
 	}
 
 	let processingChatSelection = false;
-	async function selectChat(newChat: ChatWithoutMessages): Promise<void> {
+	async function selectChat(chatId: string): Promise<void> {
 		if (processingChatSelection) return;
 		processingChatSelection = true;
 
-		const result = await chats.trySelectChat(newChat);
+		const result = await chats.trySelectChat(chatId);
 
 		if (result.success) {
 			chatInput.handleChatSelected();
 			sideBar?.close();
-			// chatStore.scrollView?.scrollToBottom(500);
 		}
 
 		processingChatSelection = false;

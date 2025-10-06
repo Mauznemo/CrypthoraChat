@@ -409,6 +409,17 @@ export const leaveChat = command(v.string(), async (chatId: string) => {
 	}
 });
 
+async function _isUserInChat(chatId: string, userId: string) {
+	const participant = await db.chatParticipant.findFirst({
+		where: {
+			chatId,
+			userId
+		}
+	});
+
+	return !!participant;
+}
+
 export const getChatById = query(v.string(), async (chatId: string) => {
 	const { locals } = getRequestEvent();
 
@@ -416,7 +427,9 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 		error(401, 'Unauthorized');
 	}
 
-	//TODO: Check if the user is a member of the chat
+	if (!(await _isUserInChat(chatId, locals.user!.id))) {
+		error(403, 'You are not a participant of this chat');
+	}
 
 	const chat = await db.chat.findUnique({
 		where: { id: chatId },
@@ -424,6 +437,18 @@ export const getChatById = query(v.string(), async (chatId: string) => {
 	});
 
 	return chat;
+});
+
+export const isUserInChat = query(v.string(), async (chatId: string) => {
+	const { locals } = getRequestEvent();
+
+	if (!locals.sessionId) {
+		error(401, 'Unauthorized');
+	}
+
+	const userInChat = await _isUserInChat(chatId, locals.user!.id);
+
+	return userInChat;
 });
 
 export const getCurrentChatKeyVersion = query(v.string(), async (chatId: string) => {
