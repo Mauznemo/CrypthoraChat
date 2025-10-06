@@ -26,6 +26,8 @@
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
+	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -302,3 +304,6 @@
 
 	<InfoSideBar />
 </div>
+
+<AddUserToChat />
+<BigImagePreview />

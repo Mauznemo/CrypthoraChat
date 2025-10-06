@@ -5,7 +5,6 @@
 	import KeySharer from '$lib/components/KeySharer.svelte';
 	import ContextMenu from '$lib/components/ContextMenu.svelte';
 	import EmojiVerification from '$lib/components/EmojiVerification.svelte';
-	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { browser } from '$app/environment';
@@ -78,7 +77,6 @@
 	{/if}
 </div>
 
-<AddUserToChat />
 <KeySharer />
 <EmojiVerification />
 <EmojiPicker />

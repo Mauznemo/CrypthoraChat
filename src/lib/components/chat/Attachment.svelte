@@ -14,6 +14,7 @@
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
+	import { imagePreviewStore } from '$lib/stores/imagePreview.svelte';
 
 	const {
 		attachmentPath,
@@ -267,10 +268,19 @@
 			</div>
 		{:then previewUrl}
 			{#if previewUrl}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<div
+					onclick={() => {
+						if (previewUrl && subType !== 'sticker') {
+							imagePreviewStore.openDisplay(previewUrl);
+						}
+					}}
 					oncontextmenu={(e) => handleContextMenu(e, name)}
 					role="group"
-					class="relative flex max-w-full items-end justify-end"
+					class="relative flex max-w-full items-end justify-end {previewUrl && subType !== 'sticker'
+						? 'cursor-pointer'
+						: ''}"
 				>
 					<img
 						src={previewUrl}
