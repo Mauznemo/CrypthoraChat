@@ -32,7 +32,19 @@
 	let inputField: HTMLTextAreaElement;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
-	let chatName: string | null = $state(null);
+	let chatName: string | null = $derived.by(() => {
+		if (chatStore.activeChat) {
+			if (chatStore.activeChat.type === 'group') {
+				return chatStore.activeChat.name;
+			} else {
+				const otherUser = chatStore.activeChat.participants.find(
+					(p) => p.user.id !== chatStore.user?.id
+				);
+				return otherUser?.user.displayName || null;
+			}
+		}
+		return null;
+	});
 
 	onMount(async () => {
 		if (!data || !data.user) {
@@ -197,13 +209,6 @@
 		const result = await chats.trySelectChat(newChat);
 
 		if (result.success) {
-			if (newChat.type === 'group') {
-				chatName = newChat.name;
-			} else {
-				const otherUser = newChat.participants.find((p) => p.user.id !== chatStore.user?.id);
-				chatName = otherUser?.user.displayName || null;
-			}
-
 			chatInput.handleChatSelected();
 			sideBar?.close();
 			// chatStore.scrollView?.scrollToBottom(500);
@@ -222,7 +227,7 @@
 </script>
 
 <svelte:head>
-	<title>{chatName || 'Chat'}</title>
+	<title>{chatName || $t('chat.chat')}</title>
 </svelte:head>
 
 <div class="flex h-dvh min-h-0">
@@ -249,10 +254,12 @@
 			<div class="flex items-center">
 				<div>
 					{#if socketStore.connected}
-						<p class="px-3 py-2 text-3xl font-extrabold text-white">{chatName || 'Chat'}</p>
+						<p class="px-3 py-2 text-3xl font-extrabold text-white">
+							{chatName || $t('chat.chat')}
+						</p>
 					{:else}
 						<p class="px-3 pt-3 text-3xl font-extrabold text-white">
-							{chatName || 'Chat'} - {$t('common.offline')}
+							{chatName || $t('chat.chat')} - {$t('common.offline')}
 						</p>
 						<p class="font-semi px-3 pb-1 text-sm text-white/60">
 							{$t('chat.offline-message')}
@@ -279,7 +286,7 @@
 			<div class="flex h-full items-center justify-center">
 				<LoadingSpinner />
 			</div>
-		{:else}
+		{:else if chatStore.activeChat}
 			<ChatMessages
 				bind:scrollView={chatStore.scrollView!}
 				onEdit={(message) => {

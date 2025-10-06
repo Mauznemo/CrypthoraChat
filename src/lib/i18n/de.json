@@ -186,7 +186,8 @@
       "failed-to-decrypt-key": "Der Chat-Schlüssel konnte nicht entschlüsselt werden und kann daher nicht mit den Benutzern geteilt werden.",
       "failed-to-get-key": "Fehler beim holen des Chat-Schlüssels, kann daher nicht mit Benutzern geteilt werden.",
       "successfully-added-users": "Benutzer erfolgreich zu Chat hinzugefügt"
-    }
+    },
+    "chat": "Chat"
   },
   "profile": {
     "change-confirm": "Dadurch werden alle Ihre anderen Geräte abgemeldet und Sie müssen den Master-Schlüssel erneut eingeben.",

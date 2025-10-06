@@ -186,7 +186,8 @@
       "add-user": "Add User",
       "add-users": "Add Users",
       "successfully-added-users": "Successfully added user to chat"
-    }
+    },
+    "chat": "Chat"
   },
   "profile": {
     "display-name": "Display Name:",
