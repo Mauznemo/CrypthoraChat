@@ -237,7 +237,9 @@
       "logout": "Logout",
       "created": "Created:",
       "expires": "Expires:",
-      "logout-confirm": "Are you sure you want to logout this device?"
+      "logout-confirm": "Are you sure you want to logout this device?",
+      "logout-success": "Successfully logged out session!",
+      "logout-failed": "Failed to logout:"
     },
     "storage": {
       "used": "Used {usedStorage} from {totalStorage} ({percentage}% used)",
@@ -248,7 +250,8 @@
       "reset-sw": "Reset Service Workers",
       "service-worker": "Service Worker",
       "clear-cache": "Clear Caches"
-    }
+    },
+    "settings": "Settings"
   },
   "utils": {
     "color-picker": {

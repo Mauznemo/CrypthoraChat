@@ -242,13 +242,16 @@
       "current": "Aktuelle Sitzung",
       "expires": "Läuft ab:",
       "logout": "Abmelden",
-      "logout-confirm": "Sind Sie sicher, dass Sie dieses Gerät abmelden möchten?"
+      "logout-confirm": "Sind Sie sicher, dass Sie dieses Gerät abmelden möchten?",
+      "logout-failed": "Fehler beim Abmelden:",
+      "logout-success": "Sitzung Erfolgreich abgemeldet!"
     },
     "storage": {
       "clear-media": "Zwischengespeicherte Medien löschen",
       "clear-media-success": "Zwischengespeicherte Medien gelöscht",
       "used": "Verwendet {usedStorage} aus {totalStorage} ({percentage}% verwendet)"
-    }
+    },
+    "settings": "Einstellungen"
   },
   "utils": {
     "color-picker": {

@@ -8,7 +8,7 @@
 	let { data }: PageProps = $props();
 
 	const settingsTitle = getContext<any>('settingsTitle');
-	settingsTitle.set('Settings');
+	settingsTitle.set($t('settings.settings'));
 
 	let categories = [
 		{

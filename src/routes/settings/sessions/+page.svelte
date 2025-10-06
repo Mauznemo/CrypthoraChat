@@ -27,10 +27,10 @@
 					await logoutSession(sessionId);
 				} catch (error: any) {
 					console.error(error);
-					toastStore.error('Failed to logout: ' + error.body.message);
+					toastStore.error($t('settings.sessions.logout-failed') + ' ' + error.body.message);
 				} finally {
 					sessions = sessions.filter((s) => s.id !== sessionId);
-					toastStore.success('Successfully logged out session!');
+					toastStore.success($t('settings.sessions.logout-success'));
 				}
 			}
 		);
