@@ -13,6 +13,7 @@
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import { showMasterKeyImport } from '$lib/chat/masterKey';
 	import { t } from 'svelte-i18n';
+	import { compressImage } from '$lib/utils/imageConverter';
 
 	let { data } = $props();
 
@@ -193,7 +194,12 @@
 						await updateDisplayName(displayName);
 
 						if (selectedFile) {
-							const result = await tryUploadProfilePicture(selectedFile);
+							let compressedFile: File | null = null;
+							if (selectedFile.type !== 'image/gif') {
+								compressedFile = await compressImage(selectedFile);
+							}
+
+							const result = await tryUploadProfilePicture(compressedFile || selectedFile);
 							if (!result.success) {
 								loadingSave = false;
 								return;

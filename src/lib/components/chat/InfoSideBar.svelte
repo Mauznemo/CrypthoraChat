@@ -14,6 +14,7 @@
 	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
+	import { compressImage } from '$lib/utils/imageConverter';
 
 	let groupName: string = $state('');
 
@@ -154,7 +155,12 @@
 										}
 
 										if (selectedFile) {
-											const result = await tryUploadProfilePicture(selectedFile);
+											let compressedFile: File | null = null;
+											if (selectedFile.type !== 'image/gif') {
+												compressedFile = await compressImage(selectedFile);
+											}
+
+											const result = await tryUploadProfilePicture(compressedFile || selectedFile);
 											if (!result.success) return;
 
 											await updateGroupImage({
