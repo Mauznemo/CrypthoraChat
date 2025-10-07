@@ -29,18 +29,19 @@
 			{...register.enhance(async ({ form, data, submit }) => {
 				try {
 					const deviceInfo = getDeviceInfo();
-					data.set('device-os', `${deviceInfo.browser} on ${deviceInfo.os}`);
+					register.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
 					redirectToProfile = false;
 					localStorage.clear();
 					await deleteDatabase();
 					await submit();
-					form.reset();
-					await generateAndStoreMasterKey();
-					await generateAndStoreKeyPair();
-					goto('/chat');
-				} catch (e: any) {
-					console.error(e);
 
+					if ((register.fields.allIssues()?.length ?? 0) === 0) {
+						form.reset();
+						await generateAndStoreMasterKey();
+						await generateAndStoreKeyPair();
+						goto('/chat');
+					}
+				} catch (e: any) {
 					errorText = e?.body?.message || e?.message || String(e) || 'Something went wrong';
 				}
 			})}
@@ -52,6 +53,7 @@
 					type="text"
 					id="username"
 					name="username"
+					autocomplete="username"
 					required
 				/>
 			</div>
@@ -63,6 +65,7 @@
 					type={showPassword ? 'text' : 'password'}
 					id="password"
 					name="password"
+					autocomplete="current-password"
 					required
 				/>
 				<button
@@ -83,8 +86,9 @@
 				<input
 					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
-					id="confirm-password"
-					name="confirm-password"
+					id="confirmPassword"
+					name="confirmPassword"
+					autocomplete="current-password"
 					required
 				/>
 				<button
@@ -104,8 +108,13 @@
 				class="mb-4 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass hover:bg-accent-600/50 focus:ring-blue-500"
 				type="submit">{$t('login.register')}</button
 			>
+			<input class="hidden" {...register.fields.deviceOs.as('hidden')} />
 
 			<p class="text-center text-red-500">{errorText}</p>
+
+			{#each register.fields.allIssues() || [] as issue}
+				<p class="text-center text-red-500">{issue.message}</p>
+			{/each}
 		</form>
 
 		<p><a href="/login">{$t('login.login-link')}</a></p>

@@ -26,11 +26,13 @@
 			{...login.enhance(async ({ form, data, submit }) => {
 				try {
 					const deviceInfo = getDeviceInfo();
-					data.set('device-os', `${deviceInfo.browser} on ${deviceInfo.os}`);
+					login.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
 					await deleteDatabase();
 					await submit();
-					form.reset();
-					localStorage.clear();
+					if ((login.fields.allIssues()?.length ?? 0) === 0) {
+						form.reset();
+						localStorage.clear();
+					}
 				} catch (error: any) {
 					const errorObj: Error | undefined = JSON.parse(error);
 					if (errorObj !== undefined) errorText = errorObj.message;
@@ -45,6 +47,7 @@
 					type="text"
 					id="username"
 					name="username"
+					autocomplete="username"
 					required
 				/>
 			</div>
@@ -56,6 +59,7 @@
 					type={showPassword ? 'text' : 'password'}
 					id="password"
 					name="password"
+					autocomplete="current-password"
 					required
 				/>
 				<button
@@ -76,7 +80,13 @@
 				type="submit">{$t('login.login')}</button
 			>
 
+			<input class="hidden" {...login.fields.deviceOs.as('hidden')} />
+
 			<p class="text-center text-red-500">{errorText}</p>
+
+			{#each login.fields.allIssues() || [] as issue}
+				<p class="text-center text-red-500">{issue.message}</p>
+			{/each}
 		</form>
 
 		<p><a href="/register">{$t('login.register-link')}</a></p>

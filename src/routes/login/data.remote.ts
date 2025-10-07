@@ -5,46 +5,27 @@ import { collectErrorMessagesString, LoginSchema } from '$lib/utils/validation';
 import { error, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
-export const login = form(async (data) => {
-	const { locals } = getRequestEvent();
-	const username = data.get('username');
-	const password = data.get('password');
-	const deviceOs = data.get('device-os');
-
-	const input = {
-		username: typeof username === 'string' ? username : '',
-		password: typeof password === 'string' ? password : '',
-		deviceOs: typeof deviceOs === 'string' ? deviceOs : ''
-	};
+export const login = form(LoginSchema, async (data) => {
+	const { locals, cookies } = getRequestEvent();
 
 	console.log('locale', locals.locale);
 
 	const t = await getServerTranslator(locals.locale || 'en');
 
-	const result = v.safeParse(LoginSchema, input);
-
-	if (!result.success) {
-		let errorMessage = collectErrorMessagesString(result.issues);
-
-		error(400, errorMessage);
-	}
-
-	const user = await validateUser(result.output.username, result.output.password);
+	const user = await validateUser(data.username, data.password);
 
 	if (!user) {
 		error(400, t('login.server.invalid-credentials'));
 	}
 
-	const session = await createSession(user.id, result.output.deviceOs);
-
-	const { cookies } = getRequestEvent();
+	const session = await createSession(user.id, data.deviceOs);
 
 	cookies.set('session', session.id, {
 		path: '/',
 		httpOnly: true,
 		secure: false, // Set to true in production with HTTPS
 		sameSite: 'lax',
-		maxAge: 60 * 60 * 24 * 360 // 30 days
+		maxAge: 60 * 60 * 24 * 360
 	});
 
 	redirect(303, '/chat');
