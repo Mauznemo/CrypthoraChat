@@ -1,11 +1,11 @@
-import { errorResponse } from '$lib/server/fileUpload';
+import { errorResponse, getUploadDir } from '$lib/server/fileUpload';
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 
-const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
+const UPLOAD_BASE_PATH = getUploadDir();
 
 export const GET: RequestHandler = async ({ url, locals, request }) => {
 	if (!locals.sessionId) {

@@ -4,8 +4,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
 import sharp from 'sharp';
+import { getUploadDir } from '$lib/server/fileUpload';
 
-const UPLOAD_PATH = (process.env.UPLOAD_PATH || './uploads') + '/profiles';
+const UPLOAD_PATH = getUploadDir() + '/profiles';
 
 let serverKeyPromise: Promise<CryptoKey> | null = null;
 async function getServerKey(): Promise<CryptoKey> {

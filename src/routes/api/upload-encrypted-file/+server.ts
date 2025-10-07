@@ -5,10 +5,10 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
-import { ensureUploadDir, errorResponse, removeFile } from '$lib/server/fileUpload';
-import e from 'cors';
+import { ensureUploadDir, errorResponse, getUploadDir, removeFile } from '$lib/server/fileUpload';
 
-const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
+const UPLOAD_BASE_PATH = getUploadDir();
+const UPLOAD_SIZE_LIMIT = parseInt(process.env.UPLOAD_SIZE_LIMIT || '104857600');
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.sessionId) {
@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const bb = busboy({
 			headers: { 'content-type': contentType },
 			limits: {
-				fileSize: 100 * 1024 * 1024, // 100MB limit
+				fileSize: UPLOAD_SIZE_LIMIT,
 				files: 1
 			}
 		});

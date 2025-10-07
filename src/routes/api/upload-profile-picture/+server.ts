@@ -7,10 +7,10 @@ import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
-import { ensureUploadDir, errorResponse, removeFile } from '$lib/server/fileUpload';
+import { ensureUploadDir, errorResponse, getUploadDir, removeFile } from '$lib/server/fileUpload';
 
-const UPLOAD_PATH = (process.env.UPLOAD_PATH || './uploads') + '/profiles';
-const TEMP_PATH = (process.env.UPLOAD_PATH || './uploads') + '/temp';
+const UPLOAD_PATH = getUploadDir() + '/profiles';
+const TEMP_PATH = getUploadDir() + '/temp';
 
 let serverKeyPromise: Promise<CryptoKey> | null = null;
 async function getServerKey(): Promise<CryptoKey> {

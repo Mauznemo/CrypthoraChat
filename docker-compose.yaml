@@ -19,10 +19,10 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
       - BODY_SIZE_LIMIT=1073741824
-      - UPLOAD_PATH=/uploads
+      - UPLOAD_SIZE_LIMIT=${UPLOAD_SIZE_LIMIT:-104857600}
+      - HOST_UPLOAD_DIR=${HOST_UPLOAD_DIR:-app_uploads}
     volumes:
-      # Change app_uploads to the path you want to use on your host
-      - app_uploads:/uploads
+      - ${HOST_UPLOAD_DIR}:/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,11 +39,15 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_HOST_DATA_DIR=${POSTGRES_HOST_DATA_DIR:-postgres_data}
     volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
+      - ${POSTGRES_HOST_DATA_DIR}:/var/lib/postgresql/data/pgdata
     healthcheck:
       test:
-        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-crypthora_db}']
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-crypthora_db}",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,14 +65,15 @@ services:
       - NTFY_LISTEN_HTTP=:80
       - NTFY_CACHE_FILE=/var/cache/ntfy/cache.db
       - NTFY_ATTACHMENT_CACHE_DIR=/var/cache/ntfy/attachments
+      - NTFY_HOST_DIR=${NTFY_HOST_DIR:-ntfy_data}
     volumes:
-      - ntfy_data:/var/cache/ntfy
-      - ntfy_config:/etc/ntfy
+      - ${NTFY_HOST_DIR}/data:/var/cache/ntfy
+      - ${NTFY_HOST_DIR}/config:/etc/ntfy
     healthcheck:
       test:
         [
-          'CMD-SHELL',
-          'wget --no-verbose --tries=1 --spider http://localhost:80/v1/health || exit 1'
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:80/v1/health || exit 1",
         ]
       interval: 30s
       timeout: 10s
@@ -79,7 +84,6 @@ services:
     networks:
       - app_network
 
-# Named volumes for data persistence
 volumes:
   postgres_data:
     driver: local
@@ -90,7 +94,6 @@ volumes:
   ntfy_config:
     driver: local
 
-# Network for inter-service communication
 networks:
   app_network:
     driver: bridge
