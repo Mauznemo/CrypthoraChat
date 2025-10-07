@@ -12,10 +12,12 @@
 	import { locale } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
+	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
+		onboardingStore.init();
 		navigator.serviceWorker?.ready.then((registration) => {
 			const currentLocale = get(locale);
 			registration.active?.postMessage({

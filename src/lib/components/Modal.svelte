@@ -2,6 +2,7 @@
 	import { modalStore } from '$lib/stores/modal.svelte.js';
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
 
@@ -39,9 +40,13 @@
 		}
 	}
 
-	function getButtonClasses(variant: string = 'primary') {
-		const baseClasses =
-			'frosted-glass px-4 py-2 font-medium transition-colors rounded-full cursor-pointer';
+	function getButtonClasses(variant: string = 'primary', outlined: boolean = false) {
+		let baseClasses =
+			'frosted-glass px-4 py-2 font-medium transition-colors rounded-full cursor-pointer disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400';
+
+		if (outlined) {
+			baseClasses += ' outline outline-4 outline-orange-600';
+		}
 
 		switch (variant) {
 			case 'primary':
@@ -107,7 +112,8 @@
 								button.onClick?.();
 								modalStore.close();
 							}}
-							class={getButtonClasses(button.variant)}
+							disabled={button.disabled === true}
+							class={getButtonClasses(button.variant, button.outlined)}
 						>
 							{button.text}
 						</button>

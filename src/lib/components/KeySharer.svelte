@@ -12,6 +12,7 @@
 	import QRCode from 'qrcode';
 	import { Html5Qrcode } from 'html5-qrcode';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 
 	type EmojiDataType = typeof emojiData;
 
@@ -228,6 +229,15 @@
 	}
 
 	function initEmoji() {
+		if (onboardingStore.showBackupMasterKeyNotice) {
+			onboardingStore.disableBackupMasterKeyNotice();
+
+			modalStore.alert(
+				$t('utils.key-sharer.backup-master-key-notice-title'),
+				$t('utils.key-sharer.backup-master-key-notice-content'),
+				{ dismissible: false }
+			);
+		}
 		shareMode = 'emojiSequence';
 		emojiSequence = [];
 		inputIndex = 0;
@@ -267,6 +277,7 @@
 				{
 					text: $t('utils.key-sharer.qr-code'),
 					variant: 'primary',
+					disabled: onboardingStore.showBackupMasterKeyNotice,
 					onClick: () => {
 						initQrCode();
 					}
@@ -274,6 +285,7 @@
 				{
 					text: $t('utils.key-sharer.emoji-sequence'),
 					variant: 'primary',
+					outlined: onboardingStore.showBackupMasterKeyNotice,
 					onClick: () => {
 						initEmoji();
 					}
@@ -302,6 +314,10 @@
 	});
 
 	const progress = $derived(mode === 'input' ? (inputIndex / 16) * 100 : 100);
+
+	function onClick(): void {
+		throw new Error('Function not implemented.');
+	}
 </script>
 
 {#if isOpen}

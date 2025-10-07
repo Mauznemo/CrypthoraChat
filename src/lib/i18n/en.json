@@ -311,7 +311,9 @@
       "clear": "Clear All",
       "add-emoji": "Add Emoji",
       "failed-to-generate-key": "Failed to generate key from emoji sequence:",
-      "time-remaining": "This Key will expire in {hours} hours and {minutes} minutes"
+      "time-remaining": "This Key will expire in {hours} hours and {minutes} minutes",
+      "backup-master-key-notice-title": "Backup Master Key!",
+      "backup-master-key-notice-content": "Please make some kind of copy of your Master Key either by writing down the emoji names or some other secure way.\nIf you loose this key you will also loose access to all messages!"
     }
   },
   "login": {

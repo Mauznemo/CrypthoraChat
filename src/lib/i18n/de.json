@@ -311,7 +311,9 @@
       "key-imported-successfully": "Schlüssel erfolgreich importiert",
       "select-mode": "Modus auswählen",
       "select-mode-export-content": "Was möchten Sie den Schlüssel exportieren/anzeigen?",
-      "select-mode-import-content": "Was möchten Sie den Schlüssel importieren?"
+      "select-mode-import-content": "Was möchten Sie den Schlüssel importieren?",
+      "backup-master-key-notice-content": "Bitte sichern Sie Ihren Master-Schlüssels, indem Sie die Emoji-Namen aufschreiben oder über einen anderen sicheren Weg.\nWenn Sie diesen Schlüssel verlieren, verlieren Sie auch den Zugriff auf alle Nachrichten!",
+      "backup-master-key-notice-title": "Master-Schlüssel sichern!"
     }
   },
   "login": {

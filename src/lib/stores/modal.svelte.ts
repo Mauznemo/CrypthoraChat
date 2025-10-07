@@ -6,6 +6,8 @@ interface ModalButton {
 	text: string;
 	variant?: 'primary' | 'secondary' | 'danger';
 	onClick?: () => void;
+	disabled?: boolean;
+	outlined?: boolean;
 }
 
 interface ModalConfig {
@@ -112,12 +114,13 @@ class ModalStore {
 	alert(
 		title: string,
 		content: string,
-		options?: { onOk?: () => void; onClose?: () => void; id?: string }
+		options?: { onOk?: () => void; onClose?: () => void; id?: string; dismissible?: boolean }
 	) {
 		this.open({
 			title,
 			content,
 			id: options?.id,
+			dismissible: options?.dismissible ?? true,
 			buttons: [
 				{
 					text: get(t)('common.ok'),

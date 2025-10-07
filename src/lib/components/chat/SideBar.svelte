@@ -4,6 +4,7 @@
 	import type { SafeUser } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
+	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 
 	let {
 		children
@@ -38,12 +39,17 @@
 >
 	<button
 		onclick={() => goto('/profile')}
-		class="flex cursor-pointer items-center justify-start p-2"
+		class="relative flex cursor-pointer items-center justify-start p-2"
 	>
 		<ProfilePicture user={chatStore.user} size="3rem" />
-		<p class="ml-2 line-clamp-1 max-w-[230px] text-2xl font-bold break-all">
+		<p class="ml-2 line-clamp-1 text-2xl font-bold break-all">
 			{chatStore.user?.displayName}
 		</p>
+		{#if onboardingStore.showBackupMasterKeyNotice}
+			<div class="flex items-center justify-center px-2">
+				<div class="h-4 w-4 shrink-0 rounded-full bg-orange-600"></div>
+			</div>
+		{/if}
 	</button>
 	{@render children()}
 </div>

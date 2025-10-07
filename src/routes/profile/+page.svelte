@@ -14,6 +14,7 @@
 	import { showMasterKeyImport } from '$lib/chat/masterKey';
 	import { t } from 'svelte-i18n';
 	import { compressImage } from '$lib/utils/imageConverter';
+	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 
 	let { data } = $props();
 
@@ -110,15 +111,19 @@
 			>{$t('profile.change-password')}</button
 		>
 		<button
-			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
+			class="flex cursor-pointer items-center gap-1 text-left text-blue-400 underline hover:text-blue-300"
 			onclick={async () => {
 				keySharerStore.openDisplay(
 					$t('profile.master-key'),
 					false,
 					await getMasterSeedForSharing()
 				);
-			}}>{$t('profile.show-master-key')}</button
-		>
+			}}
+			>{$t('profile.show-master-key')}
+			{#if onboardingStore.showBackupMasterKeyNotice}
+				<div class="h-3 w-3 rounded-full bg-orange-600"></div>
+			{/if}
+		</button>
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
 			onclick={() => showMasterKeyImport()}>{$t('profile.re-import-master-key')}</button
