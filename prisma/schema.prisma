@@ -152,5 +152,16 @@ model ServerSettings {
   id               String   @id @default("singleton")
   allowedUsernames String[]
 
-  @@unique([id]) // Ensure only one instance exists
+  @@unique([id])
+}
+
+model NotificationSubscription {
+  id        String @id @default(cuid())
+  sessionId String
+  userId    String
+  type      String // 'webpush' or 'ntfy'
+  data      Json
+
+  @@unique([sessionId])
+  @@index([sessionId])
 }

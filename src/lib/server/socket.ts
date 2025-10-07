@@ -19,6 +19,7 @@ interface AuthenticatedSocket extends Socket {
 	user?: {
 		id: string;
 		username: string;
+		sessionId: string;
 	};
 }
 
@@ -26,8 +27,109 @@ if (VAPID_EMAIL && VAPID_PRIVATE_KEY && PUBLIC_VAPID_KEY) {
 	webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, PUBLIC_VAPID_KEY, VAPID_PRIVATE_KEY);
 }
 
-const webpushSubscriptions = new Map<string, any>(); // TODO: use database later
-const ntfySubscriptions = new Map<string, string>(); // TODO: use database later
+interface WebpushSubData {
+	sessionId: string;
+	userId: string;
+	subscription: PushSubscription;
+}
+
+interface NtfySubData {
+	sessionId: string;
+	userId: string;
+	subscription: string;
+}
+
+const webpushSubscriptions = new Map<string, WebpushSubData>();
+const ntfySubscriptions = new Map<string, NtfySubData>();
+
+function getUserSubscriptions(userId: string) {
+	const ntfySubs = Array.from(ntfySubscriptions.values()).filter((sub) => sub.userId === userId);
+	const webpushSubs = Array.from(webpushSubscriptions.values()).filter(
+		(sub) => sub.userId === userId
+	);
+	return { ntfySubs, webpushSubs };
+}
+
+async function saveSubscription(data: {
+	sessionId: string;
+	userId: string;
+	webpushSubscription?: PushSubscription;
+	ntfySubscription?: string;
+}) {
+	if (!data.sessionId || !data.userId) return;
+	if (data.webpushSubscription) {
+		webpushSubscriptions.set(data.sessionId, {
+			sessionId: data.sessionId,
+			userId: data.userId,
+			subscription: data.webpushSubscription
+		});
+
+		await db.notificationSubscription.upsert({
+			where: {
+				sessionId: data.sessionId
+			},
+			create: {
+				sessionId: data.sessionId,
+				userId: data.userId,
+				type: 'webpush',
+				data: data.webpushSubscription
+			},
+			update: {
+				data: data.webpushSubscription
+			}
+		});
+	}
+	if (data.ntfySubscription) {
+		ntfySubscriptions.set(data.sessionId, {
+			sessionId: data.sessionId,
+			userId: data.userId,
+			subscription: data.ntfySubscription
+		});
+
+		await db.notificationSubscription.upsert({
+			where: {
+				sessionId: data.sessionId
+			},
+			create: {
+				sessionId: data.sessionId,
+				userId: data.userId,
+				type: 'ntfy',
+				data: data.ntfySubscription
+			},
+			update: {
+				data: data.ntfySubscription
+			}
+		});
+	}
+}
+
+async function deleteSubscription(sessionId: string) {
+	try {
+		webpushSubscriptions.delete(sessionId);
+		ntfySubscriptions.delete(sessionId);
+		await db.notificationSubscription.delete({ where: { sessionId } });
+	} catch (e) {}
+}
+
+async function loadSubscriptions() {
+	const subscriptions = await db.notificationSubscription.findMany();
+
+	for (const sub of subscriptions) {
+		if (sub.type === 'webpush') {
+			webpushSubscriptions.set(sub.sessionId, {
+				sessionId: sub.sessionId,
+				userId: sub.userId,
+				subscription: sub.data as unknown as PushSubscription
+			});
+		} else if (sub.type === 'ntfy') {
+			ntfySubscriptions.set(sub.sessionId, {
+				sessionId: sub.sessionId,
+				userId: sub.userId,
+				subscription: sub.data as string
+			});
+		}
+	}
+}
 
 async function getChatUsers(chatId: string) {
 	// TODO: Add some caching to this
@@ -69,7 +171,7 @@ export function getUserSocket(userId: string): string | null {
 	return globalThis._userSocketMap.get(userId) || null;
 }
 
-export function initializeSocket(server: HTTPServer) {
+export async function initializeSocket(server: HTTPServer) {
 	globalThis._io = new Server(server);
 	const io: Server = globalThis._io;
 
@@ -97,7 +199,7 @@ export function initializeSocket(server: HTTPServer) {
 			}
 
 			// Attach user to socket
-			socket.user = session.user;
+			socket.user = { username: session.user.username, id: session.user.id, sessionId: sessionId };
 			console.log(`User authenticated: ${session.user.username} (${session.user.id})`);
 
 			next();
@@ -108,6 +210,8 @@ export function initializeSocket(server: HTTPServer) {
 	});
 
 	console.log('Socket server initialized with authentication');
+
+	await loadSubscriptions();
 
 	io.engine.on('connection_error', (err) => {
 		console.log('Connection error on server:', err.message);
@@ -135,18 +239,28 @@ export function initializeSocket(server: HTTPServer) {
 		socket.on('subscribe-webpush', (data) => {
 			const userId = socket.user!.id;
 			console.log(`User ${userId} subscribed to push notifications`);
-			webpushSubscriptions.set(userId, data.subscription);
+			saveSubscription({
+				sessionId: socket.user!.sessionId,
+				userId,
+				webpushSubscription: data.subscription
+			});
 		});
 
 		socket.on('subscribe-ntfy-push', (data) => {
 			const userId = socket.user!.id;
 			console.log(`User ${userId} subscribed to ntfy push notifications`);
-			ntfySubscriptions.set(userId, data.topic);
+			saveSubscription({
+				sessionId: socket.user!.sessionId,
+				userId,
+				ntfySubscription: data.topic
+			});
 		});
 
 		socket.on('request-user-verify', (data) => {
+			console.log('Requesting user verification');
 			const socketId = globalThis._userSocketMap.get(data.userId);
 			if (!socketId) {
+				console.log('User not online');
 				return;
 			}
 
@@ -217,10 +331,8 @@ export function initializeSocket(server: HTTPServer) {
 						}
 					});
 
-					// Emit to all users in the chat room
 					io.to(data.chatId).emit('new-message', newMessage);
 
-					//TODO: Send websocket notification (not full message, just which chat) to users in a chat, but not currently joined, otherwise send notification
 					console.log('Sending push notifications to users: ' + chatUsers.length);
 					for (const user of chatUsers) {
 						const userSocketId = globalThis._userSocketMap.get(user.id);
@@ -235,8 +347,7 @@ export function initializeSocket(server: HTTPServer) {
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
 						if (globalThis._userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
 
-						const subscription = webpushSubscriptions.get(user.id);
-						const ntfyTopic = ntfySubscriptions.get(user.id);
+						const userSubs = getUserSubscriptions(user.id);
 
 						const notificationData: NotificationDate = {
 							groupType: newMessage.chat.type === 'group' ? 'group' : 'dm',
@@ -245,21 +356,21 @@ export function initializeSocket(server: HTTPServer) {
 							chatName: newMessage.chat.name || undefined
 						};
 
-						if (subscription) {
+						for (const subscription of userSubs.webpushSubs) {
 							const success = await sendWebpushNotification(
 								webpush,
-								subscription,
+								subscription.subscription,
 								notificationData
 							);
 							if (!success) {
-								webpushSubscriptions.delete(user.id);
+								await deleteSubscription(subscription.sessionId);
 							}
 						}
 
-						if (ntfyTopic) {
-							const success = await sendNtfyNotification(ntfyTopic, notificationData);
+						for (const ntfyTopic of userSubs.ntfySubs) {
+							const success = await sendNtfyNotification(ntfyTopic.subscription, notificationData);
 							if (!success) {
-								ntfySubscriptions.delete(user.id);
+								await deleteSubscription(ntfyTopic.sessionId);
 							}
 						}
 					}
