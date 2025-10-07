@@ -87,7 +87,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			file.on('limit', () => {
 				limitExceeded = true;
 				file.resume();
-
+				if (uploadPromise && filePath) {
+					uploadPromise
+						.then(() => {
+							if (filePath)
+								removeFile(filePath).catch((err) =>
+									console.warn('Failed to delete partial file:', err)
+								);
+						})
+						.catch(() => {});
+				}
 				resolve(errorResponse(413, 'File size limit exceeded'));
 			});
 
@@ -133,6 +142,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					if (err.message.includes('aborted') || (err as any).code === 'ECONNRESET') {
 						handleAbort();
 					} else {
+						if (limitExceeded) {
+							// Ignore pipeline errors caused by limit truncation/destruction
+							return;
+						}
 						throw err;
 					}
 				});

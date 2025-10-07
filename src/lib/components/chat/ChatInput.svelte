@@ -194,8 +194,15 @@
 					});
 					uploadingFile = null;
 					uploadedFiles = [];
+
+					for (const url of Object.values(previewUrls)) {
+						URL.revokeObjectURL(url);
+					}
+
+					selectedFiles = [];
 					compressFiles = [];
 					fileSizes = [];
+					previewUrls = {};
 					return;
 				}
 			}
