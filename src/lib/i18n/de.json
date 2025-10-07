@@ -323,7 +323,29 @@
     "register-link": "Sie haben kein Konto? Registrieren",
     "username": "Benutzername:",
     "server": {
-      "invalid-credentials": "Ungültiger Benutzername oder Passwort"
+      "invalid-credentials": "Ungültiger Benutzername oder Passwort",
+      "something-went-wrong": "Etwas ist schief gelaufen",
+      "username-not-allowed": "Benutzername nicht erlaubt (Bitte wenden Sie sich an einen Admin)",
+      "username-taken": "Benutzername bereits verwendet"
+    },
+    "validation": {
+      "confirm-password": {
+        "required": "Passwort bestätigen erforderlich",
+        "too-long": "Passwort bestätigen muss weniger als 128 Zeichen betragen",
+        "too-short": "Passwort bestätigen muss mindestens 6 Zeichen lang sein"
+      },
+      "password": {
+        "required": "Passwort ist erforderlich",
+        "too-long": "Das Passwort muss weniger als 128 Zeichen betragen",
+        "too-short": "Das Passwort muss mindestens 6 Zeichen lang sein"
+      },
+      "passwords-dont-match": "Passwörter stimmen nicht überein",
+      "username": {
+        "invalid-characters": "Der Benutzername darf nur Kleinbuchstaben, Zahlen, Unterstriche und Bindestriche enthalten",
+        "required": "Benutzername ist erforderlich",
+        "too-long": "Der Benutzername muss weniger als 50 Zeichen lang sein",
+        "too-short": "Der Benutzername muss mindestens 3 Zeichen lang sein"
+      }
     }
   },
   "notifications": {

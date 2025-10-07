@@ -10,7 +10,7 @@
 
 	let { data } = $props();
 
-	let errorText: String = $state('');
+	let errorText: string = $state('');
 	let showPassword = $state(false);
 	let redirectToProfile = $state(true);
 
@@ -42,7 +42,8 @@
 						goto('/chat');
 					}
 				} catch (e: any) {
-					errorText = e?.body?.message || e?.message || String(e) || 'Something went wrong';
+					errorText =
+						e?.body?.message || e?.message || String(e) || 'login.server.something-went-wrong';
 				}
 			})}
 		>
@@ -110,10 +111,10 @@
 			>
 			<input class="hidden" {...register.fields.deviceOs.as('hidden')} />
 
-			<p class="text-center text-red-500">{errorText}</p>
+			<p class="text-center text-red-500">{$t(errorText)}</p>
 
 			{#each register.fields.allIssues() || [] as issue}
-				<p class="text-center text-red-500">{issue.message}</p>
+				<p class="text-center text-red-500">{$t(issue.message)}</p>
 			{/each}
 		</form>
 

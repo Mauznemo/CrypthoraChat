@@ -323,7 +323,29 @@
     "confirm-password": "Confirm Password:",
     "login-link": "Already have an account? Login",
     "server": {
-      "invalid-credentials": "Invalid username or password"
+      "invalid-credentials": "Invalid username or password",
+      "username-not-allowed": "Username not allowed (Please contact an admin)",
+      "username-taken": "Username already taken",
+      "something-went-wrong": "Something went wrong"
+    },
+    "validation": {
+      "username": {
+        "required": "Username is required",
+        "too-short": "Username must be at least 3 characters",
+        "too-long": "Username must be less than 50 characters",
+        "invalid-characters": "Username can only contain lower case letters, numbers, underscores, and hyphens"
+      },
+      "password": {
+        "required": "Password is required",
+        "too-short": "Password must be at least 6 characters",
+        "too-long": "Password must be less than 128 characters"
+      },
+      "passwords-dont-match": "Passwords do not match",
+      "confirm-password": {
+        "required": "Confirm Password is required",
+        "too-short": "Confirm Password must be at least 6 characters",
+        "too-long": "Confirm Password must be less than 128 characters"
+      }
     }
   },
   "notifications": {

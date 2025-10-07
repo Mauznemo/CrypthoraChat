@@ -1,9 +1,8 @@
 import { form, getRequestEvent } from '$app/server';
 import { createSession, createUser } from '$lib/utils/auth';
 import { db } from '$lib/db';
-import { collectErrorMessagesString, RegisterSchema } from '$lib/utils/validation';
-import { error, redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
+import { RegisterSchema } from '$lib/utils/validation';
+import { error } from '@sveltejs/kit';
 
 export const register = form(RegisterSchema, async (data) => {
 	const settings = await db.serverSettings.upsert({
@@ -16,7 +15,7 @@ export const register = form(RegisterSchema, async (data) => {
 		const userCount = await db.user.count();
 
 		if (userCount > 0) {
-			error(400, 'Username not allowed (Please contact an admin)');
+			error(400, 'login.server.username-not-allowed');
 		}
 	}
 
@@ -35,9 +34,9 @@ export const register = form(RegisterSchema, async (data) => {
 		});
 	} catch (err: any) {
 		if (err.code === 'P2002') {
-			error(400, 'Username already taken');
+			error(400, 'login.server.username-taken');
 		}
 		console.error('Registration error:', err);
-		error(500, 'Something went wrong. Please try again.');
+		error(500, 'login.server.something-went-wrong');
 	}
 });

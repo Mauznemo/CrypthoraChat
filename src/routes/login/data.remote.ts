@@ -1,21 +1,15 @@
 import { form, getRequestEvent } from '$app/server';
-import { getServerTranslator } from '$lib/i18n/server';
 import { createSession, validateUser } from '$lib/utils/auth';
-import { collectErrorMessagesString, LoginSchema } from '$lib/utils/validation';
+import { LoginSchema } from '$lib/utils/validation';
 import { error, redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
 
 export const login = form(LoginSchema, async (data) => {
-	const { locals, cookies } = getRequestEvent();
-
-	console.log('locale', locals.locale);
-
-	const t = await getServerTranslator(locals.locale || 'en');
+	const { cookies } = getRequestEvent();
 
 	const user = await validateUser(data.username, data.password);
 
 	if (!user) {
-		error(400, t('login.server.invalid-credentials'));
+		error(400, 'login.server.invalid-credentials');
 	}
 
 	const session = await createSession(user.id, data.deviceOs);

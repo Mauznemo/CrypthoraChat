@@ -3,32 +3,38 @@ import * as v from 'valibot';
 export const RegisterSchema = v.pipe(
 	v.object({
 		username: v.pipe(
-			v.string('Username is required'),
-			v.minLength(3, 'Username must be at least 3 characters'),
-			v.maxLength(50, 'Username must be less than 50 characters'),
-			v.regex(
-				/^[a-z0-9_-]+$/,
-				'Username can only contain lower case letters, numbers, underscores, and hyphens'
-			)
+			v.string('login.validation.username.required'),
+			v.minLength(3, 'login.validation.username.too-short'),
+			v.maxLength(50, 'login.validation.username.too-long'),
+			v.regex(/^[a-z0-9_-]+$/, 'login.validation.username.invalid-characters')
 		),
 		password: v.pipe(
-			v.string('Password is required'),
-			v.minLength(6, 'Password must be at least 6 characters'),
-			v.maxLength(128, 'Password must be less than 128 characters')
+			v.string('login.validation.password.required'),
+			v.minLength(6, 'login.validation.password.too-short'),
+			v.maxLength(128, 'login.validation.password.too-long')
 		),
 		confirmPassword: v.pipe(
-			v.string('Confirm Password is required'),
-			v.minLength(6, 'Confirm Password must be at least 6 characters'),
-			v.maxLength(128, 'Confirm Password must be less than 128 characters')
+			v.string('login.validation.confirm-password.required'),
+			v.minLength(6, 'login.validation.confirm-password.too-short'),
+			v.maxLength(128, 'login.validation.confirm-password.too-long')
 		),
 		deviceOs: v.string()
 	}),
-	v.check((input) => input.password === input.confirmPassword, 'Passwords do not match')
+	v.check(
+		(input) => input.password === input.confirmPassword,
+		'login.validation.passwords-dont-match'
+	)
 );
 
 export const LoginSchema = v.object({
-	username: v.pipe(v.string('Username is required'), v.minLength(1, 'Username is required')),
-	password: v.pipe(v.string('Password is required'), v.minLength(1, 'Password is required')),
+	username: v.pipe(
+		v.string('login.validation.username.required'),
+		v.minLength(1, 'login.validation.username.required')
+	),
+	password: v.pipe(
+		v.string('login.validation.password.required'),
+		v.minLength(1, 'login.validation.password.required')
+	),
 	deviceOs: v.string()
 });
 

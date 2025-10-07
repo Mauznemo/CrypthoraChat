@@ -8,7 +8,7 @@
 
 	let { data } = $props();
 
-	let errorText: String = $state('');
+	let errorText: string = $state('');
 	let showPassword = $state(false);
 
 	$effect(() => {
@@ -36,7 +36,7 @@
 				} catch (error: any) {
 					const errorObj: Error | undefined = JSON.parse(error);
 					if (errorObj !== undefined) errorText = errorObj.message;
-					else errorText = 'Something went wrong! ' + error;
+					else errorText = 'login.server.something-went-wrong';
 				}
 			})}
 		>
@@ -82,10 +82,10 @@
 
 			<input class="hidden" {...login.fields.deviceOs.as('hidden')} />
 
-			<p class="text-center text-red-500">{errorText}</p>
+			<p class="text-center text-red-500">{$t(errorText)}</p>
 
 			{#each login.fields.allIssues() || [] as issue}
-				<p class="text-center text-red-500">{issue.message}</p>
+				<p class="text-center text-red-500">{$t(issue.message)}</p>
 			{/each}
 		</form>
 
