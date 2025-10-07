@@ -64,13 +64,19 @@ export const chats = {
 		chatList.removeChat(data.chatId);
 	},
 
-	handleKeyRotated(): void {
+	handleKeyRotated(ownerData?: { newKeyVersion: number; newKey: CryptoKey }): void {
 		console.log('Key rotated');
 		if (!chatStore.activeChat) return;
-		const chat = chatStore.activeChat;
-		chatStore.activeChat = null;
-		chatStore.resetChatKey();
-		chats.trySelectChat(chat.id);
+		if (ownerData) {
+			chatStore.versionedChatKey[ownerData.newKeyVersion] = ownerData.newKey;
+			chatStore.activeChat.currentKeyVersion = ownerData.newKeyVersion;
+		} else {
+			if (chatStore.activeChat.ownerId === chatStore.user?.id) return;
+			const chat = chatStore.activeChat;
+			chatStore.activeChat = null;
+			chatStore.resetChatKey();
+			chats.trySelectChat(chat.id);
+		}
 	},
 
 	handleChatUsersUpdated(data: {

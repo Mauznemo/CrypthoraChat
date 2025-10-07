@@ -83,7 +83,7 @@ export const chatOwner = {
 				modalStore.error(err, get(t)('chat.chat-owner.failed-to-save-chat-key'));
 			}
 
-			chats.handleKeyRotated();
+			chats.handleKeyRotated({ newKeyVersion, newKey: newChatKey });
 
 			return true;
 		} catch (error: any) {
