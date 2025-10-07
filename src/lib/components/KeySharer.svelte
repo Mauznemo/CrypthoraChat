@@ -288,6 +288,7 @@
 	function close() {
 		isOpen = false;
 		keySharerStore.close();
+		if (qrScanner) qrScanner.stop();
 	}
 
 	$effect(() => {
