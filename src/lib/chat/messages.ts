@@ -342,3 +342,11 @@ export function handleVisible(): void {
 export function findMessageById(id: string): ClientMessage | undefined {
 	return chatStore.messages.find((message) => message.id === id);
 }
+
+export function formatDate(date: Date): string {
+	const timeString = new Date(date).toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+	return timeString;
+}

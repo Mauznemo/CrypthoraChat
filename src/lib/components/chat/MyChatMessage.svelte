@@ -8,6 +8,7 @@
 	import Attachment from './Attachment.svelte';
 	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
+	import { formatDate } from '$lib/chat/messages';
 
 	function clamp(value: number, min: number, max: number): number {
 		return Math.max(min, Math.min(max, value));
@@ -129,12 +130,8 @@
 				{/await}
 			</svelte:boundary>
 
-			<!-- Timestamp -->
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
-				{new Date(message.timestamp).toLocaleTimeString([], {
-					hour: '2-digit',
-					minute: '2-digit'
-				})}{message.isEdited ? ` ${$t('chat.edited')}` : ''}
+				{formatDate(message.timestamp)}{message.isEdited ? ` ${$t('chat.edited')}` : ''}
 			</div>
 		</div>
 

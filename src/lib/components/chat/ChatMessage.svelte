@@ -8,6 +8,7 @@
 	import ProfilePicture from './ProfilePicture.svelte';
 	import Attachment from './Attachment.svelte';
 	import { t } from 'svelte-i18n';
+	import { formatDate } from '$lib/chat/messages';
 
 	const {
 		message,
@@ -143,12 +144,9 @@
 					<p class="pr-9 text-sm whitespace-pre-line text-red-400/50">{error}</p>
 				{/await}
 			</svelte:boundary>
-			<!-- Timestamp -->
+
 			<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
-				{new Date(message.timestamp).toLocaleTimeString([], {
-					hour: '2-digit',
-					minute: '2-digit'
-				})}{message.isEdited ? ` ${$t('chat.edited')}` : ''}
+				{formatDate(message.timestamp)}{message.isEdited ? ` ${$t('chat.edited')}` : ''}
 			</div>
 		</div>
 		{#if message.encryptedReactions.length > 0}
