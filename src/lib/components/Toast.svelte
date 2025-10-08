@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { getSafeAreaPadding } from '$lib/utils/device';
 	import { fly } from 'svelte/transition';
 
 	const { toasts } = $derived({
@@ -8,7 +9,10 @@
 </script>
 
 {#if toasts.length > 0}
-	<div class="fixed top-4 right-4 z-50 flex flex-col gap-2">
+	<div
+		style="top: {getSafeAreaPadding().top + 16}px;"
+		class="fixed right-4 z-50 flex flex-col gap-2"
+	>
 		{#each toasts as toast (toast.id)}
 			<button
 				onclick={() => toastStore.dismiss(toast.id)}

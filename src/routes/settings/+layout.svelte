@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import BackButton from '$lib/components/BackButton.svelte';
+	import { getSafeAreaPadding } from '$lib/utils/device';
 	import { setContext } from 'svelte';
 
 	let { children } = $props();
@@ -17,7 +18,11 @@
 	});
 </script>
 
-<div class="w-full p-2">
+<div
+	style="padding-top: {getSafeAreaPadding().top + 8}px; padding-bottom: {getSafeAreaPadding()
+		.bottom + 8}px;"
+	class="w-full p-2"
+>
 	<div
 		class="flex items-center justify-start gap-2 rounded-full bg-accent-600/20 px-5 py-3 frosted-glass-shadow"
 	>

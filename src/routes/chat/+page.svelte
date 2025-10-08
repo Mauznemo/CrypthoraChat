@@ -28,6 +28,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
+	import { getSafeAreaPadding } from '$lib/utils/device';
 
 	let { data }: PageProps = $props();
 
@@ -237,18 +238,23 @@
 	<title>{chatName || $t('chat.chat')}</title>
 </svelte:head>
 
-<div class="flex h-dvh min-h-0">
+<div class="flex h-full min-h-0">
 	<SideBar bind:this={sideBar}>
 		<ChatList onChatSelected={selectChat} onCreateChat={handleCreateChat} />
 
 		<button
 			onclick={() => goto('/settings')}
-			class="absolute bottom-2 left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
+			style="bottom: {getSafeAreaPadding().bottom + 8}px;"
+			class="absolute left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
 			><Icon icon="mdi:gear" class="size-6" /></button
 		>
 	</SideBar>
 
-	<div class="flex min-w-0 flex-1 flex-col p-2">
+	<div
+		style="padding-top: {getSafeAreaPadding().top}px; padding-bottom: {getSafeAreaPadding()
+			.bottom}px;"
+		class="flex min-w-0 flex-1 flex-col p-2"
+	>
 		<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">
 			<!-- Menu button - only shown on mobile -->
 			<button

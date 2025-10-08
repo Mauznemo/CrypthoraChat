@@ -33,3 +33,21 @@ export function checkIfTouchDevice(): boolean {
 	// Consider it a touch device only if fine pointer is not primary or touch points > 1
 	return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
 }
+
+export function getSafeAreaPadding(): { top: number; bottom: number; left: number; right: number } {
+	if (window.flutterSafeAreaInsets) {
+		return {
+			top: window.flutterSafeAreaInsets.top,
+			bottom: window.flutterSafeAreaInsets.bottom,
+			left: window.flutterSafeAreaInsets.left,
+			right: window.flutterSafeAreaInsets.right
+		};
+	}
+
+	return {
+		top: 0,
+		bottom: 0,
+		left: 0,
+		right: 0
+	};
+}

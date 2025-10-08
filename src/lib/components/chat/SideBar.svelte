@@ -6,6 +6,7 @@
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 	import { version } from '$app/environment';
+	import { getSafeAreaPadding } from '$lib/utils/device';
 
 	let {
 		children
@@ -25,18 +26,9 @@
 </script>
 
 <div
-	class={`
-		fixed
-		z-50
-		h-full w-80
-		min-w-80 border-r
-		border-gray-700
-		bg-gray-800/60 backdrop-blur-sm
-		 transition-transform
-		duration-300 md:static
-		md:bg-transparent
-		${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-	`}
+	style="padding-top: {getSafeAreaPadding().top}px;"
+	class={`fixed z-50 h-full w-80 min-w-80 border-r border-gray-700 bg-gray-800/60 backdrop-blur-sm transition-transform duration-300 md:static md:bg-transparent
+		${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
 >
 	<button
 		onclick={() => goto('/profile')}
@@ -53,7 +45,10 @@
 		{/if}
 	</button>
 	{@render children()}
-	<p class="pointer-events-none absolute bottom-2 w-full text-center text-sm text-gray-500">
+	<p
+		style="bottom: {getSafeAreaPadding().bottom + 8}px;"
+		class="pointer-events-none absolute w-full text-center text-sm text-gray-500"
+	>
 		Version {version}
 	</p>
 </div>

@@ -69,7 +69,7 @@
 
 	<!-- Content area -->
 	{#if browser}
-		<div class="relative z-10 min-h-dvh text-white">
+		<div class="relative z-10 h-dvh text-white">
 			{@render children?.()}
 		</div>
 	{:else}
