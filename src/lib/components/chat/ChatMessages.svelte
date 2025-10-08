@@ -13,6 +13,7 @@
 	import { scale } from 'svelte/transition';
 	import { expoInOut } from 'svelte/easing';
 	import { t } from 'svelte-i18n';
+	import { checkIfTouchDevice } from '$lib/utils/device';
 
 	interface ToolbarPosition {
 		x: number;
@@ -287,16 +288,6 @@
 			onReaction(activeMessage, { x: rect.left, y: rect.bottom + 8 });
 			activeMessage = null;
 		}
-	}
-
-	function checkIfTouchDevice(): boolean {
-		if (typeof window === 'undefined') return false;
-		// Check for fine pointer (mouse) as primary input method
-		const hasFinePrimaryPointer = window.matchMedia('(pointer: fine)').matches;
-		// Check if touch is available as a secondary input
-		const hasTouchCapability = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-		// Consider it a touch device only if fine pointer is not primary or touch points > 1
-		return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
 	}
 
 	onMount(() => {

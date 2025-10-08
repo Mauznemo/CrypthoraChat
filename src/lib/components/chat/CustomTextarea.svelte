@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { extractMentions } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import type { ChatWithoutMessages } from '$lib/types';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import { onMount, tick } from 'svelte';
 
 	let {
 		value = $bindable(''),
 		placeholder = 'Type your message here...',
+		isMobile = false,
 		disabled = false,
 		maxHeight = '15rem',
 		minHeight = '3rem',
@@ -16,6 +17,7 @@
 	}: {
 		value: string;
 		placeholder: string;
+		isMobile: boolean;
 		disabled: boolean;
 		maxHeight?: string;
 		minHeight?: string;
@@ -24,6 +26,7 @@
 		onFileSelected: ((file: File) => void) | undefined;
 	} = $props();
 
+	let internalValue = $state(value);
 	let contentEditableDiv: HTMLDivElement;
 	let isComposing = false;
 
@@ -34,21 +37,16 @@
 			return text;
 		}
 
-		// First extract mentions to get their positions in the original text
 		const mentions = extractMentions(text);
 
-		// Sort mentions by start index in descending order
 		mentions.sort((a, b) => b.startIndex - a.startIndex);
 
-		// Start with HTML escaping
 		let processedText = text
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;')
 			.replace(/\r\n/g, '\n');
 
-		// Now replace mentions in the escaped text
-		// We need to recalculate positions since escaping might have changed them
 		mentions.forEach((mention) => {
 			const escapedMention = mention.fullMatch
 				.replace(/&/g, '&amp;')
@@ -57,13 +55,12 @@
 
 			const mentionHtml = `<span class="bg-violet-800/60 frosted-glass px-2 pb-0.5 rounded-full text-gray-300 font-bold">@${mention.username}</span>`;
 
-			// Replace the first occurrence of the escaped mention
 			processedText = processedText.replace(escapedMention, mentionHtml);
 		});
 
 		return (
 			processedText
-				// Headings (must start at line beginning)
+				// Headings
 				.replace(/^### (.*)$/gm, '<span class="font-bold text-1xl">### $1</span>')
 				.replace(/^## (.*)$/gm, '<span class="font-bold text-2xl">## $1</span>')
 				.replace(/^# (.*)$/gm, '<span class="font-bold text-3xl"># $1</span>')
@@ -82,10 +79,16 @@
 	}
 
 	$effect(() => {
+		if (value === '') {
+			internalValue = '';
+		}
+	});
+
+	$effect(() => {
 		if (contentEditableDiv && !isComposing) {
-			const currentHtml = textToHtml(value);
+			const currentHtml = textToHtml(internalValue);
 			if (contentEditableDiv.innerHTML !== currentHtml) {
-				// Save current cursor position more precisely
+				// Save cursor position
 				const selection = window.getSelection();
 				let savedRange: Range | null = null;
 				let caretOffset = 0;
@@ -127,7 +130,6 @@
 							targetNode = textWalker.nextNode();
 						}
 					} catch (e) {
-						// If restoration fails, place cursor at end
 						placeCaretAtEnd();
 					}
 				}
@@ -152,15 +154,16 @@
 		const target = event.target as HTMLDivElement;
 		const newText = htmlToText(target);
 
-		if (newText !== value) {
-			value = newText;
+		if (newText !== internalValue) {
+			internalValue = newText;
+			value = internalValue;
 			onInput?.(event);
 		}
 	}
 
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
-			if (event.shiftKey) {
+			if (event.shiftKey || isMobile) {
 				event.preventDefault();
 
 				const selection = window.getSelection();
@@ -168,33 +171,71 @@
 					const range = selection.getRangeAt(0);
 					range.deleteContents();
 
+					let node = range.startContainer;
+					if (
+						node.nodeType === Node.TEXT_NODE &&
+						node.parentNode &&
+						node.parentNode.nodeName === 'SPAN'
+					) {
+						node = node.parentNode;
+					}
+
+					const isSpan = node.nodeName === 'SPAN';
+
+					const atNodeEnd =
+						range.startContainer.textContent &&
+						range.startOffset === range.startContainer.textContent.length;
+
+					const atNodeStart = range.startOffset === 0;
+					const hastNextSibling = node.nextSibling && node.nextSibling.nodeName === 'BR';
+
+					console.log('isSpan:', isSpan);
+
+					console.log(
+						'atEnd:',
+						atNodeEnd,
+						range.startOffset,
+						range.startContainer.textContent?.length
+					);
+
+					console.log(
+						'has next node:',
+						hastNextSibling,
+						node.nextSibling,
+						node.nextSibling?.nodeName
+					);
+
+					if (isSpan && atNodeEnd && node.nextSibling) {
+						console.log('At line end inserting after');
+						range.setStartAfter(node.nextSibling);
+					} else if (isSpan && atNodeStart) {
+						console.log('At line start inserting before');
+						range.setStartBefore(node);
+					} else if (isSpan) {
+						range.setStartAfter(node);
+					}
+
 					const br1 = document.createElement('br');
+					br1.setAttribute('id', 'br1');
 					range.insertNode(br1);
 
-					// Check if we need a second br (at end of content or before another br)
-					const nextSibling = br1.nextSibling;
-					const needsSecondBr = nextSibling && nextSibling.nodeName !== 'BR';
+					if (atNodeEnd && !hastNextSibling && (!isSpan || (isSpan && !hastNextSibling))) {
+						console.log('Inserting second br');
 
-					if (needsSecondBr) {
 						const br2 = document.createElement('br');
-						br1.parentNode!.insertBefore(br2, br1.nextSibling);
-
-						// Position cursor between the two brs
-						const newRange = document.createRange();
-						newRange.setStartAfter(br1);
-						newRange.collapse(true);
-
-						selection.removeAllRanges();
-						selection.addRange(newRange);
-					} else {
-						// Single br is fine, position after it
-						const newRange = document.createRange();
-						newRange.setStartAfter(br1);
-						newRange.collapse(true);
-
-						selection.removeAllRanges();
-						selection.addRange(newRange);
+						br2.setAttribute('id', 'br2');
+						range.insertNode(br2);
 					}
+
+					const newRange = document.createRange();
+					if (isSpan && atNodeEnd && node.nextSibling) newRange.setStartBefore(br1);
+					else newRange.setStartAfter(br1);
+					newRange.collapse(true);
+
+					selection.removeAllRanges();
+					selection.addRange(newRange);
+
+					br1.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 				}
 
 				const newText = htmlToText(contentEditableDiv);
@@ -205,7 +246,6 @@
 
 				return;
 			}
-			// ... rest of your code
 		}
 		onKeydown?.(event);
 	}
@@ -216,7 +256,7 @@
 
 	function handleCompositionEnd() {
 		isComposing = false;
-		// Trigger input handling after composition ends
+
 		tick().then(() => {
 			if (contentEditableDiv) {
 				handleInput(new Event('input', { bubbles: true }));
@@ -281,23 +321,22 @@
 			selection.addRange(range);
 		}
 
-		value = htmlToText(contentEditableDiv);
+		internalValue = htmlToText(contentEditableDiv);
+		value = internalValue;
 		onInput?.(new Event('input', { bubbles: true }));
 	}
 
-	// Focus method for external access
 	export function focus() {
 		contentEditableDiv?.focus();
 	}
 
-	// Blur method for external access
 	export function blur() {
 		contentEditableDiv?.blur();
 	}
 
 	onMount(() => {
-		if (contentEditableDiv && value) {
-			contentEditableDiv.innerHTML = textToHtml(value);
+		if (contentEditableDiv && internalValue) {
+			contentEditableDiv.innerHTML = textToHtml(internalValue);
 		}
 	});
 </script>
@@ -314,7 +353,7 @@
 	inputmode="text"
 	style:max-height={maxHeight}
 	style:min-height={minHeight}
-	class="frosted-glass no-scrollbar flex-1 resize-none overflow-y-auto rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white placeholder:text-gray-300 empty:before:text-gray-300 empty:before:content-[attr(aria-placeholder)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+	class="no-scrollbar flex-1 resize-none overflow-y-auto rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white frosted-glass placeholder:text-gray-300 empty:before:text-gray-300 empty:before:content-[attr(aria-placeholder)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
 	class:cursor-not-allowed={disabled}
 	oninput={handleInput}
 	onkeydown={handleKeyDown}

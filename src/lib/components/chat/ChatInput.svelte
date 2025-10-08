@@ -17,12 +17,19 @@
 	import { goto } from '$app/navigation';
 	import StickerPicker from './StickerPicker.svelte';
 	import { t } from 'svelte-i18n';
+	import { checkIfTouchDevice } from '$lib/utils/device';
 
 	let {
 		inputField = $bindable<CustomTextarea>()
 	}: {
 		inputField: CustomTextarea;
 	} = $props();
+
+	let isMobile = $state(false);
+
+	onMount(() => {
+		isMobile = checkIfTouchDevice();
+	});
 
 	export function replyToMessage(message: MessageWithRelations): void {
 		if (uploadingFile) return;
@@ -77,9 +84,15 @@
 
 	async function saveDraft(): Promise<void> {
 		if (!chatStore.activeChat) return;
+		const trimmedChatValue = chatValue.trim();
+		if (!trimmedChatValue) {
+			await clearDraft();
+			return;
+		}
+		console.log('draft saved:', JSON.stringify(trimmedChatValue));
 		await idb!.put(
 			'draftMessages',
-			{ chatId: chatStore.activeChat.id, message: chatValue },
+			{ chatId: chatStore.activeChat.id, message: trimmedChatValue },
 			chatStore.activeChat.id
 		);
 	}
@@ -93,7 +106,11 @@
 		if (!chatStore.activeChat) return null;
 		let result = await idb!.get('draftMessages', chatStore.activeChat.id);
 		if (!result) return null;
-		return result.message;
+		console.log('draft:', JSON.stringify(result.message));
+		const message = result.message;
+		const trimmedMessage = message.trim();
+		if (trimmedMessage === '') return null;
+		return trimmedMessage;
 	}
 
 	function openFileSelector(): void {
@@ -303,7 +320,8 @@
 
 	function handleKeydown(event: KeyboardEvent): void {
 		if (uploadingFile) return;
-		if (event.key === 'Enter' && !event.shiftKey) {
+		console.log('keydown send, mobile:', isMobile);
+		if (event.key === 'Enter' && !event.shiftKey && !isMobile) {
 			event.preventDefault();
 			sendMessage();
 		}
@@ -592,11 +610,12 @@
 	<CustomTextarea
 		bind:value={chatValue}
 		bind:this={inputField}
+		{isMobile}
 		onInput={handleInput}
 		onKeydown={handleKeydown}
 		onFileSelected={(file) => handleFileSelect(file, true)}
 		placeholder={$t('chat.chat-input.placeholder')}
-		disabled={false}
+		disabled={!chatStore.activeChat}
 	/>
 
 	<button
