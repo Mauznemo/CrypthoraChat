@@ -57,7 +57,7 @@
 		chatStore.user = data.user;
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		const wasConnected = socketStore.connected;
+		// const wasConnected = socketStore.connected;
 
 		await checkForMasterKey();
 
@@ -67,10 +67,18 @@
 
 		initializePushNotifications();
 
-		if (wasConnected) {
-			handleConnect();
-		}
+		// if (wasConnected) {
+		// 	handleConnect();
+		// }
 
+		subscribeToSocketEvents();
+	});
+
+	onDestroy(() => {
+		unsubscribeFromSocketEvents();
+	});
+
+	function subscribeToSocketEvents() {
 		socketStore.onNewMessage((m) => {
 			messages.handleNewMessage(m);
 			if (m.senderId === data?.user?.id) chatStore.scrollView?.lockToBottom();
@@ -124,11 +132,9 @@
 			modalStore.error(error.error);
 			console.error('Socket error:', error);
 		});
-	});
+	}
 
-	onDestroy(() => {
-		//document.removeEventListener('visibilitychange', handleVisibilityChange);
-
+	function unsubscribeFromSocketEvents() {
 		if (chatStore.activeChat) {
 			socketStore.leaveChat(chatStore.activeChat.id);
 		}
@@ -139,16 +145,14 @@
 		socketStore.off('messages-read');
 		socketStore.off('new-chat', chats.handleAddedToChatChat);
 		socketStore.off('removed-from-chat', chats.handleRemovedFromChat);
-		socketStore.off('reconnect', handleConnect);
+		socketStore.off('connect', handleConnect);
 		socketStore.off('new-system-message');
 		socketStore.off('requested-user-verify');
 		socketStore.off('chat-users-updated');
 		socketStore.off('chat-updated');
 		socketStore.off('key-rotated', chats.handleKeyRotated);
 		socketStore.off('message-error');
-
-		//socketStore.disconnect();
-	});
+	}
 
 	function handleVisibilityChange(): void {
 		if (!document.hidden && data.user?.id) {
@@ -211,10 +215,20 @@
 	}
 
 	if (browser) {
-		window.disconnectSocket = () => socketStore.disconnect();
+		window.disconnectSocket = () => {
+			if (document.hidden) {
+				console.log('Disconnecting socket because window is hidden');
+				socketStore.disconnect();
+				unsubscribeFromSocketEvents();
+			} else {
+				console.log('Not disconnecting socket because window is not hidden');
+			}
+		};
 		window.connectSocket = () => {
+			if (socketStore.connected) return;
 			socketStore.connect();
-			handleConnect();
+			subscribeToSocketEvents();
+			// handleConnect();
 		};
 	}
 </script>
