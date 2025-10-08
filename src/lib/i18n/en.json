@@ -225,7 +225,8 @@
       "appearance": "Appearance",
       "sessions": "Sessions",
       "storage": "Storage",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "open-wrapper-settings": "Wrapper Settings"
     },
     "appearance": {
       "accent-color": "Accent Color",

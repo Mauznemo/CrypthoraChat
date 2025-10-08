@@ -225,7 +225,8 @@
       "advanced": "Erweiterte",
       "appearance": "Aussehen",
       "sessions": "Sitzungen",
-      "storage": "Speicher"
+      "storage": "Speicher",
+      "open-wrapper-settings": "Wrapper-Einstellungen"
     },
     "advanced": {
       "clear-cache": "Caches löschen",
