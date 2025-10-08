@@ -229,19 +229,23 @@
 	}
 
 	function initEmoji() {
-		if (onboardingStore.showBackupMasterKeyNotice) {
-			onboardingStore.disableBackupMasterKeyNotice();
-
-			modalStore.alert(
-				$t('utils.key-sharer.backup-master-key-notice-title'),
-				$t('utils.key-sharer.backup-master-key-notice-content'),
-				{ dismissible: false }
-			);
-		}
 		shareMode = 'emojiSequence';
 		emojiSequence = [];
 		inputIndex = 0;
 		mode = keySharerStore.base64Seed ? 'display' : 'input';
+
+		if (mode === 'display') {
+			if (onboardingStore.showBackupMasterKeyNotice) {
+				onboardingStore.disableBackupMasterKeyNotice();
+
+				modalStore.alert(
+					$t('utils.key-sharer.backup-master-key-notice-title'),
+					$t('utils.key-sharer.backup-master-key-notice-content'),
+					{ dismissible: false }
+				);
+			}
+		}
+
 		if (keySharerStore.base64Seed) base64Seed = keySharerStore.base64Seed;
 		if (mode === 'display' && base64Seed) {
 			updateEmojiDisplay(base64Seed);
@@ -277,7 +281,7 @@
 				{
 					text: $t('utils.key-sharer.qr-code'),
 					variant: 'primary',
-					disabled: onboardingStore.showBackupMasterKeyNotice,
+					disabled: onboardingStore.showBackupMasterKeyNotice && !!keySharerStore.base64Seed,
 					onClick: () => {
 						initQrCode();
 					}
@@ -285,7 +289,7 @@
 				{
 					text: $t('utils.key-sharer.emoji-sequence'),
 					variant: 'primary',
-					outlined: onboardingStore.showBackupMasterKeyNotice,
+					outlined: onboardingStore.showBackupMasterKeyNotice && !!keySharerStore.base64Seed,
 					onClick: () => {
 						initEmoji();
 					}
