@@ -358,7 +358,7 @@
 
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
-				class="message-wrapper relative max-w-full pl-6"
+				class="message-wrapper relative max-w-full"
 				data-message-id={message.id}
 				onmouseleave={handleMessageLeave}
 				ontouchend={(e) => handleTouchEnd(e, message, isFromMe)}
