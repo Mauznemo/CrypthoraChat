@@ -1,4 +1,11 @@
 export function getDeviceInfo() {
+	if (window.isFlutterWebView) {
+		return {
+			os: 'Mobile',
+			browser: 'Wrapper App'
+		};
+	}
+
 	const ua = navigator.userAgent;
 	const userAgentData = (navigator as any).userAgentData;
 
