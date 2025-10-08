@@ -392,7 +392,7 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="text-center text-xs text-gray-400">
+			<div class="text-center text-sm text-gray-400 md:text-xs">
 				<p>{message.content}</p>
 			</div>
 		{/if}
