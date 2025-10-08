@@ -5,6 +5,7 @@
 	import type { Snippet } from 'svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
+	import { version } from '$app/environment';
 
 	let {
 		children
@@ -52,6 +53,7 @@
 		{/if}
 	</button>
 	{@render children()}
+	<p class="absolute bottom-2 w-full text-center text-sm text-gray-500">Version {version}</p>
 </div>
 
 <!-- Backdrop for mobile -->

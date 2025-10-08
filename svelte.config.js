@@ -1,5 +1,8 @@
 import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import fs from 'fs';
+
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -8,6 +11,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter(),
+		version: {
+			name: pkg.version
+		},
 		experimental: {
 			remoteFunctions: true
 		},
