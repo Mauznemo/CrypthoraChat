@@ -53,7 +53,9 @@
 		{/if}
 	</button>
 	{@render children()}
-	<p class="absolute bottom-2 w-full text-center text-sm text-gray-500">Version {version}</p>
+	<p class="pointer-events-none absolute bottom-2 w-full text-center text-sm text-gray-500">
+		Version {version}
+	</p>
 </div>
 
 <!-- Backdrop for mobile -->
