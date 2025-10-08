@@ -11,6 +11,9 @@
 
 	let color = $state(initialColor);
 	let isOpen = $state(false);
+	let buttonElement: HTMLButtonElement | null = $state(null);
+	let popupElement: HTMLDivElement | null = $state(null);
+	let popupPosition = $state({ top: 0, left: 0, right: 'auto' });
 
 	const presetColors = [
 		'#f54a00', // Orange
@@ -52,6 +55,48 @@
 		color = newColor;
 	}
 
+	function calculatePosition() {
+		if (!buttonElement || !popupElement) return;
+
+		const buttonRect = buttonElement.getBoundingClientRect();
+		const popupRect = popupElement.getBoundingClientRect();
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+
+		let top = buttonRect.bottom + 8;
+		let left = buttonRect.left;
+
+		if (top + popupRect.height > viewportHeight) {
+			top = buttonRect.top - popupRect.height - 8;
+		}
+
+		if (left + popupRect.width > viewportWidth) {
+			left = viewportWidth - popupRect.width - 16;
+		}
+
+		if (left < 16) {
+			left = 16;
+		}
+
+		if (top < 16) {
+			top = 16;
+		}
+
+		popupPosition = { top, left, right: 'auto' };
+	}
+
+	$effect(() => {
+		if (isOpen && buttonElement && popupElement) {
+			calculatePosition();
+			window.addEventListener('resize', calculatePosition);
+			window.addEventListener('scroll', calculatePosition);
+			return () => {
+				window.removeEventListener('resize', calculatePosition);
+				window.removeEventListener('scroll', calculatePosition);
+			};
+		}
+	});
+
 	function handleInput(e: Event) {
 		const target = e.target as HTMLInputElement;
 		const value = target.value;
@@ -65,6 +110,7 @@
 
 <div class="relative inline-block">
 	<button
+		bind:this={buttonElement}
 		onclick={() => (isOpen = !isOpen)}
 		class="flex items-center gap-3 rounded-full border-2 bg-gray-800/60 p-6 px-4 py-2 pl-2 shadow-sm frosted-glass transition-colors hover:border-gray-400"
 	>
@@ -85,7 +131,9 @@
 
 	{#if isOpen}
 		<div
-			class="absolute z-50 mt-2 min-w-[280px] rounded-4xl border bg-gray-800/60 p-4 frosted-glass-shadow"
+			bind:this={popupElement}
+			class="fixed z-50 min-w-[280px] rounded-4xl border bg-gray-800/60 p-4 frosted-glass-shadow"
+			style="top: {popupPosition.top}px; left: {popupPosition.left}px;"
 		>
 			<div class="mb-4">
 				<button
