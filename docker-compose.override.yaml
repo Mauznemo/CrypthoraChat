@@ -1,10 +1,10 @@
 services:
   crypthora-chat:
     ports:
-      - '3000:3000'
+      - "3000:3000"
   postgres:
     ports:
-      - '5432:5432'
+      - "5432:5432"
   ntfy:
     ports:
-      - '8080:80'
+      - "8181:80"
