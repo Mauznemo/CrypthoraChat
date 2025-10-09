@@ -1,7 +1,7 @@
 # CrypthoraChat
 CrypthoraChat is an open-source, self-hostable, cross-platform E2EE chat app that gives you full control over your own messages.
 It can be used as an PWA (Progressive Web App) or on Android with a [wrapper app](https://github.com/Mauznemo/CrypthoraChatWrapper)
-CrypthoraChat is meant for family and friends, if you want to chat with multiple people on different servers, the Android wrapper will support easy switching.
+CrypthoraChat is meant for family and friends, so it does not have cross-server support (if you want to chat with people on different servers, the Android wrapper will support easy switching.)
 
 If you need help with anything you can join my [Discord Server](https://discord.gg/GshuXQjv9H)
 
@@ -16,34 +16,32 @@ If you need help with anything you can join my [Discord Server](https://discord.
 ## Features
 ### Current
 - User registration/login (with admin dashboard to add allowed usernames)
-- Realtime chat with editing, deleting, message reactions, replying and basic markdown support in groups or dms
+- Realtime chat with editing, deleting, message reactions, replying, basic markdown support and file uploads in groups or dms
+- Sticker picker and creator (with importer from apps like WhatsApp)
 - Message read receipts
 - Push notifications even if the app is closed*
+- Customizable colors and background
 - Verifying others with an emoji sequence
 - Multi device support without re-verifying (with a master key)
+- Session view to log out other devices
 - Manual chat key rotation
+- Localization (English and German) 
 
 <sub>*If the PWA is installed directly, Android devices will go into a deep idle mode after 30 min of inactivity and notifications will stop going through until the phone is unlocked again. You need to use the wrapper app to always get notifications. IOS might have a similar problem, but this is not as easy to fix.</sub>
 
 ### Planned
-- Sticker picker and creator
-- File upload (backend is already done)
-- Gif picker
-- Add localization (German) 
-- Customizable colors and background
-- Option to disable blur effects for old low end devices
-- Automatic chat key rotation
 - More markdown support
 - Voice Messages
-- Session view to log out other devices
-- Some other small things
+- Option to disable blur effects for old low end devices
+- Automatic chat key rotation
+- Gif picker
 
 
 ## About
 ### Why I made this
 If you are reading this you probably heard of the EUs plans to scan every message, even in E2EE apps, client side (Chat Control) and I like many others am not a big fan of that.
 At first I tied [matrix](https://matrix.org/) with Element X, but it is a bit complex to use in some areas (especially for some people in my family), behaves a bit weird sometimes, push notifications where unreliable sometimes, but mainly it is missing some features my friends and I use a lot (like stickers and an in app gif picker).
-I was also scared that if the law goes though the matrix client apps might get taken down (especially a problem for IOS users), this problem does not exist with my PWA approach since it is just a website on your domain or even just local network.
+I was also scared that if the law goes though the matrix client apps might get taken down (and yes for Android you could just build the APK, but for IOS users this is a bigger problem), this problem does not exist with my PWA approach since it is just a website on your domain or even just local network.
 
 ### What's Encrypted
 - Messages: All text messages, images, reactions and files sent between users are end-to-end encrypted
