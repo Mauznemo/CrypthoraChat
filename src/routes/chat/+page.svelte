@@ -58,7 +58,7 @@
 		chatStore.user = data.user;
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		// const wasConnected = socketStore.connected;
+		const wasConnected = socketStore.connected;
 
 		await checkForMasterKey();
 
@@ -68,9 +68,9 @@
 
 		initializePushNotifications();
 
-		// if (wasConnected) {
-		// 	handleConnect();
-		// }
+		if (wasConnected) {
+			handleConnect();
+		}
 
 		subscribeToSocketEvents();
 	});
