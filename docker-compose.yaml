@@ -3,10 +3,7 @@ name: crypthora_chat
 services:
   # CrypthoraChat
   crypthora-chat:
-    # TODO: replace with own image (gh actions ghcr.io)
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/Mauznemo/CrypthoraChat:latest
     container_name: crypthora_chat_web
     restart: unless-stopped
     environment:
@@ -20,9 +17,8 @@ services:
       - PROFILE_PIC_KEY=${PROFILE_PIC_KEY}
       - BODY_SIZE_LIMIT=1073741824
       - UPLOAD_SIZE_LIMIT=${UPLOAD_SIZE_LIMIT:-104857600}
-      - HOST_UPLOAD_DIR=${HOST_UPLOAD_DIR:-app_uploads}
     volumes:
-      - ${HOST_UPLOAD_DIR}:/uploads
+      - app_uploads:/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,9 +35,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_HOST_DATA_DIR=${POSTGRES_HOST_DATA_DIR:-postgres_data}
     volumes:
-      - ${POSTGRES_HOST_DATA_DIR}:/var/lib/postgresql/data/pgdata
+      - postgres_data:/var/lib/postgresql/data/pgdata
     healthcheck:
       test:
         [
@@ -65,10 +60,9 @@ services:
       - NTFY_LISTEN_HTTP=:80
       - NTFY_CACHE_FILE=/var/cache/ntfy/cache.db
       - NTFY_ATTACHMENT_CACHE_DIR=/var/cache/ntfy/attachments
-      - NTFY_HOST_DIR=${NTFY_HOST_DIR:-ntfy_data}
     volumes:
-      - ${NTFY_HOST_DIR}/data:/var/cache/ntfy
-      - ${NTFY_HOST_DIR}/config:/etc/ntfy
+      - ntfy_data:/var/cache/ntfy
+      - ntfy_config:/etc/ntfy
     healthcheck:
       test:
         [
