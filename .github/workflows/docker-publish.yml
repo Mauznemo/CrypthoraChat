@@ -33,5 +33,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/Mauznemo/crypthora-chat:latest
-            ghcr.io/Mauznemo/crypthora-chat:${{ env.VERSION }}
+            ghcr.io/mauznemo/crypthora-chat:latest
+            ghcr.io/mauznemo/crypthora-chat:${{ env.VERSION }}
