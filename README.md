@@ -43,6 +43,10 @@ If you are reading this you probably heard of the EUs plans to scan every messag
 At first I tied [matrix](https://matrix.org/) with Element X, but it is a bit complex to use in some areas (especially for some people in my family), behaves a bit weird sometimes, push notifications where unreliable sometimes, but mainly it is missing some features my friends and I use a lot (like stickers and an in app gif picker).
 I was also scared that if the law goes though the matrix client apps might get taken down (and yes for Android you could just build the APK, but for IOS users this is a bigger problem), this problem does not exist with my PWA approach since it is just a website on your domain or even just local network.
 
+## Installation
+First you need to host CrypthoraChat on a server: [Getting started hosting](#getting-started-hosting)
+If you have done this there are a lot of ways to install/use the clint on your devices, have a look at [this](INSTALLATION.md).
+
 ### What's Encrypted
 - Messages: All text messages, images, reactions and files sent between users are end-to-end encrypted
 - User profile pictures and group images are encrypted server-side (Not E2EE) for storage on disk
@@ -72,8 +76,11 @@ When a group is created, a unique, key is generated. This key is used to encrypt
 - **On-Device Key Storage:** To support multi-device setups, a 16-byte seed (128-bit entropy) is stored in the browser's IndexedDB. This seed is used to derive a master key, which then encrypts all chat keys before they are stored in the database.
 
 
-## Getting started
+## Getting started hosting
 CrypthoraChat comes with a `docker-compose.yaml` file meaning you can simply deploy it almost everywhere or test locally.
+
+> [!IMPORTANT]
+> For anything else than testing locally you must use `https` (TLS), or else some needed browser crypto functions arn't available!
 
 ### Running locally
 1. Create a `.env` file and copy the content from `.env.example` and fill it all out
