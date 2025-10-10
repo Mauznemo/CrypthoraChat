@@ -28,7 +28,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
-	import { getSafeAreaPadding } from '$lib/utils/device';
+	import { getDeviceInfo, getSafeAreaPadding } from '$lib/utils/device';
 
 	let { data }: PageProps = $props();
 
@@ -251,14 +251,14 @@
 	</SideBar>
 
 	<div
-		style="padding-top: {getSafeAreaPadding().top}px; padding-bottom: {getSafeAreaPadding()
-			.bottom}px;"
+		style="padding-top: {getSafeAreaPadding().top}px; padding-bottom: {getSafeAreaPadding().bottom +
+			8}px;"
 		class="flex min-w-0 flex-1 flex-col p-2"
 	>
 		<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">
 			<!-- Menu button - only shown on mobile -->
 			<button
-				class="flex h-12 w-12 items-center justify-center rounded-full hover:bg-gray-700 md:hidden"
+				class="flex h-12 w-12 items-center justify-center rounded-full pt-1 text-3xl hover:bg-gray-700 md:hidden"
 				onclick={sideBar.toggle}
 			>
 				☰
