@@ -1,7 +1,7 @@
 {
 	"name": "crypthorachat",
 	"private": true,
-	"version": "0.0.1-alpha.1",
+	"version": "0.0.1-alpha.2",
 	"type": "module",
 	"main": "server/index.js",
 	"engines": {

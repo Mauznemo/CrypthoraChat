@@ -3,7 +3,7 @@ name: crypthora_chat
 services:
   # CrypthoraChat
   crypthora-chat:
-    image: ghcr.io/Mauznemo/CrypthoraChat:latest
+    image: ghcr.io/Mauznemo/crypthora-chat:latest
     container_name: crypthora_chat_web
     restart: unless-stopped
     environment:
