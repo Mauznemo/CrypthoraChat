@@ -18,6 +18,7 @@ RUN npx svelte-kit sync
 
 # Build the application
 ENV DATABASE_URL="postgresql://placeholder"
+ENV PUBLIC_VAPID_KEY="placeholder"
 RUN npx prisma generate
 RUN npm run build
 
