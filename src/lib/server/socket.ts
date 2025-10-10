@@ -353,6 +353,7 @@ export async function initializeSocket(server: HTTPServer) {
 							groupType: newMessage.chat.type === 'group' ? 'group' : 'dm',
 							username: newMessage.user.username,
 							chatId: newMessage.chat.id,
+							timestamp: newMessage.timestamp.getTime(),
 							chatName: newMessage.chat.name || undefined
 						};
 

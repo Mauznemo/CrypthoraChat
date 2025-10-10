@@ -2,6 +2,7 @@ export interface NotificationDate {
 	groupType: 'dm' | 'group';
 	username: string;
 	chatId: string;
+	timestamp: number;
 	chatName?: string;
 }
 
