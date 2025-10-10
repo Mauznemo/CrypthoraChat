@@ -1,5 +1,9 @@
 import { themeStore } from '$lib/stores/theme.svelte';
 import '$lib/i18n';
+import { waitLocale } from 'svelte-i18n';
 
-console.log('[layout.svelte] Client hooks loaded');
+console.log('Client hooks loaded');
 themeStore.loadTheme();
+
+await waitLocale();
+console.log('i18n initialized');
