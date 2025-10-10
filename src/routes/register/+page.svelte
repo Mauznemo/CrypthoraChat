@@ -7,6 +7,7 @@
 	import { register } from './data.remote';
 	import { getDeviceInfo } from '$lib/utils/device';
 	import { t } from 'svelte-i18n';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
@@ -19,6 +20,11 @@
 			goto('/profile');
 		}
 	});
+
+	onMount(() => {
+		const deviceInfo = getDeviceInfo();
+		register.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
+	});
 </script>
 
 <div class="flex min-h-dvh items-center justify-center">
@@ -28,8 +34,6 @@
 		<form
 			{...register.enhance(async ({ form, data, submit }) => {
 				try {
-					const deviceInfo = getDeviceInfo();
-					register.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
 					redirectToProfile = false;
 					localStorage.clear();
 					await deleteDatabase();

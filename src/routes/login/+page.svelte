@@ -5,6 +5,7 @@
 	import { deleteDatabase } from '$lib/idb';
 	import { getDeviceInfo } from '$lib/utils/device';
 	import { t } from 'svelte-i18n';
+	import { onMount, tick } from 'svelte';
 
 	let { data } = $props();
 
@@ -16,6 +17,11 @@
 			goto('/profile');
 		}
 	});
+
+	onMount(() => {
+		const deviceInfo = getDeviceInfo();
+		login.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
+	});
 </script>
 
 <div class="flex min-h-dvh items-center justify-center">
@@ -25,8 +31,6 @@
 		<form
 			{...login.enhance(async ({ form, data, submit }) => {
 				try {
-					const deviceInfo = getDeviceInfo();
-					login.fields.deviceOs.set(`${deviceInfo.browser} on ${deviceInfo.os}`);
 					await deleteDatabase();
 					await submit();
 					if ((login.fields.allIssues()?.length ?? 0) === 0) {
