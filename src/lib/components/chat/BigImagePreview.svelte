@@ -132,20 +132,22 @@
 				</button>
 			</div>
 			<div
-				class="w-[min(60dvh, 100%)] flex max-h-[90dvh] min-h-[60dvh] items-center justify-center overflow-hidden rounded-xl"
+				class="flex max-h-[90dvh] min-h-[80dvh] min-w-[90dvw] items-center justify-center overflow-hidden rounded-xl md:min-w-[60dvw]"
 			>
-				<img
-					bind:this={imgElement}
-					src={imagePreviewStore.src}
-					alt="Preview"
-					class="max-h-[88dvh] max-w-full rounded-xl object-contain select-none"
-					style="transform: scale({zoom}) translate({translateX}px, {translateY}px); transform-origin: center center; cursor: {zoom >
-					MIN_ZOOM
-						? 'grab'
-						: 'default'}; will-change: transform;"
-					onpointerdown={handlePointerDown}
-					draggable="false"
-				/>
+				{#key Math.round(zoom * 10)}
+					<img
+						bind:this={imgElement}
+						src={imagePreviewStore.src}
+						alt="Preview"
+						class="max-h-[88dvh] max-w-full rounded-xl object-contain select-none"
+						style="transform: scale({zoom}) translate({translateX}px, {translateY}px); transform-origin: center center; cursor: {zoom >
+						MIN_ZOOM
+							? 'grab'
+							: 'default'}; will-change: transform;"
+						onpointerdown={handlePointerDown}
+						draggable="false"
+					/>
+				{/key}
 			</div>
 		</div>
 	</div>
