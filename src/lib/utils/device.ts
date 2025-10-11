@@ -1,3 +1,7 @@
+import { modalStore } from '$lib/stores/modal.svelte';
+import { t } from 'svelte-i18n';
+import { get } from 'svelte/store';
+
 export function getDeviceInfo() {
 	if (window.isFlutterWebView) {
 		return {
@@ -57,4 +61,57 @@ export function getSafeAreaPadding(): { top: number; bottom: number; left: numbe
 		left: 0,
 		right: 0
 	};
+}
+
+export function checkWrapperVersion() {
+	if (!window.wrapperVersion) {
+		return;
+	}
+
+	fetch('https://api.github.com/repos/Mauznemo/CrypthoraChatWrapper/releases/latest')
+		.then((response) => {
+			if (!response.ok) {
+				console.error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then((data) => {
+			const latestVersion = data.tag_name.replace('v', '');
+
+			if (window.wrapperVersion !== latestVersion) {
+				if (localStorage.getItem('ignoreWrapperUpdate') === latestVersion) {
+					console.log('Ignoring wrapper update');
+					return;
+				}
+
+				modalStore.open({
+					title: get(t)('app.wrapper.update-available'),
+					content: get(t)('app.wrapper.update-available-content', {
+						values: { newVersion: latestVersion, currentVersion: window.wrapperVersion }
+					}),
+					buttons: [
+						{
+							text: get(t)('common.download'),
+							variant: 'primary',
+							onClick: () => {
+								window.open(
+									'https://github.com/Mauznemo/CrypthoraChatWrapper/releases/latest',
+									'_blank'
+								);
+							}
+						},
+						{
+							text: get(t)('common.ignore'),
+							variant: 'secondary',
+							onClick: () => {
+								localStorage.setItem('ignoreWrapperUpdate', latestVersion);
+							}
+						}
+					]
+				});
+			}
+		})
+		.catch((error) => {
+			console.error('Could not fetch latest release:', error);
+		});
 }

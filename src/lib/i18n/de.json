@@ -13,7 +13,8 @@
     "done": "Fertig",
     "delete": "Löschen",
     "warning": "Warnung",
-    "success": "Erfolg"
+    "success": "Erfolg",
+    "ignore": "Ignorieren"
   },
   "chat": {
     "add-reaction": "Reaktion hinzufügen",
@@ -354,5 +355,11 @@
   "notifications": {
     "new-message-dm": "Neue Nachricht von {username}",
     "new-message-group": "Neue Nachricht von {username} in {chatName}"
+  },
+  "app": {
+    "wrapper": {
+      "update-available": "Wrapper-Update verfügbar",
+      "update-available-content": "Neue Version {newVersion}, installierte Version {currentVersion}"
+    }
   }
 }

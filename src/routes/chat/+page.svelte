@@ -28,7 +28,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
-	import { getDeviceInfo, getSafeAreaPadding } from '$lib/utils/device';
+	import { checkWrapperVersion, getDeviceInfo, getSafeAreaPadding } from '$lib/utils/device';
 
 	let { data }: PageProps = $props();
 
@@ -63,6 +63,8 @@
 		await checkForMasterKey();
 
 		await checkPublicKey();
+
+		checkWrapperVersion();
 
 		socketStore.connect();
 

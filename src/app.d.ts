@@ -20,6 +20,7 @@ declare global {
 	}
 	interface Window {
 		isFlutterWebView?: boolean;
+		wrapperVersion?: string;
 		flutter_inappwebview?: any;
 		ntfyTopic?: string;
 		flutterSafeAreaInsets?: { top: number; bottom: number, left: number, right: number };

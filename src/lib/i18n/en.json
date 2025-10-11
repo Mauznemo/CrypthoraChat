@@ -13,7 +13,8 @@
     "done": "Done",
     "delete": "Delete",
     "warning": "Warning",
-    "success": "Success"
+    "success": "Success",
+    "ignore": "Ignore"
   },
   "chat": {
     "loading-older": "Loading older messages...",
@@ -354,5 +355,11 @@
   "notifications": {
     "new-message-group": "New Message from {username} in {chatName}",
     "new-message-dm": "New Message from {username}"
+  },
+  "app": {
+    "wrapper": {
+      "update-available": "Wrapper update available",
+      "update-available-content": "New version {newVersion}, installed version {currentVersion}"
+    }
   }
 }
