@@ -45,12 +45,15 @@
 		{/if}
 	</button>
 	{@render children()}
-	<p
+	<div
 		style="bottom: {getSafeAreaPadding().bottom + 8}px;"
 		class="pointer-events-none absolute w-full text-center text-sm text-gray-500"
 	>
-		Version {version}
-	</p>
+		<p>Version {version}</p>
+		{#if window.wrapperVersion}
+			<p>Wrapper Version {window.wrapperVersion}</p>
+		{/if}
+	</div>
 </div>
 
 <!-- Backdrop for mobile -->
