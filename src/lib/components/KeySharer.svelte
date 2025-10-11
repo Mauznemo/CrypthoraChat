@@ -112,6 +112,10 @@
 
 		const tempBytes = new Uint8Array(base64ToArrayBuffer(base64));
 
+		if (tempBytes.length !== 16) {
+			throw new Error('Invalid base64 length. Must be exactly 16 bytes.');
+		}
+
 		const dateSalt = getDateSalt();
 		const saltArray = new Uint8Array(dateSalt);
 		console.log('Date salt:', arrayBufferToBase64(saltArray.buffer));
@@ -218,7 +222,35 @@
 				qrbox: 250
 			},
 			async (decodedText) => {
-				const seed = await base64WithDateSaltToSeed(decodedText);
+				let seed: string;
+				try {
+					seed = await base64WithDateSaltToSeed(decodedText);
+				} catch (error) {
+					qrScanner.pause(false);
+					modalStore.open({
+						title: $t('utils.key-sharer.invalid'),
+						content: $t('utils.key-sharer.invalid-qr-code'),
+						buttons: [
+							{
+								text: $t('common.close'),
+								variant: 'secondary',
+								onClick: () => {
+									qrScanner.stop();
+									close();
+								}
+							},
+							{
+								text: $t('common.retry'),
+								variant: 'primary',
+								onClick: () => {
+									qrScanner.resume();
+								}
+							}
+						]
+					});
+
+					return;
+				}
 				toastStore.success($t('utils.key-sharer.key-imported-successfully'));
 				keySharerStore.onDone?.(seed);
 				close();

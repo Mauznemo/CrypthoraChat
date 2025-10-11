@@ -14,7 +14,9 @@
     "delete": "Löschen",
     "warning": "Warnung",
     "success": "Erfolg",
-    "ignore": "Ignorieren"
+    "ignore": "Ignorieren",
+    "close": "Schließen",
+    "retry": "Wiederholen"
   },
   "chat": {
     "add-reaction": "Reaktion hinzufügen",
@@ -173,10 +175,10 @@
     "key-pair": {
       "failed-to-get-public-key": "Fehler beim holen des öffentlichen Schlüssels:",
       "public-key-integrity-error": "Öffentliche Schlüsselintegritätsprüfung ist fehlgeschlagen!\nIhr öffentlicher Schlüssel, der in der Datenbank gespeichert ist, stimmt nicht mehr mit dem von Ihrem Gerät generierten überein.\nEntweder ist der Master-Schlüssel auf diesem Gerät falsch, etwas ist beschädigt oder jemand hat die Datenbank manipuliert.",
-      "re-generate-key-pair": "Öffentlichen Schlüssel neu generieren",
+      "re-generate-key-pair": "Neu generieren",
       "re-generate-key-pair-confirm": "Nachdem Sie Ihren öffentlichen Schlüssel neu generiert haben, müssen Sie beim erstellen eines neuen Chats den anderen Benutzern erneut verifizieren.",
       "re-generate-key-pair-success": "Ihr Schlüsselpaar wurde regeneriert.\nWenn Sie einen neuen Chat erstellen oder einem beitreten, müssen Sie die anderen Benutzern erneut verifizieren.",
-      "re-import-master-key": "Master-Schlüssel neu eingeben"
+      "re-import-master-key": "Master-Schlüssel neu importieren"
     },
     "emoji-verification": {
       "failed-to-verify-user": "Fehler beim verifiziern des Benutzers",
@@ -316,7 +318,9 @@
       "select-mode-export-content": "Was möchten Sie den Schlüssel exportieren/anzeigen?",
       "select-mode-import-content": "Was möchten Sie den Schlüssel importieren?",
       "backup-master-key-notice-content": "Bitte sichern Sie Ihren Master-Schlüssels, indem Sie die Emoji-Namen aufschreiben oder über einen anderen sicheren Weg.\nWenn Sie diesen Schlüssel verlieren, verlieren Sie auch den Zugriff auf alle Nachrichten!",
-      "backup-master-key-notice-title": "Master-Schlüssel sichern!"
+      "backup-master-key-notice-title": "Master-Schlüssel sichern!",
+      "invalid": "Ungültig",
+      "invalid-qr-code": "Der von Ihnen gescannte QR-Code ist ungültig"
     }
   },
   "login": {
