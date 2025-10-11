@@ -34,6 +34,9 @@
 		<form
 			{...register.enhance(async ({ form, data, submit }) => {
 				try {
+					if (window.isFlutterWebView) {
+						await window.flutter_inappwebview.callHandler('regenerateNtfyTopic');
+					}
 					redirectToProfile = false;
 					localStorage.clear();
 					await deleteDatabase();

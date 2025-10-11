@@ -53,6 +53,9 @@ export const logoutSession = command(v.string(), async (sessionId: string) => {
 		await db.session.delete({
 			where: { id: sessionId }
 		});
+		await db.notificationSubscription.deleteMany({
+			where: { sessionId }
+		});
 	} catch (err) {
 		error(500, 'Something went wrong');
 	}

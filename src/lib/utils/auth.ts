@@ -68,6 +68,10 @@ export async function validateSession(sessionId: string) {
 
 export async function deleteSession(sessionId: string) {
 	await db.session.delete({ where: { id: sessionId } });
+
+	try {
+		await db.notificationSubscription.deleteMany({ where: { sessionId } });
+	} catch (e) {}
 }
 
 // Helper function to format validation errors
