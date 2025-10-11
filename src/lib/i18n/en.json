@@ -42,7 +42,8 @@
       "loading-audio": "Loading audio {size}",
       "decrypt-failed-audio": "Failed to decrypt audio",
       "ignore-limit": "Download and load preview",
-      "add-to-my-stickers": "Add to my stickers"
+      "add-to-my-stickers": "Add to my stickers",
+      "corrupted-file": "(Corrupted)"
     },
     "chat-list": {
       "new-chat": "+ New Chat",

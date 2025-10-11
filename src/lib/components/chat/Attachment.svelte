@@ -36,6 +36,8 @@
 
 	let downloadingFile = $state(false);
 
+	let corruptedFile = $state(false);
+
 	let previewDimensions: { width: number; height: number } | null = $state(null);
 
 	onMount(() => {
@@ -110,7 +112,16 @@
 			if (!result.success) return;
 			blob = await decryptFile(result.encodedData!, keyVersion);
 			console.log('decryptFile');
-			previewUrl = URL.createObjectURL(blob);
+			try {
+				previewUrl = await fileUtils.getPreviewURL(blob, fileType as 'image' | 'video' | 'audio');
+			} catch (error) {
+				console.log('Failed to get preview URL', error);
+				fileType = 'other';
+				subType = null;
+				previewDimensions = null;
+				corruptedFile = true;
+				return;
+			}
 			await saveFileToIDB(attachmentPath, blob, name);
 			console.log('saveFileToIDB');
 		}
@@ -407,39 +418,48 @@
 
 {#snippet otherPreview(name: string)}
 	<div style={getPreviewSize()} class="flex items-center rounded-xl bg-gray-500/40 px-4 py-2 pl-1">
-		<svg
-			class="mr-2 size-8 shrink-0 text-gray-200 md:size-12"
-			aria-hidden="true"
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			fill="none"
-			viewBox="0 0 24 24"
-		>
-			<path
-				stroke="currentColor"
-				stroke-linejoin="round"
-				stroke-width="1"
-				d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
-			/>
-			<text
-				class="select-none"
-				x="12"
-				y="15"
-				text-anchor="middle"
-				dominant-baseline="middle"
-				fill="currentColor"
-				font-size="5"
-				font-family="Arial, sans-serif"
-				font-weight="bold"
+		{#if !corruptedFile}
+			<svg
+				class="mr-2 size-8 shrink-0 text-gray-200 md:size-12"
+				aria-hidden="true"
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				fill="none"
+				viewBox="0 0 24 24"
 			>
-				{name.split('.').pop()?.toUpperCase() || ''}
-			</text>
-		</svg>
+				<path
+					stroke="currentColor"
+					stroke-linejoin="round"
+					stroke-width="1"
+					d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
+				/>
+				<text
+					class="select-none"
+					x="12"
+					y="15"
+					text-anchor="middle"
+					dominant-baseline="middle"
+					fill="currentColor"
+					font-size="5"
+					font-family="Arial, sans-serif"
+					font-weight="bold"
+				>
+					{name.split('.').pop()?.toUpperCase() || ''}
+				</text>
+			</svg>
+		{:else}
+			<Icon
+				icon="mdi:file-document-error-outline"
+				class="mr-2 ml-1 size-8 shrink-0 text-red-400 md:size-10"
+			/>
+		{/if}
 		<div>
 			<p class="md:text-md line-clamp-1 pr-6 text-sm font-bold break-all text-gray-200">{name}</p>
 			<p class="text-sm text-gray-300">
-				{fileUtils.formatFileSize(fileSizeBytes)}
+				{fileUtils.formatFileSize(fileSizeBytes)}{corruptedFile
+					? ' ' + $t('chat.attachment.corrupted-file')
+					: ''}
 			</p>
 		</div>
 		<button

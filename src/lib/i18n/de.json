@@ -42,7 +42,8 @@
       "ignore-limit": "Herunterladen und Vorschau laden",
       "loading-video": "Video lädt {size}",
       "sticker-added-to-my-stickers": "Sticker erfolgreich zu Ihren Stickern hinzugefügt",
-      "add-to-my-stickers": "Zu meinen Stickern hinzufügen"
+      "add-to-my-stickers": "Zu meinen Stickern hinzufügen",
+      "corrupted-file": "(Beschädigt)"
     },
     "chat-list": {
       "new-chat": "+ Neuer Chat",

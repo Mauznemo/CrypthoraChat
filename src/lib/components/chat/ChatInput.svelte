@@ -78,7 +78,9 @@
 	let uploadedFiles: File[] = $state([]);
 	let containerWidth = $state(0);
 	let fileSizes: number[] = $state([]);
+	let compressibleFiles: boolean[] = $state([]);
 	let compressFiles: boolean[] = $state([]);
+	let viewableMediaFiles: ('none' | 'image' | 'video' | 'audio')[] = $state([]);
 
 	let stickerPicker: StickerPicker;
 
@@ -118,25 +120,36 @@
 		fileInput.click();
 	}
 
-	function handleFilesSelect(event: Event, compress: boolean): void {
+	async function handleFilesSelect(event: Event, compress: boolean): Promise<void> {
 		const target = event.target as HTMLInputElement;
 		const files = target.files;
 		if (files) {
 			for (let i = 0; i < files.length; i++) {
-				handleFileSelect(files[i], compress);
+				await handleFileSelect(files[i], compress);
 			}
 		}
 	}
 
-	function handleFileSelect(file: File, compress: boolean): void {
+	async function handleFileSelect(file: File, compress: boolean): Promise<void> {
+		const validResult = await fileUtils.isValidMediaFile(file);
+
+		if (validResult.success) viewableMediaFiles.push(validResult.type!);
+		else viewableMediaFiles.push('none');
 		selectedFiles.push(file);
 		fileSizes.push(file.size);
 		compressFiles.push(compress);
-		if (file.type.startsWith('image/')) {
+		if (
+			validResult.success &&
+			validResult.type === 'image' &&
+			fileUtils.isImageMimeType(file.type)
+		) {
 			if (previewUrls[file.name]) {
 				URL.revokeObjectURL(previewUrls[file.name]);
 			}
 			previewUrls[file.name] = URL.createObjectURL(file);
+			compressibleFiles.push(isCompressible(file));
+		} else {
+			compressibleFiles.push(false);
 		}
 	}
 
@@ -182,14 +195,20 @@
 				uploadingFile = file;
 
 				let fileToUpload = file;
-				if (file.type.startsWith('image/') && compressFiles[i]) {
+				if (fileUtils.isImageMimeType(file.type) && compressFiles[i] && compressibleFiles[i]) {
 					fileToUpload = await compressImage(file);
 					fileSizes[i] = fileToUpload.size;
 				}
 
 				let previewDimensions: { width: number; height: number } | null = null;
-				if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-					previewDimensions = await fileUtils.getMediaDimensions(fileToUpload);
+				if (
+					(viewableMediaFiles[i] === 'image' && fileUtils.isImageMimeType(fileToUpload.type)) ||
+					(viewableMediaFiles[i] === 'video' && fileUtils.isVideoMimeType(fileToUpload.type))
+				) {
+					previewDimensions = await fileUtils.getMediaDimensions(
+						fileToUpload,
+						viewableMediaFiles[i] as 'image' | 'video'
+					);
 				}
 
 				const result = await tryUploadFile(
@@ -218,6 +237,8 @@
 
 					selectedFiles = [];
 					compressFiles = [];
+					compressFiles = [];
+					viewableMediaFiles = [];
 					fileSizes = [];
 					previewUrls = {};
 					return;
@@ -492,7 +513,7 @@
 				>
 					<Icon icon="mdi:close" class="size-6" />
 				</button>
-				{#if isCompressible(file)}
+				{#if compressibleFiles[index]}
 					<button
 						data-tooltip={compressFiles[index]
 							? $t('chat.chat-input.disable-compression')
