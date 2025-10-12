@@ -230,6 +230,14 @@ class SocketStore {
 			subscription: subscription.toJSON()
 		});
 	}
+
+	setSocketSessionActive() {
+		this.socket?.emit('active', {});
+	}
+
+	setSocketSessionInactive() {
+		this.socket?.emit('inactive', {});
+	}
 }
 
 export const socketStore = new SocketStore();

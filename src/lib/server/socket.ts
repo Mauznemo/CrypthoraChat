@@ -149,7 +149,6 @@ async function getChatUsers(chatId: string) {
 		}
 	});
 
-	// Flatten into an array of user objects
 	return (
 		chat?.participants.map((p) => ({
 			id: p.user.id,
@@ -161,6 +160,7 @@ async function getChatUsers(chatId: string) {
 export interface SocketSessionData {
 	userId: string;
 	socketId: string;
+	userActive: boolean; // Whether the user hast the app in the foreground or not
 }
 
 globalThis._io ??= null;
@@ -179,20 +179,25 @@ export function getUserSockets(userId: string): string[] {
 	return sockets.map((s) => s.socketId);
 }
 
+export function hasUserActiveSockets(userId: string): boolean {
+	if (!globalThis._sessionSocketMap) throw new Error('User socket map not initialized');
+	const sockets = Array.from(globalThis._sessionSocketMap.values()).filter(
+		(s) => s.userId === userId
+	);
+	return sockets.some((s) => s.userActive);
+}
+
 export async function initializeSocket(server: HTTPServer) {
 	globalThis._io = new Server(server);
 	const io: Server = globalThis._io;
 
-	// Authentication middleware
 	io.use(async (socket: AuthenticatedSocket, next) => {
 		try {
-			// Extract session cookie from handshake
 			const cookies = socket.handshake.headers.cookie;
 			if (!cookies) {
 				return next(new Error('No cookies found'));
 			}
 
-			// Parse session ID from cookies
 			const sessionMatch = cookies.match(/session=([^;]+)/);
 			if (!sessionMatch) {
 				return next(new Error('No session cookie found'));
@@ -200,13 +205,11 @@ export async function initializeSocket(server: HTTPServer) {
 
 			const sessionId = decodeURIComponent(sessionMatch[1]);
 
-			// Validate session using your existing function
 			const session = await validateSession(sessionId);
 			if (!session) {
 				return next(new Error('Invalid session'));
 			}
 
-			// Attach user to socket
 			socket.user = { username: session.user.username, id: session.user.id, sessionId: sessionId };
 			console.log(`User authenticated: ${session.user.username} (${session.user.id})`);
 
@@ -229,7 +232,8 @@ export async function initializeSocket(server: HTTPServer) {
 		if (socket.user) {
 			globalThis._sessionSocketMap.set(socket.user.sessionId, {
 				userId: socket.user.id,
-				socketId: socket.id
+				socketId: socket.id,
+				userActive: true
 			});
 		}
 
@@ -243,6 +247,28 @@ export async function initializeSocket(server: HTTPServer) {
 		socket.on('leave-chat', (chatId: string) => {
 			socket.leave(chatId);
 			console.log(`User ${socket.id} left chat ${chatId}`);
+		});
+
+		socket.on('inactive', () => {
+			console.log(`User ${socket.id} inactive`);
+			if (socket.user) {
+				globalThis._sessionSocketMap.set(socket.user.sessionId, {
+					userId: socket.user.id,
+					socketId: socket.id,
+					userActive: false
+				});
+			}
+		});
+
+		socket.on('active', () => {
+			console.log(`User ${socket.id} active`);
+			if (socket.user) {
+				globalThis._sessionSocketMap.set(socket.user.sessionId, {
+					userId: socket.user.id,
+					socketId: socket.id,
+					userActive: true
+				});
+			}
 		});
 
 		socket.on('subscribe-webpush', (data) => {
@@ -285,7 +311,6 @@ export async function initializeSocket(server: HTTPServer) {
 			io.to(data.chatId).emit('key-rotated');
 		});
 
-		// Handle new message
 		socket.on(
 			'send-message',
 			async (data: {
@@ -310,7 +335,6 @@ export async function initializeSocket(server: HTTPServer) {
 						return;
 					}
 
-					// Save message to database
 					const newMessage = await db.message.create({
 						data: {
 							chatId: data.chatId,
@@ -358,7 +382,7 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
-						if (userSocketIds.length !== 0) continue; // Don't notify users that are currently in the app
+						if (hasUserActiveSockets(user.id)) continue; // Don't notify users that are currently in the app
 
 						const userSubs = getUserSubscriptions(user.id);
 
@@ -383,9 +407,6 @@ export async function initializeSocket(server: HTTPServer) {
 
 						for (const ntfyTopic of userSubs.ntfySubs) {
 							const success = await sendNtfyNotification(ntfyTopic.subscription, notificationData);
-							if (!success) {
-								//await deleteSubscription(ntfyTopic.sessionId);
-							}
 						}
 					}
 				} catch (error) {
@@ -395,12 +416,10 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		);
 
-		// Handle message editing
 		socket.on(
 			'edit-message',
 			async (data: { messageId: string; encryptedContent: string; keyVersion: number }) => {
 				try {
-					// Verify user owns the message and update it
 					const updatedMessage = await db.message.update({
 						where: {
 							id: data.messageId,
@@ -426,7 +445,6 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 					});
 
-					// Emit to all users in the chat
 					io.to(updatedMessage.chatId).emit('message-updated', {
 						message: updatedMessage,
 						type: 'edit'
@@ -438,7 +456,6 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		);
 
-		// Handle message deletion
 		socket.on('delete-message', async (data: { messageId: string; chatId: string }) => {
 			try {
 				const message = await db.message.findUnique({
@@ -463,7 +480,6 @@ export async function initializeSocket(server: HTTPServer) {
 					}
 				});
 
-				// Emit to all users in the chat
 				io.to(data.chatId).emit('message-deleted', data.messageId);
 			} catch (error) {
 				console.error('Error deleting message:', error);
@@ -471,7 +487,6 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		});
 
-		// Handle message reactions
 		socket.on(
 			'react-to-message',
 			async (data: { messageId: string; encryptedReaction: string }) => {
@@ -490,7 +505,6 @@ export async function initializeSocket(server: HTTPServer) {
 					}
 
 					console.log('Adding reaction:', reactionKey);
-					// Add reaction
 					const updatedMessage = await db.message.update({
 						where: { id: data.messageId },
 						data: {
@@ -505,7 +519,6 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 					});
 
-					// Emit updated message
 					io.to(updatedMessage.chatId).emit('message-updated', {
 						message: updatedMessage,
 						type: 'reaction'
@@ -568,10 +581,8 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		);
 
-		// Handle message read status
 		socket.on('mark-messages-read', async (data: { messageIds: string[]; chatId: string }) => {
 			try {
-				// Update read status in database
 				await Promise.all(
 					data.messageIds.map((messageId) =>
 						db.message.update({
@@ -588,7 +599,6 @@ export async function initializeSocket(server: HTTPServer) {
 					)
 				);
 
-				// Emit read status update
 				io.to(data.chatId).emit('messages-read', {
 					messageIds: data.messageIds,
 					userId: socket.user!.id
@@ -598,7 +608,6 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		});
 
-		// Handle typing indicators
 		socket.on('typing-start', (data: { chatId: string; username: string }) => {
 			socket.to(data.chatId).emit('user-typing', {
 				userId: socket.user!.id,
@@ -634,7 +643,6 @@ export async function initializeSocket(server: HTTPServer) {
 		);
 
 		socket.on('disconnect', () => {
-			// Remove from user socket map
 			if (socket.user?.sessionId) {
 				globalThis._sessionSocketMap.delete(socket.user.sessionId);
 			}

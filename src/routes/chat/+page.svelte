@@ -165,6 +165,16 @@
 
 			messages.handleVisible();
 		}
+
+		if (!socketStore.connected) {
+			return;
+		}
+
+		if (document.hidden) {
+			socketStore.setSocketSessionInactive();
+		} else {
+			socketStore.setSocketSessionActive();
+		}
 	}
 
 	function removeQueryParams() {
