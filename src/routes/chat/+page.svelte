@@ -269,11 +269,11 @@
 			<div class="flex items-center">
 				<div>
 					{#if socketStore.connected}
-						<p class="px-3 py-2 text-3xl font-extrabold text-white">
+						<p class="line-clamp-1 px-3 py-2 text-3xl font-extrabold break-all text-white">
 							{chatName || $t('chat.chat')}
 						</p>
 					{:else}
-						<p class="px-3 pt-3 text-3xl font-extrabold text-white">
+						<p class="line-clamp-1 px-3 pt-3 text-3xl font-extrabold break-all text-white">
 							{chatName || $t('chat.chat')} - {$t('common.offline')}
 						</p>
 						<p class="font-semi px-3 pb-1 text-sm text-white/60">
