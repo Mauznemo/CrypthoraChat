@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import type { Server as HTTPServer } from 'http';
+import { get, type Server as HTTPServer } from 'http';
 import { db } from '../db';
 import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
@@ -158,17 +158,25 @@ async function getChatUsers(chatId: string) {
 	);
 }
 
+export interface SocketSessionData {
+	userId: string;
+	socketId: string;
+}
+
 globalThis._io ??= null;
-globalThis._userSocketMap ??= new Map<string, string>();
+globalThis._sessionSocketMap ??= new Map<string, SocketSessionData>();
 
 export function getIO(): Server {
 	if (!globalThis._io) throw new Error('Socket not initialized');
 	return globalThis._io;
 }
 
-export function getUserSocket(userId: string): string | null {
-	if (!globalThis._userSocketMap) throw new Error('User socket map not initialized');
-	return globalThis._userSocketMap.get(userId) || null;
+export function getUserSockets(userId: string): string[] {
+	if (!globalThis._sessionSocketMap) throw new Error('User socket map not initialized');
+	const sockets = Array.from(globalThis._sessionSocketMap.values()).filter(
+		(s) => s.userId === userId
+	);
+	return sockets.map((s) => s.socketId);
 }
 
 export async function initializeSocket(server: HTTPServer) {
@@ -218,19 +226,20 @@ export async function initializeSocket(server: HTTPServer) {
 	});
 
 	io.on('connection', (socket: AuthenticatedSocket) => {
-		// Add this after connection
 		if (socket.user) {
-			globalThis._userSocketMap.set(socket.user.id, socket.id);
+			globalThis._sessionSocketMap.set(socket.user.sessionId, {
+				userId: socket.user.id,
+				socketId: socket.id
+			});
 		}
 
 		console.log('User connected:', socket.id, 'User:', socket.user?.username);
-		// Join chat room
+
 		socket.on('join-chat', (chatId: string) => {
 			socket.join(chatId);
 			console.log(`User ${socket.id} joined chat ${chatId}`);
 		});
 
-		// Leave chat room
 		socket.on('leave-chat', (chatId: string) => {
 			socket.leave(chatId);
 			console.log(`User ${socket.id} left chat ${chatId}`);
@@ -258,16 +267,18 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('request-user-verify', (data) => {
 			console.log('Requesting user verification');
-			const socketId = globalThis._userSocketMap.get(data.userId);
-			if (!socketId) {
+			const socketIds = getUserSockets(data.userId);
+			if (socketIds.length === 0) {
 				console.log('User not online');
 				return;
 			}
 
-			io.to(socketId).emit('requested-user-verify', {
-				requestorId: socket.user!.id,
-				requestorUsername: socket.user!.username
-			});
+			for (const socketId of socketIds) {
+				io.to(socketId).emit('requested-user-verify', {
+					requestorId: socket.user!.id,
+					requestorUsername: socket.user!.username
+				});
+			}
 		});
 
 		socket.on('key-rotated', async (data) => {
@@ -335,17 +346,19 @@ export async function initializeSocket(server: HTTPServer) {
 
 					console.log('Sending push notifications to users: ' + chatUsers.length);
 					for (const user of chatUsers) {
-						const userSocketId = globalThis._userSocketMap.get(user.id);
-						if (userSocketId) {
-							io.to(userSocketId).emit('new-message-notify', {
-								chatId: data.chatId,
-								chatName: newMessage.chat.name,
-								username: newMessage.user.username
-							});
+						const userSocketIds = getUserSockets(user.id);
+						if (userSocketIds.length !== 0) {
+							for (const userSocketId of userSocketIds) {
+								io.to(userSocketId).emit('new-message-notify', {
+									chatId: data.chatId,
+									chatName: newMessage.chat.name,
+									username: newMessage.user.username
+								});
+							}
 						}
 
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
-						if (globalThis._userSocketMap.has(user.id)) continue; // Don't notify users that are currently in the app
+						if (userSocketIds.length !== 0) continue; // Don't notify users that are currently in the app
 
 						const userSubs = getUserSubscriptions(user.id);
 
@@ -371,7 +384,7 @@ export async function initializeSocket(server: HTTPServer) {
 						for (const ntfyTopic of userSubs.ntfySubs) {
 							const success = await sendNtfyNotification(ntfyTopic.subscription, notificationData);
 							if (!success) {
-								await deleteSubscription(ntfyTopic.sessionId);
+								//await deleteSubscription(ntfyTopic.sessionId);
 							}
 						}
 					}
@@ -604,9 +617,12 @@ export async function initializeSocket(server: HTTPServer) {
 		socket.on(
 			'chat-created',
 			(data: { userIds: string[]; chatId: string; type: 'dm' | 'group' }) => {
-				const targetSockets = data.userIds
-					.map((userId) => globalThis._userSocketMap.get(userId))
-					.filter((socketId): socketId is string => socketId !== undefined);
+				const targetSockets: string[] = [];
+
+				for (const userId of data.userIds) {
+					const userSocketIds = getUserSockets(userId);
+					targetSockets.push(...userSocketIds);
+				}
 
 				targetSockets.forEach((socketId) => {
 					io.to(socketId).emit('new-chat-created', {
@@ -619,8 +635,8 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('disconnect', () => {
 			// Remove from user socket map
-			if (socket.user) {
-				globalThis._userSocketMap.delete(socket.user.id);
+			if (socket.user?.sessionId) {
+				globalThis._sessionSocketMap.delete(socket.user.sessionId);
 			}
 			console.log('User disconnected:', socket.id);
 		});

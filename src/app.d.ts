@@ -2,6 +2,8 @@
 // for information about these interfaces
 import type { User } from '$prisma';
 import type { Server } from 'socket.io';
+import type { SocketSessionData } from '$lib/server/socket';
+
 declare global {
 	namespace App {
 		// interface Error {}
@@ -28,7 +30,7 @@ declare global {
 		connectSocket? = () => {};
 	}
 	var _io: Server | null;
-	var _userSocketMap: Map<string, string>;
+	var _sessionSocketMap: Map<string, SocketSessionData>;
 }
 
 export {};
