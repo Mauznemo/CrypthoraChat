@@ -16,6 +16,8 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import BackButton from '$lib/components/BackButton.svelte';
 	import { t } from 'svelte-i18n';
+	import { fileUtils } from '$lib/chat/fileUtils';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -120,19 +122,26 @@
 		fileInput.click();
 	}
 
-	function handleFileSelect(event: Event): void {
+	async function handleFileSelect(event: Event): Promise<void> {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
 			selectedFile = file;
 
-			if (file.type.startsWith('image/')) {
+			if (fileUtils.isImageMimeType(file.type)) {
 				if (previewUrl) {
 					URL.revokeObjectURL(previewUrl);
 				}
-				// Create new preview URL
-				previewUrl = URL.createObjectURL(file);
+
+				try {
+					previewUrl = await fileUtils.getPreviewURL(file, 'image');
+				} catch (error) {
+					toastStore.error($t('chat.info-bar.invalid-file-type'));
+					previewUrl = null;
+					selectedFile = null;
+				}
 			} else {
+				toastStore.error($t('chat.info-bar.invalid-file-type'));
 				previewUrl = null;
 			}
 		}
