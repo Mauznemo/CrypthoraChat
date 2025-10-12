@@ -87,14 +87,24 @@ CrypthoraChat comes with a `docker-compose.yaml` file meaning you can simply dep
 2. Run `docker-compose up -d --build` you can now access it at [http://localhost:3000/](http://localhost:3000/)
 
 ### Coolify guide
-1. Select a project, click on new resource and select "Public Repository"
-2. Under "Build Pack" select "Docker Compose", click "Continue" and wait a bit for it to load everything.
-3. Now you can set the domain for your chat app and for ntfy (this is used for more reliable push notification in the android wrapper app), click "Save"
-4. Go to the "Environment variables" tab and set both URLs again there, also set a password for the postgres database
-5. Now set your VAPID data (this is needed for push notification everywhere else), you can use [this](https://www.attheminute.com/vapid-key-generator) website to generate the keys, you also need to to input any email address. (It is used for a critical administrative and security function, allowing the push service to communicate with you, the server operator, if problems arise)
-6. Set `PROFILE_PIC_KEY` to a random 32 byte value, you can run this to generate one `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-7. Now hit "Deploy"
-8. When its done you can click on "Links" and open the chat app, the first user registered will be the server admin that manges the allowed user names
+1. Select a project, click on new resource and select "Docker Compose Empty"
+2. Go the releases and download the `docker-compose.yaml` for the latest, the open it, copy everything and past it into Coolify
+3. Remove these as they would cause issues with Coolify's proxy
+```yaml
+# Remove this from all 3 services
+networks:
+  - app_network
+# And this at the end
+networks:
+  app_network:
+    driver: bridge
+```
+4. Now you can set the domain for your Crypthora Chat and Ntfy (Push notification server for Wrapper app), do this by clicking "Settings" on the right of the service and using `https://chat.my-server.com:3000` and `https://ntfy.my-server.com:80`
+5. Go to the "Environment variables" tab and set both URLs again there (without the port!), also set a password for the postgres database
+6. Now set your VAPID data (this is needed for push notification everywhere else), you can use [this](https://www.attheminute.com/vapid-key-generator) website to generate the keys, you also need to to input any email address. (It is used for a critical administrative and security function, allowing the push service to communicate with you, the server operator, if problems arise)
+7. Set `PROFILE_PIC_KEY` to a random 32 byte value, you can run this to generate one `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+8. Now hit "Deploy"
+9. When its done you can click on "Links" and open the chat app, the first user registered will be the server admin that manges the allowed user names
 
 ## Tech stack
 - [SvelteKit 5](https://svelte.dev/) (experimental [Remote Functions](https://svelte.dev/docs/kit/remote-functions) are enabled)
