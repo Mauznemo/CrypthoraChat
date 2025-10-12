@@ -44,13 +44,14 @@
 		}
 	}
 
-	function handleFilesSelect(event: Event): void {
+	async function handleFilesSelect(event: Event): Promise<void> {
 		if (loading) return;
 		const target = event.target as HTMLInputElement;
 		const files = target.files;
 		if (files) {
 			for (let i = 0; i < files.length; i++) {
 				handleFileSelect(files[i]);
+				await tick();
 			}
 		}
 	}
