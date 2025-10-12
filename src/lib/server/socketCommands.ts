@@ -1,6 +1,6 @@
 import { db } from '$lib/db';
 import { error } from '@sveltejs/kit';
-import { getIO, getUserSocket } from './socket';
+import { getIO, getUserSockets } from './socket';
 
 /** Sends a system message to all connected clients in the chat */
 export async function sendSystemMessage(chatId: string, content: string) {
@@ -47,9 +47,11 @@ export async function sendEventToUsersInChat(chatId: string, event: string, data
 	});
 
 	for (const participant of chatParticipants) {
-		const userSocket = getUserSocket(participant.userId);
-		if (userSocket) {
-			io.to(userSocket).emit(event, { ...data, chatId });
+		const userSocketIds = getUserSockets(participant.userId);
+		if (userSocketIds.length > 0) {
+			for (const userSocket of userSocketIds) {
+				io.to(userSocket).emit(event, { ...data, chatId });
+			}
 		}
 	}
 }
@@ -58,9 +60,11 @@ export async function sendEventToUsersInChat(chatId: string, event: string, data
 export async function sendEventToUser(userId: string, event: string, data: any) {
 	const io = getIO();
 
-	const userSocket = getUserSocket(userId);
-	console.log('Sending event to user:', userSocket);
-	if (!userSocket) return;
+	const userSocketIds = getUserSockets(userId);
+	console.log('Sending event to user:', userId);
+	if (userSocketIds.length === 0) return;
 
-	io.to(userSocket).emit(event, data);
+	for (const userSocket of userSocketIds) {
+		io.to(userSocket).emit(event, data);
+	}
 }
