@@ -77,7 +77,10 @@
 	});
 </script>
 
-<div class="m-1 mr-6 flex items-start space-x-2">
+{#if showProfile}
+	<div class="h-2"></div>
+{/if}
+<div class="relative m-1 mr-6 flex items-start space-x-2">
 	<!-- Profile picture and username (only shown for first message in group) -->
 	<div
 		class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:left-0"
@@ -95,7 +98,7 @@
 	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-start">
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
-			<div class="mb-0.5 pl-7 lg:pl-1.5">
+			<div class="mb-0.5 pl-9 lg:pl-1.5">
 				<p class="line-clamp-1 max-w-[250px] text-sm font-medium break-all text-gray-300">
 					{message.user.displayName || 'Unknown'}
 				</p>
