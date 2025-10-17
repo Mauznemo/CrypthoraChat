@@ -6,8 +6,10 @@ export interface NotificationDate {
 	chatName?: string;
 }
 
+const NTFY_URL = process.env.NTFY_PUSH_URL || 'http://ntfy:80';
+
 export async function sendNtfyNotification(topic: string, data: NotificationDate) {
-	const url = `http://ntfy:80/${topic}`;
+	const url = `${NTFY_URL}/${topic}`;
 
 	const headers = {
 		'Content-Type': 'application/json'

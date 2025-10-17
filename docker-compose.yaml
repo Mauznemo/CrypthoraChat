@@ -9,6 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - CHAT_URL=${CHAT_URL}
+      - NTFY_PUSH_URL=${NTFY_PUSH_URL:-http://ntfy:80} # The url used by the server to send ntfy push notifications to
       - ORIGIN=${CHAT_URL}
       - PUBLIC_VAPID_KEY=${PUBLIC_VAPID_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
