@@ -13,7 +13,7 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
 	return bytes.buffer;
 }
 
-//** Encrypts key for DB storage */
+/** Encrypts key for DB storage using master key */
 export async function encryptKeyForStorage(
 	key: CryptoKey,
 	keyType: 'symmetric' | 'public' | 'private' = 'symmetric'
@@ -47,7 +47,7 @@ export async function encryptKeyForStorage(
 	return arrayBufferToBase64(combined.buffer);
 }
 
-//** Decrypts key from DB */
+/** Decrypts key from DB using master key */
 export async function decryptKeyFromStorage(
 	encryptedBase64: string,
 	keyType: 'symmetric' | 'public' | 'private' = 'symmetric'
@@ -83,10 +83,55 @@ export async function decryptKeyFromStorage(
 	]);
 }
 
-//** Concatenates two array buffers */
+/** Concatenates two array buffers */
 export function concatArrayBuffers(a: ArrayBuffer, b: ArrayBuffer): ArrayBuffer {
 	const tmp = new Uint8Array(a.byteLength + b.byteLength);
 	tmp.set(new Uint8Array(a), 0);
 	tmp.set(new Uint8Array(b), a.byteLength);
 	return tmp.buffer;
+}
+
+/** Converts a symmetric key to base64 */
+export async function keyToBase64(key: CryptoKey): Promise<string> {
+	return arrayBufferToBase64(await crypto.subtle.exportKey('raw', key));
+}
+
+/** Converts a base64 string to a symmetric key */
+export async function base64ToKey(base64: string): Promise<CryptoKey> {
+	return crypto.subtle.importKey('raw', base64ToArrayBuffer(base64), 'AES-GCM', true, [
+		'encrypt',
+		'decrypt'
+	]);
+}
+
+export async function encryptStringWithKey(stringData: string, key: CryptoKey): Promise<string> {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(stringData);
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
+	combined.set(iv, 0);
+	combined.set(new Uint8Array(encrypted), iv.byteLength);
+	return arrayBufferToBase64(combined.buffer);
+}
+
+export async function decryptStringWithKey(
+	encryptedStringBase64: string,
+	key: CryptoKey
+): Promise<string> {
+	try {
+		const combined = new Uint8Array(base64ToArrayBuffer(encryptedStringBase64));
+		const iv = combined.slice(0, 12);
+		const encryptedData = combined.slice(12);
+		const decrypted = await crypto.subtle.decrypt(
+			{ name: 'AES-GCM', iv },
+			key,
+			encryptedData.buffer
+		);
+		const decoder = new TextDecoder();
+		return decoder.decode(decrypted);
+	} catch (error) {
+		console.error('Error decrypting:', error);
+		throw error;
+	}
 }

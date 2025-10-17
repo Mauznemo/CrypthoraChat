@@ -206,7 +206,7 @@
     "go-to-admin-panel": "Go to Admin Dashboard",
     "change-password": "Change Password",
     "master-key": "Master Key (Don't share with anyone)",
-    "show-master-key": "Show Master Key",
+    "show-master-key": "Export Master Key",
     "re-import-master-key": "Re-import Master Key",
     "current-password": "Current Password:",
     "new-password": "New Password:",
@@ -320,7 +320,10 @@
       "backup-master-key-notice-title": "Backup Master Key!",
       "backup-master-key-notice-content": "Please make some kind of copy of your Master Key either by writing down the emoji names or some other secure way.\nIf you loose this key you will also loose access to all messages!",
       "invalid-qr-code": "The QR code you scanned is invalid",
-      "invalid": "Invalid"
+      "invalid": "Invalid",
+      "show-qr-code": "Show QR code",
+      "scan-qr-code": "Scan QR code",
+      "key-exported-successfully": "Key exported successfully"
     }
   },
   "login": {

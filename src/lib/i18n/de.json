@@ -214,7 +214,7 @@
     "master-key": "Master-Schlüssel (mit niemanden teilen)",
     "new-password": "Neues Passwort:",
     "re-import-master-key": "Master-Schlüssel reimportieren",
-    "show-master-key": "Master-Schlüssel anzeigen",
+    "show-master-key": "Master-Schlüssel exportieren",
     "user-id": "Benutzer-ID:",
     "username": "Benutzername:",
     "you-are-admin": "Sie sind Administrator dieses Servers",
@@ -320,7 +320,10 @@
       "backup-master-key-notice-content": "Bitte sichern Sie Ihren Master-Schlüssels, indem Sie die Emoji-Namen aufschreiben oder über einen anderen sicheren Weg.\nWenn Sie diesen Schlüssel verlieren, verlieren Sie auch den Zugriff auf alle Nachrichten!",
       "backup-master-key-notice-title": "Master-Schlüssel sichern!",
       "invalid": "Ungültig",
-      "invalid-qr-code": "Der von Ihnen gescannte QR-Code ist ungültig"
+      "invalid-qr-code": "Der von Ihnen gescannte QR-Code ist ungültig",
+      "key-exported-successfully": "Schlüssel erfolgreich exportiert",
+      "scan-qr-code": "QR-Code scannen",
+      "show-qr-code": "QR-Code anzeigen"
     }
   },
   "login": {

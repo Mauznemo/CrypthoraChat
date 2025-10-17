@@ -5,7 +5,14 @@
 	import { fade, scale } from 'svelte/transition';
 	import { expoInOut } from 'svelte/easing';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { arrayBufferToBase64, base64ToArrayBuffer } from '$lib/crypto/utils';
+	import {
+		arrayBufferToBase64,
+		base64ToArrayBuffer,
+		base64ToKey,
+		decryptKeyFromStorage,
+		decryptStringWithKey,
+		encryptStringWithKey
+	} from '$lib/crypto/utils';
 	import Icon from '@iconify/svelte';
 	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
 	import { t } from 'svelte-i18n';
@@ -13,12 +20,14 @@
 	import { Html5Qrcode } from 'html5-qrcode';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
+	import { getMasterSeedForSharing } from '$lib/crypto/master';
+	import { getEncryptedKey, removeEncryptedKey, saveEncryptedKey } from './keySharer.remote';
 
 	type EmojiDataType = typeof emojiData;
 
 	let isOpen = $state(false);
-	let shareMode: 'emojiSequence' | 'qrCode' = $state('emojiSequence');
-	let mode: 'display' | 'input' = $state('input');
+	let shareType: 'emojiSequence' | 'showQrCode' | 'scanQrCode' = $state('emojiSequence');
+	let mode: 'export' | 'import' = $state('import');
 	let base64Seed: string;
 
 	// prettier-ignore
@@ -133,6 +142,7 @@
 		return arrayBufferToBase64(seedBytes.buffer);
 	}
 
+	// #region Emoji Utils
 	export async function seedToEmojiSequence(base64Seed: string): Promise<string[]> {
 		const base64 = await seedToBase64WithDateSalt(base64Seed);
 		const seedBytes = new Uint8Array(base64ToArrayBuffer(base64));
@@ -162,7 +172,7 @@
 	}
 
 	function handleEmojiSelect(emoji: string) {
-		if (mode === 'input' && inputIndex < 16) {
+		if (mode === 'import' && inputIndex < 16) {
 			emojiSequence[inputIndex] = emoji;
 			inputIndex++;
 
@@ -197,21 +207,108 @@
 	}
 
 	function openEmojiPicker(event: MouseEvent) {
-		if (mode === 'input') {
+		if (mode === 'import') {
 			emojiPickerStore.open(event.target as HTMLElement, handleEmojiSelect, [...EMOJI_SET].sort());
 		}
 	}
 
-	async function updateEmojiDisplay(seed: string) {
+	// #endregion
+
+	// Export: Show seed as emojis
+	async function initExportShowEmojis(seed: string) {
 		displayEmojis = await seedToEmojiSequence(seed);
 	}
 
-	async function updateQrCodeDisplay(seed: string) {
+	// Export: Show seed as QR code
+	async function initExportShowQrCode(seed: string) {
 		const seedWithSalt = await seedToBase64WithDateSalt(seed);
 		qrCodeDataUrl = await QRCode.toDataURL(seedWithSalt);
 	}
 
-	async function initQrCodeScanner() {
+	// Export: Scan key => save encrypted master seed in db
+	async function initExportScanQrCode() {
+		await tick();
+		const id = 'qr-reader';
+		qrScanner = new Html5Qrcode(id);
+		qrScanner.start(
+			{ facingMode: 'environment' },
+			{
+				fps: 10,
+				qrbox: 250
+			},
+			async (decodedText) => {
+				try {
+					let key = await base64ToKey(decodedText);
+					const seedBase64 = await getMasterSeedForSharing();
+					const encryptedSeed = await encryptStringWithKey(seedBase64, key);
+					saveEncryptedKey(encryptedSeed);
+				} catch (error) {
+					qrScanner.pause(false);
+					modalStore.open({
+						title: $t('utils.key-sharer.invalid'),
+						content: $t('utils.key-sharer.invalid-qr-code'),
+						buttons: [
+							{
+								text: $t('common.close'),
+								variant: 'secondary',
+								onClick: () => {
+									qrScanner.stop();
+									close();
+								}
+							},
+							{
+								text: $t('common.retry'),
+								variant: 'primary',
+								onClick: () => {
+									qrScanner.resume();
+								}
+							}
+						]
+					});
+
+					return;
+				}
+				toastStore.success($t('utils.key-sharer.key-exported-successfully'));
+				close();
+				qrScanner.stop();
+			},
+			(error) => {}
+		);
+	}
+
+	// Import: Show key as emojis
+	function initImportEmojis() {
+		shareType = 'emojiSequence';
+		emojiSequence = [];
+		inputIndex = 0;
+	}
+
+	// Import: Generate key => show as qr => wait for enc seed in db
+	async function initImportShowQrCode() {
+		const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+			'encrypt',
+			'decrypt'
+		]);
+
+		const exported = await crypto.subtle.exportKey('raw', key);
+		const keyBase64 = arrayBufferToBase64(exported);
+
+		qrCodeDataUrl = await QRCode.toDataURL(keyBase64);
+		const interval = setInterval(async () => {
+			const encryptedSeed = await getEncryptedKey();
+			if (encryptedSeed) {
+				await removeEncryptedKey();
+				clearInterval(interval);
+				const seedBase64 = await decryptStringWithKey(encryptedSeed, key);
+				toastStore.success($t('utils.key-sharer.key-imported-successfully'));
+				keySharerStore.onDone?.(seedBase64);
+				close();
+			}
+		}, 5000);
+	}
+
+	// Import: Scan seed as qr code
+	async function initImportScanQrCode() {
 		await tick();
 		const id = 'qr-reader';
 		qrScanner = new Html5Qrcode(id);
@@ -261,12 +358,9 @@
 	}
 
 	function initEmoji() {
-		shareMode = 'emojiSequence';
-		emojiSequence = [];
-		inputIndex = 0;
-		mode = keySharerStore.base64Seed ? 'display' : 'input';
+		shareType = 'emojiSequence';
 
-		if (mode === 'display') {
+		if (mode === 'export') {
 			if (onboardingStore.showBackupMasterKeyNotice) {
 				onboardingStore.disableBackupMasterKeyNotice();
 
@@ -276,26 +370,40 @@
 					{ dismissible: false }
 				);
 			}
-		}
 
-		if (keySharerStore.base64Seed) base64Seed = keySharerStore.base64Seed;
-		if (mode === 'display' && base64Seed) {
-			updateEmojiDisplay(base64Seed);
+			if (keySharerStore.base64Seed) base64Seed = keySharerStore.base64Seed;
+			initExportShowEmojis(base64Seed);
+			initExportShowEmojis(base64Seed);
+		} else if (mode === 'import') {
+			initImportEmojis();
 		}
 		isOpen = true;
 		console.log('initEmoji');
 	}
 
-	function initQrCode() {
-		shareMode = 'qrCode';
-		keySharerStore.useDateSalt = true;
-		mode = keySharerStore.base64Seed ? 'display' : 'input';
-		if (keySharerStore.base64Seed) base64Seed = keySharerStore.base64Seed;
-		if (mode === 'display' && base64Seed) {
-			updateQrCodeDisplay(base64Seed);
+	function initQrCode(show: boolean) {
+		shareType = show ? 'showQrCode' : 'scanQrCode';
+
+		if (mode === 'export') {
+			if (shareType === 'showQrCode') {
+				keySharerStore.useDateSalt = true;
+				if (keySharerStore.base64Seed) base64Seed = keySharerStore.base64Seed;
+				initExportShowQrCode(base64Seed);
+			} else if (shareType === 'scanQrCode') {
+				initExportScanQrCode();
+			}
 		}
 		isOpen = true;
-		if (mode === 'input') initQrCodeScanner();
+		if (mode === 'import') {
+			if (shareType === 'showQrCode') {
+				initImportShowQrCode();
+			} else if (shareType === 'scanQrCode') {
+				keySharerStore.useDateSalt = true;
+				initImportScanQrCode();
+			} else if (shareType === 'emojiSequence') {
+				initImportEmojis();
+			}
+		}
 		console.log('initQrCode');
 	}
 
@@ -303,25 +411,33 @@
 		keySharerStore.clearInput = clearSequence;
 	});
 
-	function open() {
+	function openExport() {
+		mode = 'export';
 		modalStore.open({
 			title: $t('utils.key-sharer.select-mode'),
-			content: keySharerStore.base64Seed
-				? $t('utils.key-sharer.select-mode-export-content')
-				: $t('utils.key-sharer.select-mode-import-content'),
+			content: $t('utils.key-sharer.select-mode-export-content'),
+			buttonAlignment: 'vertical',
 			buttons: [
 				{
-					text: $t('utils.key-sharer.qr-code'),
+					text: $t('utils.key-sharer.show-qr-code'),
 					variant: 'primary',
-					disabled: onboardingStore.showBackupMasterKeyNotice && !!keySharerStore.base64Seed,
+					disabled: onboardingStore.showBackupMasterKeyNotice,
 					onClick: () => {
-						initQrCode();
+						initQrCode(true);
+					}
+				},
+				{
+					text: $t('utils.key-sharer.scan-qr-code'),
+					variant: 'primary',
+					disabled: onboardingStore.showBackupMasterKeyNotice,
+					onClick: () => {
+						initQrCode(false);
 					}
 				},
 				{
 					text: $t('utils.key-sharer.emoji-sequence'),
 					variant: 'primary',
-					outlined: onboardingStore.showBackupMasterKeyNotice && !!keySharerStore.base64Seed,
+					outlined: onboardingStore.showBackupMasterKeyNotice,
 					onClick: () => {
 						initEmoji();
 					}
@@ -331,6 +447,48 @@
 				if (!isOpen) keySharerStore.close();
 			}
 		});
+	}
+
+	function openImport() {
+		mode = 'import';
+		modalStore.open({
+			title: $t('utils.key-sharer.select-mode'),
+			content: $t('utils.key-sharer.select-mode-import-content'),
+			buttonAlignment: 'vertical',
+			buttons: [
+				{
+					text: $t('utils.key-sharer.show-qr-code'),
+					variant: 'primary',
+					onClick: () => {
+						initQrCode(true);
+					}
+				},
+				{
+					text: $t('utils.key-sharer.scan-qr-code'),
+					variant: 'primary',
+					onClick: () => {
+						initQrCode(false);
+					}
+				},
+				{
+					text: $t('utils.key-sharer.emoji-sequence'),
+					variant: 'primary',
+					onClick: () => {
+						initEmoji();
+					}
+				}
+			],
+			onClose: () => {
+				if (!isOpen) keySharerStore.close();
+			}
+		});
+	}
+
+	function open() {
+		mode = keySharerStore.base64Seed ? 'export' : 'import';
+
+		if (mode === 'export') openExport();
+		else if (mode === 'import') openImport();
 	}
 
 	function close() {
@@ -349,11 +507,7 @@
 		});
 	});
 
-	const progress = $derived(mode === 'input' ? (inputIndex / 16) * 100 : 100);
-
-	function onClick(): void {
-		throw new Error('Function not implemented.');
-	}
+	const progress = $derived(mode === 'import' ? (inputIndex / 16) * 100 : 100);
 </script>
 
 {#if isOpen}
@@ -374,8 +528,8 @@
 			>
 				<Icon icon="mdi:close" class="size-6" />
 			</button>
-			{#if shareMode === 'emojiSequence'}
-				{#if mode === 'display'}
+			{#if shareType === 'emojiSequence'}
+				{#if mode === 'export'}
 					<h3 class="mt-2 mb-5 text-lg font-semibold text-white">
 						{keySharerStore.title}
 					</h3>
@@ -400,17 +554,6 @@
 							{/each}
 						</div>
 					</div>
-					{#if keySharerStore.useDateSalt}
-						{@const timeRemaining = getSaltTimeRemaining()}
-						<p class="mt-3 text-center text-sm text-gray-400">
-							{$t('utils.key-sharer.time-remaining', {
-								values: {
-									hours: timeRemaining.hours,
-									minutes: timeRemaining.minutes
-								}
-							})}
-						</p>
-					{/if}
 				{:else}
 					<div>
 						<div class="mb-6">
@@ -477,30 +620,36 @@
 						</div>
 					</div>
 				{/if}
-			{:else if shareMode === 'qrCode'}
+			{:else if shareType === 'showQrCode'}
 				<h3 class="mt-2 mb-5 text-lg font-semibold text-white">
 					{keySharerStore.title}
 				</h3>
-				{#if mode === 'display'}
+				{#if mode === 'export' || mode === 'import'}
 					<div class="flex justify-center">
 						<img src={qrCodeDataUrl} alt="QR Code" class="h-48 w-48 rounded-xl" />
 					</div>
-				{:else if mode === 'input'}
+				{/if}
+			{:else if shareType === 'scanQrCode'}
+				<h3 class="mt-2 mb-5 text-lg font-semibold text-white">
+					{keySharerStore.title}
+				</h3>
+
+				{#if mode === 'import' || mode === 'export'}
 					<div class="flex justify-center">
 						<div id="qr-reader" class="h-64 w-64 overflow-hidden rounded-2xl"></div>
 					</div>
 				{/if}
-				{#if keySharerStore.useDateSalt}
-					{@const timeRemaining = getSaltTimeRemaining()}
-					<p class="mt-3 text-center text-sm text-gray-400">
-						{$t('utils.key-sharer.time-remaining', {
-							values: {
-								hours: timeRemaining.hours,
-								minutes: timeRemaining.minutes
-							}
-						})}
-					</p>
-				{/if}
+			{/if}
+			{#if keySharerStore.useDateSalt}
+				{@const timeRemaining = getSaltTimeRemaining()}
+				<p class="mt-3 text-center text-sm text-gray-400">
+					{$t('utils.key-sharer.time-remaining', {
+						values: {
+							hours: timeRemaining.hours,
+							minutes: timeRemaining.minutes
+						}
+					})}
+				</p>
 			{/if}
 		</div>
 	</div>

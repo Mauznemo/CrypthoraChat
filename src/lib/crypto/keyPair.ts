@@ -14,12 +14,12 @@ import {
 export interface KeyPairResult {
 	privateKey: CryptoKey;
 	publicKey: CryptoKey;
-	publicKeyBase64: string; // For sharing/storing
+	publicKeyBase64: string;
 }
 
 export interface EncryptedKey {
 	encryptedData: ArrayBuffer;
-	iv?: Uint8Array; // Only for AES-GCM approach
+	iv?: Uint8Array;
 }
 
 /** Generates RSA key pair and stores it encrypted on the db */
@@ -29,11 +29,11 @@ export async function generateAndStoreKeyPair(): Promise<void> {
 		const keyPair = await crypto.subtle.generateKey(
 			{
 				name: 'RSA-OAEP',
-				modulusLength: 2048, // or 4096 for higher security
+				modulusLength: 2048,
 				publicExponent: new Uint8Array([1, 0, 1]),
 				hash: 'SHA-256'
 			},
-			true, // extractable
+			true,
 			['encrypt', 'decrypt']
 		);
 		console.log('Key pair generated');
@@ -65,11 +65,11 @@ export async function regenerateAndStoreKeyPair(): Promise<void> {
 		const keyPair = await crypto.subtle.generateKey(
 			{
 				name: 'RSA-OAEP',
-				modulusLength: 2048, // or 4096 for higher security
+				modulusLength: 2048,
 				publicExponent: new Uint8Array([1, 0, 1]),
 				hash: 'SHA-256'
 			},
-			true, // extractable
+			true,
 			['encrypt', 'decrypt']
 		);
 		console.log('New Key pair generated');
@@ -220,7 +220,7 @@ export async function hmacPublicKey(publicKeyBase64: string): Promise<string> {
 
 	const signature = await crypto.subtle.sign('HMAC', masterKey, publicKeyBytes);
 
-	return arrayBufferToBase64(signature); // store alongside public key in DB
+	return arrayBufferToBase64(signature);
 }
 
 export async function verifyPublicKeyHmac(

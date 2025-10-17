@@ -17,6 +17,7 @@ interface ModalConfig {
 	buttons?: ModalButton[];
 	showCloseButton?: boolean;
 	dismissible?: boolean;
+	buttonAlignment?: 'vertical' | 'horizontal';
 	onClose?: () => void;
 	customContent?: Snippet;
 }

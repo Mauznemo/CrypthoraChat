@@ -105,7 +105,12 @@
 
 			<!-- Buttons -->
 			{#if modalStore.config.buttons && modalStore.config.buttons.length > 0}
-				<div class="flex justify-end gap-3">
+				<div
+					class={modalStore.config.buttonAlignment === undefined ||
+					modalStore.config.buttonAlignment === 'horizontal'
+						? 'flex justify-end gap-3'
+						: 'flex flex-col items-stretch gap-3'}
+				>
 					{#each modalStore.config.buttons as button}
 						<button
 							onclick={() => {
