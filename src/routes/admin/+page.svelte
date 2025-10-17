@@ -1,7 +1,7 @@
 <script lang="ts">
 	import BackButton from '$lib/components/BackButton.svelte';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { getSafeAreaPadding } from '$lib/utils/device';
 	import type { PageProps } from './$types';
 	import {
 		addUsername,
@@ -53,7 +53,7 @@
 	}
 </script>
 
-<div style="padding-top: {getSafeAreaPadding().top + 16}px;" class="p-4">
+<div style="padding-top: {layoutStore.safeAreaPadding.top + 16}px;" class="p-4">
 	<div class="flex items-center gap-2">
 		<BackButton backPath="/profile" />
 

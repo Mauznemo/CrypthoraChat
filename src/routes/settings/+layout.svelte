@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import BackButton from '$lib/components/BackButton.svelte';
-	import { getSafeAreaPadding } from '$lib/utils/device';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 	import { setContext } from 'svelte';
 
 	let { children } = $props();
@@ -19,8 +19,8 @@
 </script>
 
 <div
-	style="padding-top: {getSafeAreaPadding().top + 8}px; padding-bottom: {getSafeAreaPadding()
-		.bottom + 8}px;"
+	style="padding-top: {layoutStore.safeAreaPadding.top + 8}px; padding-bottom: {layoutStore
+		.safeAreaPadding.bottom + 8}px;"
 	class="w-full p-2"
 >
 	<div

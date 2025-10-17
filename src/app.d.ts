@@ -26,6 +26,7 @@ declare global {
 		flutter_inappwebview?: any;
 		ntfyTopic?: string;
 		flutterSafeAreaInsets?: { top: number; bottom: number, left: number, right: number };
+		onFlutterSafeAreaInsetsChanged? = () => {};
 		disconnectSocket? = () => {};
 		connectSocket? = () => {};
 	}

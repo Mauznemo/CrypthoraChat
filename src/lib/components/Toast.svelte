@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { layoutStore } from '$lib/stores/layout.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { getSafeAreaPadding } from '$lib/utils/device';
 	import { fly } from 'svelte/transition';
 
 	const { toasts } = $derived({
@@ -10,7 +10,7 @@
 
 {#if toasts.length > 0}
 	<div
-		style="top: {getSafeAreaPadding().top + 16}px;"
+		style="top: {layoutStore.safeAreaPadding.top + 16}px;"
 		class="fixed right-4 z-50 flex flex-col gap-2"
 	>
 		{#each toasts as toast (toast.id)}

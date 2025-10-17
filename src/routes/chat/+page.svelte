@@ -28,7 +28,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
-	import { checkWrapperVersion, getDeviceInfo, getSafeAreaPadding } from '$lib/utils/device';
+	import { checkWrapperVersion, getDeviceInfo } from '$lib/utils/device';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -243,6 +244,9 @@
 			subscribeToSocketEvents();
 			// handleConnect();
 		};
+		window.onFlutterSafeAreaInsetsChanged = () => {
+			layoutStore.updateSafeAreaPadding();
+		};
 	}
 </script>
 
@@ -256,15 +260,15 @@
 
 		<button
 			onclick={() => goto('/settings')}
-			style="bottom: {getSafeAreaPadding().bottom + 8}px;"
+			style="bottom: {layoutStore.safeAreaPadding.bottom + 8}px;"
 			class="absolute left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
 			><Icon icon="mdi:gear" class="size-6" /></button
 		>
 	</SideBar>
 
 	<div
-		style="padding-top: {getSafeAreaPadding().top}px; padding-bottom: {getSafeAreaPadding().bottom +
-			8}px;"
+		style="padding-top: {layoutStore.safeAreaPadding.top}px; padding-bottom: {layoutStore
+			.safeAreaPadding.bottom + 8}px;"
 		class="flex min-w-0 flex-1 flex-col p-2"
 	>
 		<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">

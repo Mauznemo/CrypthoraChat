@@ -15,8 +15,8 @@
 	import { t } from 'svelte-i18n';
 	import { compressImage } from '$lib/utils/imageConverter';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
-	import { getSafeAreaPadding } from '$lib/utils/device';
 	import { fileUtils } from '$lib/chat/fileUtils';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 
 	let { data } = $props();
 
@@ -77,7 +77,10 @@
 	accept="image/*"
 />
 
-<div style="padding-top: {getSafeAreaPadding().top + 32}px;" class="flex flex-col items-center p-8">
+<div
+	style="padding-top: {layoutStore.safeAreaPadding.top + 32}px;"
+	class="flex flex-col items-center p-8"
+>
 	<div
 		class="flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl bg-gray-800/60 p-4 frosted-glass"
 	>

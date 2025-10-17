@@ -10,13 +10,12 @@
 	import GroupPicture from './GroupPicture.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
-	import { chatList } from '$lib/chat/chatList';
 	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
 	import { compressImage } from '$lib/utils/imageConverter';
-	import { getSafeAreaPadding } from '$lib/utils/device';
 	import { fileUtils } from '$lib/chat/fileUtils';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 
 	let groupName: string = $state('');
 
@@ -97,7 +96,7 @@
 
 {#if infoBarStore.isOpen && (chatStore.activeChat || infoBarStore.userToShow)}
 	<div
-		style="padding-top: {getSafeAreaPadding().top}px;"
+		style="padding-top: {layoutStore.safeAreaPadding.top}px;"
 		class="
 		fixed right-0 z-50 h-full w-full min-w-80 border-l border-gray-700 bg-gray-800/60 p-5 backdrop-blur-sm transition-transform duration-300 md:w-80 xl:static xl:bg-transparent"
 	>

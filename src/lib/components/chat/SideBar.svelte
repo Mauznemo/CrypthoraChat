@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import type { SafeUser } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 	import { version } from '$app/environment';
-	import { getSafeAreaPadding } from '$lib/utils/device';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 
 	let {
 		children
@@ -26,7 +25,7 @@
 </script>
 
 <div
-	style="padding-top: {getSafeAreaPadding().top}px;"
+	style="padding-top: {layoutStore.safeAreaPadding.top}px;"
 	class={`fixed z-50 h-full w-80 min-w-80 border-r border-gray-700 bg-gray-800/60 backdrop-blur-sm transition-transform duration-300 md:static md:bg-transparent
 		${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
 >
@@ -46,7 +45,7 @@
 	</button>
 	{@render children()}
 	<div
-		style="bottom: {getSafeAreaPadding().bottom + 8}px;"
+		style="bottom: {layoutStore.safeAreaPadding.bottom + 8}px;"
 		class="pointer-events-none absolute w-full text-center text-sm text-gray-500"
 	>
 		<p>Version {version}</p>

@@ -13,11 +13,13 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
+	import { layoutStore } from '$lib/stores/layout.svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
 		onboardingStore.init();
+		layoutStore.updateSafeAreaPadding();
 		navigator.serviceWorker?.ready.then((registration) => {
 			const currentLocale = get(locale);
 			registration.active?.postMessage({
