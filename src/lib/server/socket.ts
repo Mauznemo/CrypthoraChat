@@ -368,7 +368,7 @@ export async function initializeSocket(server: HTTPServer) {
 
 					io.to(data.chatId).emit('new-message', newMessage);
 
-					console.log('Sending push notifications to users: ' + chatUsers.length);
+					console.log('Sending push notifications (users in chat: ' + chatUsers.length + ')');
 					for (const user of chatUsers) {
 						const userSocketIds = getUserSockets(user.id);
 						if (userSocketIds.length !== 0) {
@@ -382,7 +382,10 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
-						if (hasUserActiveSockets(user.id)) continue; // Don't notify users that are currently in the app
+						if (hasUserActiveSockets(user.id)) {
+							console.log('User @' + user.username + ' has active sockets, skipping notification');
+							continue;
+						} // Don't notify users that are currently in the app
 
 						const userSubs = getUserSubscriptions(user.id);
 

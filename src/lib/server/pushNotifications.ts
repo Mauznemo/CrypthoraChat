@@ -23,7 +23,7 @@ export async function sendNtfyNotification(topic: string, data: NotificationDate
 		});
 
 		if (response.ok) {
-			console.log('Notification sent successfully');
+			console.log('Notification sent successfully to:', topic);
 			return true;
 		} else {
 			console.error('Failed to send notification:', response.status);
