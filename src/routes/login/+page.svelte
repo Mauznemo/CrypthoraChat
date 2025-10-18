@@ -31,9 +31,6 @@
 		<form
 			{...login.enhance(async ({ form, data, submit }) => {
 				try {
-					if (window.isFlutterWebView) {
-						await window.flutter_inappwebview.callHandler('regenerateNtfyTopic');
-					}
 					await deleteDatabase();
 					await submit();
 					if ((login.fields.allIssues()?.length ?? 0) === 0) {
