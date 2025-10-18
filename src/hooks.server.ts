@@ -1,14 +1,12 @@
 import type { Handle, HandleValidationError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { validateSession } from '$lib/utils/auth';
-import * as v from 'valibot';
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/', '/login', '/register'];
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/api/profile-picture'];
 
 const ADMIN_ROUTES = ['/admin'];
 
-// Check if a route is public
 function isPublicRoute(pathname: string): boolean {
 	return PUBLIC_ROUTES.some((route) => {
 		if (route === '/') return pathname === '/';
