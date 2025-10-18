@@ -38,10 +38,6 @@ function getMimeType(fileExtension: string): string {
 
 // GET /profile-pic?filePath=./uploads/profiles/<uuid>.png.enc
 export const GET: RequestHandler = async ({ url, locals }) => {
-	if (!locals.sessionId) {
-		throw error(401, 'Unauthorized');
-	}
-
 	try {
 		const filePathParam = url.searchParams.get('filePath');
 		if (!filePathParam) {
