@@ -6,6 +6,7 @@ import webpush from 'web-push';
 import 'dotenv/config';
 import { removeFile } from './fileUpload';
 import {
+	getImageUrl,
 	sendNtfyNotification,
 	sendWebpushNotification,
 	type NotificationDate
@@ -394,6 +395,11 @@ export async function initializeSocket(server: HTTPServer) {
 							username: newMessage.user.username,
 							chatId: newMessage.chat.id,
 							timestamp: newMessage.timestamp.getTime(),
+							imageUrl: getImageUrl(
+								newMessage.chat.type === 'group'
+									? newMessage.chat.imagePath
+									: newMessage.user.profilePicPath
+							),
 							chatName: newMessage.chat.name || undefined
 						};
 

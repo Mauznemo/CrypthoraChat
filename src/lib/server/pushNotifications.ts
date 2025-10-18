@@ -3,6 +3,7 @@ export interface NotificationDate {
 	username: string;
 	chatId: string;
 	timestamp: number;
+	imageUrl?: string;
 	chatName?: string;
 }
 
@@ -54,4 +55,9 @@ export async function sendWebpushNotification(
 		console.error('Error sending webpush notification:', error);
 		return false;
 	}
+}
+
+export function getImageUrl(path: string | null | undefined) {
+	if (!path) return undefined;
+	return `${process.env.CHAT_URL}/api/profile-picture?filePath=${path}`;
 }
