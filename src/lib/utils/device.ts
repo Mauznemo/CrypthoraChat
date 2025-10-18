@@ -75,11 +75,13 @@ export function checkWrapperVersion() {
 						{
 							text: get(t)('common.download'),
 							variant: 'primary',
-							onClick: () => {
-								window.open(
-									'https://github.com/Mauznemo/CrypthoraChatWrapper/releases/latest',
-									'_blank'
-								);
+							onClick: async () => {
+								if (window.isFlutterWebView) {
+									await window.flutter_inappwebview.callHandler(
+										'openUrl',
+										'https://github.com/Mauznemo/CrypthoraChatWrapper/releases/latest'
+									);
+								}
 							}
 						},
 						{

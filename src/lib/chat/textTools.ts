@@ -35,7 +35,10 @@ export function processLinks(text: string): string {
 		// Add protocol if missing (for www. links)
 		const href = url.startsWith('www.') ? `https://${url}` : url;
 
-		// Create clickable link with styling
+		if (window.isFlutterWebView) {
+			return `<a href="#" onclick="(async () => {try { await window.flutter_inappwebview.callHandler('openUrl', '${href}'); } catch (err) { console.error('Flutter handler error:', err); }})()" class="text-blue-400 hover:text-blue-300 underline">${url}</a>`;
+		}
+
 		return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">${url}</a>`;
 	});
 }
