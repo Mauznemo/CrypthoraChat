@@ -2,7 +2,7 @@
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import { getChatById, getUserById } from '$lib/chat/chat.remote';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 	import type { ChatWithoutMessages } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
@@ -229,23 +229,24 @@
 	}
 
 	if (browser) {
-		window.disconnectSocket = () => {
-			if (document.hidden) {
-				console.log('Disconnecting socket because window is hidden');
-				socketStore.disconnect();
+		window.setSocketActive = async () => {
+			socketStore.setSocketSessionActive();
+			if (!socketStore.connected) {
+				console.log('window.setSocketActive Connecting socket since it was not connected');
+				socketStore.connect();
 				unsubscribeFromSocketEvents();
-			} else {
-				console.log('Not disconnecting socket because window is not hidden');
+				await tick();
+				subscribeToSocketEvents();
 			}
 		};
-		window.connectSocket = () => {
-			if (socketStore.connected) return;
-			socketStore.connect();
-			subscribeToSocketEvents();
-			// handleConnect();
+		window.setSocketInactive = () => {
+			socketStore.setSocketSessionInactive();
 		};
 		window.onFlutterSafeAreaInsetsChanged = () => {
 			layoutStore.updateSafeAreaPadding();
+		};
+		window.goToChat = (chatId: string) => {
+			selectChat(chatId);
 		};
 	}
 </script>

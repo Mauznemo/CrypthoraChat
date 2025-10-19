@@ -27,8 +27,9 @@ declare global {
 		ntfyTopic?: string;
 		flutterSafeAreaInsets?: { top: number; bottom: number, left: number, right: number };
 		onFlutterSafeAreaInsetsChanged? = () => {};
-		disconnectSocket? = () => {};
-		connectSocket? = () => {};
+		setSocketActive? = () => {};
+		setSocketInactive? = () => {};
+		goToChat? = (chatId: string) => {};
 	}
 	var _io: Server | null;
 	var _sessionSocketMap: Map<string, SocketSessionData>;
