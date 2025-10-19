@@ -17,9 +17,12 @@ If you want to install the Web app just like a normal app (with its own window a
 On Android you have two options:
 ### Wrapper app (Recommended)
 The wrapper app has several advantages over just installing the PWA. Manly always receiving push notifications even after the phone goes into doze mode (after 30min screen off an being stationary), notifications having the actual app icon everywhere, the app feeling more native and some other things. To install it follow:
-1. Download and install the latest `apk` of the [wrapper app](https://github.com/Mauznemo/CrypthoraChatWrapper/releases/latest)
-2. Open it and give it all permission it needs
-3. Input your CrypthoraChat url and ntfy push server address (make sure to use `wss://` not `https://`)
+1. Install the ntfy app ([F-Droid](https://f-droid.org/packages/io.heckel.ntfy/), [GitHub](https://github.com/binwiederhier/ntfy-android/releases/latest) or from Play Store)
+2. Open it, tap on the three dots in the top right, open settings and change the default server to your ntfy server. Also change connection protocol to websockets
+3. Go into the apps settings/app info (hold down icon > app info). Tap on battery usage > background usage and set it to unrestricted (options may be called different depending on you phone)
+4. Now download and install the latest `apk` of the [wrapper app](https://github.com/Mauznemo/CrypthoraChatWrapper/releases/latest)
+5. Open it and give it all permission it needs
+6. Input your CrypthoraChat url (push provider should show ntfy, if not somethings is wrong) and tap save
 If you even want to change the server inside of CrypthoraChat g expand the side drawer, tap the gear and click on "Wrapper Settings"
 
 ### PWA
