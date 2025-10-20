@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { extractMentions } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
 	import { onMount, tick } from 'svelte';
 
 	let {
@@ -25,6 +24,11 @@
 		onKeydown: ((event: KeyboardEvent) => void) | undefined;
 		onFileSelected: ((file: File) => void) | undefined;
 	} = $props();
+
+	export function setValue(value: string): void {
+		internalValue = value;
+		value = internalValue;
+	}
 
 	let internalValue = $state(value);
 	let contentEditableDiv: HTMLDivElement;
@@ -77,12 +81,6 @@
 		console.log('innerText:', JSON.stringify(html.innerText));
 		return html.innerText;
 	}
-
-	$effect(() => {
-		if (value === '') {
-			internalValue = '';
-		}
-	});
 
 	$effect(() => {
 		if (contentEditableDiv && !isComposing) {

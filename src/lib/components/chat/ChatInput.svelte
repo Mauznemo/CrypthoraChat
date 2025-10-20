@@ -14,7 +14,6 @@
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import Icon from '@iconify/svelte';
 	import { idb } from '$lib/idb';
-	import { goto } from '$app/navigation';
 	import StickerPicker from './StickerPicker.svelte';
 	import { t } from 'svelte-i18n';
 	import { checkIfTouchDevice } from '$lib/utils/device';
@@ -46,7 +45,7 @@
 		previewUrls = {};
 
 		messageEditing = message;
-		chatValue = await decryptMessage({ message });
+		inputField.setValue(await decryptMessage({ message }));
 	}
 
 	export async function handleChatSelected(): Promise<void> {
@@ -56,9 +55,9 @@
 		const draft = await getDraft();
 		if (draft) {
 			console.log('draft', JSON.stringify(draft.trim()));
-			chatValue = draft.trim();
+			inputField.setValue(draft.trim());
 		} else {
-			chatValue = '';
+			inputField.setValue('');
 		}
 	}
 
@@ -257,7 +256,7 @@
 		}
 
 		const messageContent = chatValue.trim();
-		chatValue = '';
+		inputField.setValue('');
 
 		if (isTyping) {
 			socketStore.stopTyping({
@@ -355,7 +354,7 @@
 
 	function handleCloseEdit(): void {
 		messageEditing = null;
-		chatValue = '';
+		inputField.setValue('');
 		//setTimeout(() => autoGrow(inputField), 100);
 	}
 
@@ -482,9 +481,10 @@
 			{#each filteredUsers as participant}
 				<button
 					onclick={() => {
-						chatValue =
+						inputField.setValue(
 							chatValue.slice(0, chatValue.length - (currentMention?.length || 0)) +
-							participant.user.username;
+								participant.user.username
+						);
 					}}
 				>
 					<strong>@{participant.user.username.slice(0, currentMention?.length)}</strong

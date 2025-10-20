@@ -1,17 +1,14 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { socketStore } from '$lib/stores/socket.svelte';
-	import { getChatById, getUserById } from '$lib/chat/chat.remote';
+	import { getUserById } from '$lib/chat/chat.remote';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
-	import type { ChatWithoutMessages } from '$lib/types';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import ChatList from '$lib/components/chat/ChatList.svelte';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializePushNotifications } from '$lib/pushNotifications';
-	import { keySharerStore } from '$lib/stores/keySharer.svelte';
-	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import ChatInput from '$lib/components/chat/ChatInput.svelte';
 	import * as messages from '$lib/chat/messages';
 	import SideBar from '$lib/components/chat/SideBar.svelte';
@@ -25,15 +22,15 @@
 	import Icon from '@iconify/svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
-	import { toastStore } from '$lib/stores/toast.svelte';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
-	import { checkWrapperVersion, getDeviceInfo } from '$lib/utils/device';
+	import { checkWrapperVersion } from '$lib/utils/device';
 	import { layoutStore } from '$lib/stores/layout.svelte';
+	import CustomTextarea from '$lib/components/chat/CustomTextarea.svelte';
 
 	let { data }: PageProps = $props();
 
-	let inputField: HTMLTextAreaElement;
+	let inputField: CustomTextarea;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
 	let chatName: string | null = $derived.by(() => {
