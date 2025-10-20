@@ -246,6 +246,7 @@
 			layoutStore.updateSafeAreaPadding();
 		};
 		window.goToChat = (chatId: string) => {
+			if (chatStore.activeChat?.id === chatId) return;
 			selectChat(chatId);
 		};
 	}
