@@ -54,7 +54,6 @@
 	let messageContainer = $state<HTMLDivElement | null>(null);
 
 	let isLoadingOlder = $state(false);
-	let canLoadOlder = $state(false);
 
 	let isTouchDevice: boolean = $state(false);
 	let isHovering = false;
@@ -91,7 +90,7 @@
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				if (entry.isIntersecting && !isLoadingOlder && chats.hasMoreOlder && canLoadOlder) {
+				if (entry.isIntersecting && !isLoadingOlder && chats.hasMoreOlder) {
 					console.log('Loading older messages');
 					loadOlderMessages();
 				}
@@ -297,10 +296,6 @@
 		// Listen for clicks outside
 		document.addEventListener('click', handleClickOutside);
 		document.addEventListener('touchstart', handleClickOutside);
-
-		setTimeout(() => {
-			canLoadOlder = true;
-		}, 1000);
 
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
