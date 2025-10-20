@@ -96,7 +96,7 @@
 
 {#if infoBarStore.isOpen && (chatStore.activeChat || infoBarStore.userToShow)}
 	<div
-		style="padding-top: {layoutStore.safeAreaPadding.top}px;"
+		style="padding-top: {layoutStore.safeAreaPadding.top + 16}px;"
 		class="
 		fixed right-0 z-50 h-full w-full min-w-80 border-l border-gray-700 bg-gray-800/60 p-5 backdrop-blur-sm transition-transform duration-300 md:w-80 xl:static xl:bg-transparent"
 	>
