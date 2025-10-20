@@ -108,6 +108,7 @@ export function handleMessageUpdated(
 
 	if (update.content === true) {
 		chatStore.messages[index].encryptedContent = updatedMessage.encryptedContent;
+		chatStore.messages[index].isEdited = true;
 	}
 
 	if (update.reactions === true) {
