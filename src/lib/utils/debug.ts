@@ -10,5 +10,13 @@ export const developer = {
 		} catch (err) {
 			console.warn('Could not export key (might be non-extractable):', err);
 		}
+	},
+	showDebugInfo(): boolean {
+		if (localStorage.getItem('debug')) return true;
+		return false;
+	},
+	setDebug(enabled: boolean): void {
+		if (!enabled) localStorage.removeItem('debug');
+		else localStorage.setItem('debug', 'true');
 	}
 };

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { developer } from '$lib/utils/debug';
 	import { onMount, onDestroy, tick } from 'svelte';
 	import type { Snippet } from 'svelte';
 
@@ -15,8 +16,12 @@
 	} = $props();
 
 	let content: HTMLElement | null = null;
-	let anchorMessageId: string = '';
-	let lockedToBottom = true;
+	let anchorMessageId: string = $state('');
+	let lockedToBottom = $state(true);
+	let didResize = false;
+	let scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	let showDebugInfo = $state(false);
 
 	function isNearBottom(threshold = 10): boolean {
 		if (!container) return false;
@@ -61,14 +66,16 @@
 		handleScroll?.();
 	}
 
+	let lastChild: any;
+
 	onMount(() => {
 		if (!container || !content) return;
+
+		showDebugInfo = developer.showDebugInfo();
 
 		let lastDistanceToTop = 0;
 
 		const findReferenceElement = async () => {
-			// await tick();
-
 			const contentRect = content!.getBoundingClientRect();
 			const containerRect = container!.getBoundingClientRect();
 			const children = content!.children;
@@ -78,19 +85,33 @@
 				if (!child.dataset.messageId) continue;
 				const childRect = child.getBoundingClientRect();
 
+				if (didResize) {
+					console.log('[SV] Resizing, breaking findReferenceElement');
+					break;
+				}
+
 				if (childRect.bottom > containerRect.top && childRect.top < containerRect.bottom) {
+					console.log('[SV] Setting new anchor element to', child.dataset.messageId);
 					lastDistanceToTop = childRect.top - contentRect.top;
 					anchorMessageId = child.dataset.messageId;
+					if (showDebugInfo) {
+						child.style.background = '#fff';
+						if (lastChild === child) break;
+						if (lastChild) lastChild.style.background = '#bbbb';
+						lastChild = child;
+					}
 					break;
 				}
 			}
 		};
 
-		const ro = new ResizeObserver(() => {
+		const ro = new ResizeObserver(async () => {
 			if (lockedToBottom) {
 				container!.scrollTop = container!.scrollHeight;
 				return;
 			}
+
+			didResize = true;
 
 			const contentRect = content!.getBoundingClientRect();
 			const refEl = document.querySelector(`[data-message-id="${anchorMessageId}"]`);
@@ -98,7 +119,7 @@
 			const currentDistanceToTop = refTop - contentRect.top;
 
 			console.log(
-				`[SV] currentDistanceToTop ${currentDistanceToTop} last distance to top ${lastDistanceToTop}`
+				`[SV] currentDistanceToTop ${currentDistanceToTop} last distance to top ${lastDistanceToTop}, messageId ${anchorMessageId}`
 			);
 
 			// If reference element moved down, content was added above
@@ -106,23 +127,46 @@
 				const offset = currentDistanceToTop - lastDistanceToTop;
 				console.log('[SV] Content added above viewport, adjusting scroll:', offset);
 				container!.scrollTop += offset;
+
+				// Wait a bit before allowing findReferenceElement to run again
+				setTimeout(() => {
+					didResize = false;
+				}, 50);
 			} else {
+				didResize = false;
 				console.log('[SV] Content added below viewport, no adjustment needed');
 			}
 		});
 
 		findReferenceElement();
 
-		function handleScroll() {
-			findReferenceElement();
+		function handleScrollDebounced() {
+			// Clear existing timer
+			if (scrollDebounceTimer) {
+				clearTimeout(scrollDebounceTimer);
+			}
+
+			// Set new timer
+			scrollDebounceTimer = setTimeout(() => {
+				if (didResize) {
+					console.log('[SV] Resizing, not calling findReferenceElement from scroll');
+					return;
+				}
+				console.log('[SV] Calling findReferenceElement from scroll');
+				findReferenceElement();
+				scrollDebounceTimer = null;
+			}, 100); // 100ms debounce
 		}
 
-		container.addEventListener('scroll', handleScroll);
+		container.addEventListener('scroll', handleScrollDebounced);
 		ro.observe(content);
 
 		onDestroy(() => {
+			if (scrollDebounceTimer) {
+				clearTimeout(scrollDebounceTimer);
+			}
 			ro?.disconnect();
-			container?.removeEventListener('scroll', handleScroll);
+			container?.removeEventListener('scroll', handleScrollDebounced);
 		});
 	});
 </script>
@@ -140,4 +184,14 @@
 	<div bind:this={content} class="flex flex-col">
 		{@render children()}
 	</div>
+	{#if showDebugInfo}
+		<div class="fixed top-5 right-5">
+			{#if lockedToBottom}
+				<p>Locked</p>
+			{:else}
+				<p>Unlocked</p>
+			{/if}
+			<p>{anchorMessageId}</p>
+		</div>
+	{/if}
 </div>

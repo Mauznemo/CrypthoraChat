@@ -235,7 +235,8 @@
     "advanced": {
       "clear-cache": "Caches löschen",
       "reset-sw": "Service Workers zurücksetzen",
-      "service-worker": "Service Worker"
+      "service-worker": "Service Worker",
+      "show-debug-info": "Debug-Info anzeigen"
     },
     "appearance": {
       "background": "Hintergrund",

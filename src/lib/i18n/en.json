@@ -259,7 +259,8 @@
     "advanced": {
       "reset-sw": "Reset Service Workers",
       "service-worker": "Service Worker",
-      "clear-cache": "Clear Caches"
+      "clear-cache": "Clear Caches",
+      "show-debug-info": "Show Debug Info"
     },
     "settings": "Settings"
   },
