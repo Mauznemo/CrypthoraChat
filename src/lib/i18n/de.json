@@ -22,7 +22,7 @@
     "add-reaction": "Reaktion hinzufügen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
-    "loading-older": "Lädt älterer Nachrichten...",
+    "loading-older": "Lädt ältere Nachrichten...",
     "reply": "Antworten",
     "show-info": "Info anzeigen",
     "attachments": "{count, plural, one {# anhang} other {# anhänge}}",

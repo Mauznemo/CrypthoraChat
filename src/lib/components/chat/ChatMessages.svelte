@@ -334,7 +334,7 @@
 >
 	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}
-			<LoadingSpinner />
+			<LoadingSpinner size="1.5rem" />
 			<div class="py-2 text-center text-sm text-gray-500">{$t('chat.loading-older')}</div>
 		{/if}
 	</div>
