@@ -82,11 +82,11 @@
 	<div class="h-5 lg:hidden"></div>
 {/if}
 <div
-	class="message-container relative my-1 flex flex-row-reverse items-start space-x-2 space-x-reverse"
+	class="message-container relative my-1 flex flex-row-reverse items-start space-x-2 space-x-reverse lg:pr-10"
 >
 	<!-- Profile picture and username (only shown for first message in group) -->
 	<div
-		class="absolute -top-[20px] -right-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:right-0"
+		class="absolute -top-[20px] -right-1 z-10 flex flex-col items-center space-y-1 lg:top-0 lg:right-0"
 	>
 		{#if showProfile}
 			<ProfilePicture user={message.user} size="2rem" imageSize="64" />

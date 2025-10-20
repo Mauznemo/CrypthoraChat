@@ -80,11 +80,9 @@
 {#if showProfile}
 	<div class="h-2"></div>
 {/if}
-<div class="relative m-1 mr-6 flex items-start space-x-2">
+<div class="relative m-1 mr-6 flex items-start space-x-2 lg:pl-10">
 	<!-- Profile picture and username (only shown for first message in group) -->
-	<div
-		class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:relative lg:top-0 lg:left-0"
-	>
+	<div class="absolute -top-1 -left-1 z-10 flex flex-col items-center space-y-1 lg:top-0 lg:left-0">
 		{#if showProfile}
 			<ProfilePicture user={message.user} size="2rem" imageSize="64" />
 		{:else}
