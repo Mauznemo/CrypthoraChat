@@ -38,7 +38,7 @@ export async function validateUser(username: string, password: string): Promise<
 
 export async function createSession(userId: string, deviceOs: string) {
 	const expiresAt = new Date();
-	expiresAt.setDate(expiresAt.getDate() + 360); // 360 days
+	expiresAt.setMonth(expiresAt.getMonth() + 6); // 6 months expiration
 
 	return db.session.create({
 		data: {
@@ -55,12 +55,30 @@ export async function validateSession(sessionId: string) {
 		include: { user: true }
 	});
 
-	if (!session || session.expiresAt < new Date()) {
+	const now = new Date();
+
+	// Check if session exists and is not expired
+	if (!session || session.expiresAt < now) {
 		if (session) {
 			await db.session.delete({ where: { id: sessionId } });
 		}
-
 		return null;
+	}
+
+	// Calculate the time difference in milliseconds
+	const timeUntilExpiry = session.expiresAt.getTime() - now.getTime();
+	const halfMonthInMs = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+
+	if (timeUntilExpiry <= halfMonthInMs) {
+		const newExpiresAt = new Date();
+		newExpiresAt.setMonth(newExpiresAt.getMonth() + 6); // Renew for another 6 months
+
+		await db.session.update({
+			where: { id: sessionId },
+			data: { expiresAt: newExpiresAt }
+		});
+
+		session.expiresAt = newExpiresAt;
 	}
 
 	return session;
