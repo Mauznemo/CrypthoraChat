@@ -114,7 +114,7 @@ export const chats = {
 	},
 
 	/** Tries to select a chat and get its messages, shows an error modal if it fails */
-	async trySelectChat(newChatId: string): Promise<{ success: boolean }> {
+	async trySelectChat(newChatId: string, messagesToLoad = 15): Promise<{ success: boolean }> {
 		chatStore.loadingChat = true;
 		cancelAllDownloads();
 		console.log('Chat selected (leaving previous):', chatStore.activeChat?.id);
@@ -165,7 +165,10 @@ export const chats = {
 			return { success: false };
 		}
 
-		const success = await chats.tryGetMessages(currentNewChat, { limit: 15, loadMore: 'older' });
+		const success = await chats.tryGetMessages(currentNewChat, {
+			limit: messagesToLoad,
+			loadMore: 'older'
+		});
 
 		if (success) {
 			chatStore.activeChat = currentNewChat;

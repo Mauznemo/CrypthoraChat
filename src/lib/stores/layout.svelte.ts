@@ -24,6 +24,9 @@ class Layout {
 			right: 0
 		};
 	}
+
+	anchorMessageId: string = $state('');
+	lastDistanceToTop = 0;
 }
 
 export const layoutStore = new Layout();

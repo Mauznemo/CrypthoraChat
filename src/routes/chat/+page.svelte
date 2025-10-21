@@ -103,7 +103,7 @@
 		});
 		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
 		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
-		socketStore.onConnect(handleConnect);
+		socketStore.onConnect(() => handleConnect(true));
 		socketStore.onUserVerifyRequested((d) => {
 			console.log('User @' + d.requestorUsername + ' requested a verification');
 			modalStore.open({
@@ -146,7 +146,7 @@
 		socketStore.off('messages-read');
 		socketStore.off('new-chat', chats.handleAddedToChatChat);
 		socketStore.off('removed-from-chat', chats.handleRemovedFromChat);
-		socketStore.off('connect', handleConnect);
+		socketStore.off('connect');
 		socketStore.off('new-system-message');
 		socketStore.off('requested-user-verify');
 		socketStore.off('chat-users-updated');
@@ -180,7 +180,7 @@
 		window.history.replaceState({}, document.title, url);
 	}
 
-	async function handleConnect(): Promise<void> {
+	async function handleConnect(shouldRestoreScrollPos = false): Promise<void> {
 		chatStore.loadingChat = true;
 		const params = new URLSearchParams(window.location.search);
 		removeQueryParams();
@@ -194,7 +194,7 @@
 			return;
 		}
 
-		selectChat(chatId);
+		selectChat(chatId, shouldRestoreScrollPos);
 	}
 
 	function handleCreateChat(): void {
@@ -211,15 +211,27 @@
 	}
 
 	let processingChatSelection = false;
-	async function selectChat(chatId: string): Promise<void> {
+	async function selectChat(chatId: string, shouldRestoreScrollPos = false): Promise<void> {
 		if (processingChatSelection) return;
 		processingChatSelection = true;
+		await tick();
 
-		const result = await chats.trySelectChat(chatId);
+		let restoreScrollPos = false;
+		let messagesToLoad = 15;
+		if (chatStore.activeChat && chatStore.activeChat.id === chatId && shouldRestoreScrollPos) {
+			restoreScrollPos = true;
+			messagesToLoad = chatStore.messages.length < 15 ? 15 : chatStore.messages.length;
+			chatStore.scrollView?.findReference();
+		}
+
+		const result = await chats.trySelectChat(chatId, messagesToLoad);
 
 		if (result.success) {
 			chatInput.handleChatSelected();
 			sideBar?.close();
+			if (!restoreScrollPos) {
+				chatStore.scrollView?.lockToBottom();
+			}
 		}
 
 		processingChatSelection = false;
