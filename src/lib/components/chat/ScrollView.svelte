@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 	import { layoutStore } from '$lib/stores/layout.svelte';
 	import { developer } from '$lib/utils/debug';
+	import Icon from '@iconify/svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
+	import { fly } from 'svelte/transition';
 
 	let {
 		class: className = '',
@@ -20,6 +23,7 @@
 	let lockedToBottom = $state(false);
 	let lastChild: any;
 	let showDebugInfo = $state(false);
+	let hideDownButton = $state(false);
 
 	function isNearBottom(threshold = 10): boolean {
 		if (!container) return false;
@@ -29,6 +33,7 @@
 
 	export function lockToBottom() {
 		lockedToBottom = true;
+		hideDownButton = true;
 		container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 	}
 
@@ -43,8 +48,10 @@
 	}
 
 	function onScroll() {
-		if (isNearBottom(10)) lockedToBottom = true;
-		else lockedToBottom = false;
+		if (isNearBottom(10)) {
+			lockedToBottom = true;
+			hideDownButton = false;
+		} else lockedToBottom = false;
 		handleScroll?.();
 	}
 
@@ -123,7 +130,7 @@
 <div
 	bind:this={container}
 	onscroll={onScroll}
-	class={`relative container mini-scrollbar h-full overflow-x-hidden overflow-y-auto ${className}`}
+	class={`relative mini-scrollbar h-full overflow-x-hidden overflow-y-auto ${className}`}
 	aria-live="polite"
 >
 	<div bind:this={content} class="flex flex-col">
@@ -133,5 +140,16 @@
 		<div class="fixed top-5 right-5 text-xs">
 			{lockedToBottom ? 'Locked' : 'Unlocked'} | {layoutStore.anchorMessageId}
 		</div>
+	{/if}
+	{#if !lockedToBottom && !hideDownButton}
+		<button
+			transition:fly|global={{ duration: 500, y: 200 }}
+			onclick={lockToBottom}
+			class="fixed bottom-20 z-50 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white {infoBarStore.isOpen
+				? 'right-[350px]'
+				: 'right-10'}"
+		>
+			<Icon icon="mdi:arrow-down" class="size-6" />
+		</button>
 	{/if}
 </div>
