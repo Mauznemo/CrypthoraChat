@@ -214,6 +214,7 @@
 	async function selectChat(chatId: string, shouldRestoreScrollPos = false): Promise<void> {
 		if (processingChatSelection) return;
 		processingChatSelection = true;
+		await chatInput.saveDraft();
 		await tick();
 
 		let restoreScrollPos = false;

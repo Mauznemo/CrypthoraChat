@@ -25,9 +25,9 @@
 		onFileSelected: ((file: File) => void) | undefined;
 	} = $props();
 
-	export function setValue(value: string): void {
-		internalValue = value;
-		value = internalValue;
+	export function setValue(val: string): void {
+		internalValue = val;
+		value = val;
 	}
 
 	let internalValue = $state(value);

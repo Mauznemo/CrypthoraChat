@@ -52,6 +52,10 @@
 		messageReplying = null;
 		messageEditing = null;
 
+		if (draftTimeout) {
+			clearTimeout(draftTimeout);
+		}
+
 		const draft = await getDraft();
 		if (draft) {
 			console.log('draft', JSON.stringify(draft.trim()));
@@ -83,14 +87,14 @@
 
 	let stickerPicker: StickerPicker;
 
-	async function saveDraft(): Promise<void> {
+	export async function saveDraft(): Promise<void> {
 		if (!chatStore.activeChat) return;
 		const trimmedChatValue = chatValue.trim();
 		if (!trimmedChatValue) {
 			await clearDraft();
 			return;
 		}
-		console.log('draft saved:', JSON.stringify(trimmedChatValue));
+		console.log('draft saved:', JSON.stringify(trimmedChatValue), 'for', chatStore.activeChat.name);
 		await idb!.put(
 			'draftMessages',
 			{ chatId: chatStore.activeChat.id, message: trimmedChatValue },
@@ -107,7 +111,7 @@
 		if (!chatStore.activeChat) return null;
 		let result = await idb!.get('draftMessages', chatStore.activeChat.id);
 		if (!result) return null;
-		console.log('draft:', JSON.stringify(result.message));
+		console.log('got draft:', JSON.stringify(result.message), 'for', chatStore.activeChat.name);
 		const message = result.message;
 		const trimmedMessage = message.trim();
 		if (trimmedMessage === '') return null;
@@ -166,6 +170,10 @@
 
 		if (typingTimeout) {
 			clearTimeout(typingTimeout);
+		}
+
+		if (draftTimeout) {
+			clearTimeout(draftTimeout);
 		}
 
 		if (chatStore.activeChat && isTyping && chatStore.user?.id) {
