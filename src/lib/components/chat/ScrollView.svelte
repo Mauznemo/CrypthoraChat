@@ -24,6 +24,8 @@
 	let lastChild: any;
 	let showDebugInfo = $state(false);
 	let hideDownButton = $state(false);
+	let allowUnlock = $state(false);
+	let unlockTimeout: NodeJS.Timeout | null = null;
 
 	function isNearBottom(threshold = 10): boolean {
 		if (!container) return false;
@@ -34,6 +36,10 @@
 	export function lockToBottom() {
 		lockedToBottom = true;
 		hideDownButton = true;
+		allowUnlock = false;
+		unlockTimeout = setTimeout(() => {
+			allowUnlock = true;
+		}, 500);
 		container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 	}
 
@@ -48,11 +54,15 @@
 	}
 
 	function onScroll() {
+		handleScroll?.();
+
 		if (isNearBottom(10)) {
 			lockedToBottom = true;
 			hideDownButton = false;
-		} else lockedToBottom = false;
-		handleScroll?.();
+		} else {
+			if (!allowUnlock) return;
+			lockedToBottom = false;
+		}
 	}
 
 	let lastDistanceToTop = 0;
@@ -145,9 +155,10 @@
 		<button
 			transition:fly|global={{ duration: 500, y: 200 }}
 			onclick={lockToBottom}
-			class="fixed bottom-20 z-50 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white {infoBarStore.isOpen
+			class="fixed z-50 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white {infoBarStore.isOpen
 				? 'right-[350px]'
 				: 'right-10'}"
+			style="bottom: {80 + layoutStore.safeAreaPadding.bottom}px;"
 		>
 			<Icon icon="mdi:arrow-down" class="size-6" />
 		</button>
