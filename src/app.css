@@ -94,7 +94,7 @@
 		@apply pointer-events-none invisible opacity-0;
 		transition: all 0.2s ease-out;
 		transition-delay: var(--tooltip-delay, 500ms);
-		transform: translate(-50%, 5px);
+		transform: translate(-50%, 0);
 	}
 
 	/* Tooltip content */
@@ -128,7 +128,6 @@
 	[data-tooltip]:not([data-tooltip='false']):hover:before,
 	[data-tooltip]:not([data-tooltip='false']):hover:after {
 		@apply visible opacity-100;
-		transform: translate(-50%, 0);
 	}
 
 	/* Hide immediately when not hovering */
