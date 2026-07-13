@@ -24,6 +24,7 @@
 	import { t } from 'svelte-i18n';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
 	import BigImagePreview from '$lib/components/chat/BigImagePreview.svelte';
+	import BigDocumentPreview from '$lib/components/chat/BigDocumentPreview.svelte';
 	import { checkWrapperVersion } from '$lib/utils/device';
 	import { layoutStore } from '$lib/stores/layout.svelte';
 	import CustomTextarea from '$lib/components/chat/CustomTextarea.svelte';
@@ -355,3 +356,4 @@
 
 <AddUserToChat />
 <BigImagePreview />
+<BigDocumentPreview />

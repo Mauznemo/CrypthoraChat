@@ -47,6 +47,14 @@ const AUDIO_MIME_TYPES = new Set([
 	'audio/webm'
 ]);
 
+const PDF_EXTENSIONS = new Set(['pdf']);
+
+const PDF_MIME_TYPES = new Set(['application/pdf']);
+
+const HTML_EXTENSIONS = new Set(['html', 'htm']);
+
+const HTML_MIME_TYPES = new Set(['text/html']);
+
 export const fileUtils = {
 	/** Check if a filename has an image extension */
 	isImageFile(filename: string): boolean {
@@ -117,6 +125,52 @@ export const fileUtils = {
 		return AUDIO_MIME_TYPES.has(mimeType);
 	},
 
+	/** Check if a filename has a pdf extension */
+	isPdfFile(filename: string): boolean {
+		if (!filename || typeof filename !== 'string') {
+			return false;
+		}
+
+		const lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex === -1) {
+			return false;
+		}
+
+		const extension = filename.substring(lastDotIndex + 1).toLowerCase();
+		return PDF_EXTENSIONS.has(extension);
+	},
+
+	isPdfExtension(extension: string): boolean {
+		return PDF_EXTENSIONS.has(extension);
+	},
+
+	isPdfMimeType(mimeType: string): boolean {
+		return PDF_MIME_TYPES.has(mimeType);
+	},
+
+	/** Check if a filename has an html extension */
+	isHtmlFile(filename: string): boolean {
+		if (!filename || typeof filename !== 'string') {
+			return false;
+		}
+
+		const lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex === -1) {
+			return false;
+		}
+
+		const extension = filename.substring(lastDotIndex + 1).toLowerCase();
+		return HTML_EXTENSIONS.has(extension);
+	},
+
+	isHtmlExtension(extension: string): boolean {
+		return HTML_EXTENSIONS.has(extension);
+	},
+
+	isHtmlMimeType(mimeType: string): boolean {
+		return HTML_MIME_TYPES.has(mimeType);
+	},
+
 	/** Get the file extension from a filename */
 	getFileExtension(filename: string): string | null {
 		if (!filename || typeof filename !== 'string') {
@@ -185,10 +239,25 @@ export const fileUtils = {
 		}
 	},
 
+	/**
+	 * Blob URLs are rendered by declared MIME type (unlike <img>/<video>/<audio>, which
+	 * sniff content), so an iframe needs an explicitly-typed blob or it shows raw bytes.
+	 */
+	ensureMimeType(blob: Blob, fileType: 'image' | 'video' | 'audio' | 'pdf' | 'html' | 'other'): Blob {
+		const mimeType =
+			fileType === 'pdf' ? 'application/pdf' : fileType === 'html' ? 'text/html' : null;
+		if (!mimeType || blob.type === mimeType) return blob;
+		return blob.slice(0, blob.size, mimeType);
+	},
+
 	async getPreviewURL(
 		file: File | Blob,
-		expectedType: 'image' | 'video' | 'audio'
+		expectedType: 'image' | 'video' | 'audio' | 'pdf' | 'html'
 	): Promise<string> {
+		if (expectedType === 'pdf' || expectedType === 'html') {
+			return URL.createObjectURL(file);
+		}
+
 		const url = URL.createObjectURL(file);
 
 		try {

@@ -45,7 +45,9 @@
       "loading-video": "Video lädt {size}",
       "sticker-added-to-my-stickers": "Sticker erfolgreich zu Ihren Stickern hinzugefügt",
       "add-to-my-stickers": "Zu meinen Stickern hinzufügen",
-      "corrupted-file": "(Beschädigt)"
+      "corrupted-file": "(Beschädigt)",
+      "decrypt-failed-document": "Dokument konnte nicht entschlüsselt werden",
+      "loading-document": "Dokument wird geladen {size}"
     },
     "chat-list": {
       "new-chat": "+ Neuer Chat",

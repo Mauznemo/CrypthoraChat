@@ -15,6 +15,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
 	import { imagePreviewStore } from '$lib/stores/imagePreview.svelte';
+	import { documentPreviewStore } from '$lib/stores/documentPreview.svelte';
+	import PdfCanvas from './PdfCanvas.svelte';
 
 	const {
 		attachmentPath,
@@ -28,7 +30,7 @@
 	let ignoreLimit = $state(false);
 	let fileInIDB = $state(false);
 
-	let fileType: 'image' | 'video' | 'audio' | 'other' = $state('other');
+	let fileType: 'image' | 'video' | 'audio' | 'pdf' | 'html' | 'other' = $state('other');
 	let subType: string | null = $state(null);
 
 	let previewUrl: string | null = $state(null);
@@ -46,6 +48,8 @@
 		if (fileUtils.isImageExtension(ext)) fileType = 'image';
 		else if (fileUtils.isVideoExtension(ext)) fileType = 'video';
 		else if (fileUtils.isAudioExtension(ext)) fileType = 'audio';
+		else if (fileUtils.isPdfExtension(ext)) fileType = 'pdf';
+		else if (fileUtils.isHtmlExtension(ext)) fileType = 'html';
 
 		if (fileType === 'image' && attachmentPath.startsWith('sticker:')) subType = 'sticker';
 
@@ -89,6 +93,8 @@
 		if (fileUtils.isImageFile(name)) fileType = 'image';
 		if (fileUtils.isVideoFile(name)) fileType = 'video';
 		if (fileUtils.isAudioFile(name)) fileType = 'audio';
+		if (fileUtils.isPdfFile(name)) fileType = 'pdf';
+		if (fileUtils.isHtmlFile(name)) fileType = 'html';
 		fileSizeBytes = await getFileSize(attachmentPath);
 		fileInIDB = await fileExistsInIDB(attachmentPath);
 
@@ -104,16 +110,19 @@
 		let blob: Blob;
 
 		if (retrievedBlob) {
-			previewUrl = URL.createObjectURL(retrievedBlob);
-			blob = retrievedBlob;
+			blob = fileUtils.ensureMimeType(retrievedBlob, fileType);
+			previewUrl = URL.createObjectURL(blob);
 			console.log('retrievedBlob');
 		} else {
 			const result = await tryGetFile(attachmentPath);
 			if (!result.success) return;
-			blob = await decryptFile(result.encodedData!, keyVersion);
+			blob = fileUtils.ensureMimeType(await decryptFile(result.encodedData!, keyVersion), fileType);
 			console.log('decryptFile');
 			try {
-				previewUrl = await fileUtils.getPreviewURL(blob, fileType as 'image' | 'video' | 'audio');
+				previewUrl = await fileUtils.getPreviewURL(
+					blob,
+					fileType as 'image' | 'video' | 'audio' | 'pdf' | 'html'
+				);
 			} catch (error) {
 				console.log('Failed to get preview URL', error);
 				fileType = 'other';
@@ -215,11 +224,17 @@
 			return 'height: 300px; width: 400px; max-width: 100%;';
 		} else if (fileType === 'audio') {
 			return 'height: 190px; width: 400px; max-width: 100%;';
+		} else if (fileType === 'pdf' || fileType === 'html') {
+			return 'height: 220px; width: 300px; max-width: 100%;';
 		} else if (fileType === 'other') {
 			return 'height: 48px; width: 300px; max-width: 100%;';
 		}
 		return '';
 	}
+
+	const DOCUMENT_PREVIEW_SOURCE_SIZE = 1000;
+	const DOCUMENT_PREVIEW_CARD_WIDTH = 300;
+	const DOCUMENT_PREVIEW_SCALE = DOCUMENT_PREVIEW_CARD_WIDTH / DOCUMENT_PREVIEW_SOURCE_SIZE;
 </script>
 
 <div class="max-w-full self-stretch">
@@ -245,6 +260,10 @@
 					{@render videoPreview(decryptedName)}
 				{:else if fileType === 'audio'}
 					{@render audioPreview(decryptedName)}
+				{:else if fileType === 'pdf'}
+					{@render pdfPreview(decryptedName)}
+				{:else if fileType === 'html'}
+					{@render htmlPreview(decryptedName)}
 				{:else if fileType === 'other'}
 					{@render otherPreview(decryptedName)}
 				{/if}
@@ -414,6 +433,129 @@
 			</p>
 		{/await}
 	{/if}
+{/snippet}
+
+{#snippet htmlPreview(name: string)}
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
+		{@render ignoreLimitButton(name, fileSizeBytes)}
+	{:else}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
+			{@render documentLoading(name)}
+		{:then previewUrl}
+			{#if previewUrl}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+				<div
+					onclick={() => documentPreviewStore.openDisplay(previewUrl!, 'html', name)}
+					oncontextmenu={(e) => handleContextMenu(e, name)}
+					role="group"
+					style={getPreviewSize()}
+					class="relative cursor-pointer overflow-hidden rounded-xl bg-gray-200"
+				>
+					<div class="pointer-events-none absolute inset-0 overflow-hidden">
+						<iframe
+							src={previewUrl}
+							title={name}
+							sandbox=""
+							tabindex="-1"
+							style="width: {DOCUMENT_PREVIEW_SOURCE_SIZE}px; height: {DOCUMENT_PREVIEW_SOURCE_SIZE}px; transform: scale({DOCUMENT_PREVIEW_SCALE}); transform-origin: top left; border: none;"
+						></iframe>
+					</div>
+					<span
+						class="absolute top-3 left-3 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white"
+					>
+						HTML
+					</span>
+					{@render documentDownloadButton(previewUrl, name)}
+					{@render documentNameBar(name)}
+				</div>
+			{/if}
+		{:catch error}
+			{console.error(error)}
+			<p class="text-center whitespace-pre-line text-red-400">
+				{$t('chat.attachment.decrypt-failed-document')}
+			</p>
+		{/await}
+	{/if}
+{/snippet}
+
+{#snippet pdfPreview(name: string)}
+	{#if fileSizeBytes > DOWNLOAD_LIMIT && !ignoreLimit && !fileInIDB}
+		{@render ignoreLimitButton(name, fileSizeBytes)}
+	{:else}
+		{#await getMediaUrl(attachmentPath, keyVersion, name)}
+			{@render documentLoading(name)}
+		{:then previewUrl}
+			{#if previewUrl}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+				<div
+					onclick={() => documentPreviewStore.openDisplay(previewUrl!, 'pdf', name)}
+					oncontextmenu={(e) => handleContextMenu(e, name)}
+					role="group"
+					style={getPreviewSize()}
+					class="relative cursor-pointer overflow-hidden rounded-xl bg-gray-200"
+				>
+					<div class="absolute inset-0 flex items-center justify-center">
+						<PdfCanvas
+							src={previewUrl}
+							maxWidth={DOCUMENT_PREVIEW_CARD_WIDTH - 20}
+							maxHeight={200}
+							onerror={() => {
+								corruptedFile = true;
+							}}
+						/>
+					</div>
+					<span
+						class="absolute top-3 left-3 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white"
+					>
+						PDF
+					</span>
+					{@render documentDownloadButton(previewUrl, name)}
+					{@render documentNameBar(name)}
+				</div>
+			{/if}
+		{:catch error}
+			{console.error(error)}
+			<p class="text-center whitespace-pre-line text-red-400">
+				{$t('chat.attachment.decrypt-failed-document')}
+			</p>
+		{/await}
+	{/if}
+{/snippet}
+
+{#snippet documentLoading(name: string)}
+	<div
+		style={getPreviewSize()}
+		class="relative flex max-w-full flex-col items-center justify-center rounded-xl bg-gray-500/20"
+	>
+		<LoadingSpinner />
+		<p class="text-md absolute bottom-1/8 text-center font-bold whitespace-pre-line text-gray-400">
+			{$t('chat.attachment.loading-document', {
+				values: { size: fileUtils.formatFileSize(fileSizeBytes) }
+			})}
+		</p>
+	</div>
+{/snippet}
+
+{#snippet documentDownloadButton(previewUrl: string, name: string)}
+	<button
+		onclick={(e) => {
+			e.stopPropagation();
+			fileUtils.downloadFileFromUrl(previewUrl, name);
+		}}
+		data-tooltip={$t('common.download')}
+		class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
+		aria-label="Download"
+	>
+		<Icon icon="mdi:tray-download" class="size-6" />
+	</button>
+{/snippet}
+
+{#snippet documentNameBar(name: string)}
+	<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+		<p class="line-clamp-1 pr-2 text-xs font-bold break-all text-white">{name}</p>
+	</div>
 {/snippet}
 
 {#snippet otherPreview(name: string)}

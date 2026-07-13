@@ -43,6 +43,8 @@
       "decrypt-failed-video": "Failed to decrypt video",
       "loading-audio": "Loading audio {size}",
       "decrypt-failed-audio": "Failed to decrypt audio",
+      "loading-document": "Loading document {size}",
+      "decrypt-failed-document": "Failed to decrypt document",
       "ignore-limit": "Download and load preview",
       "add-to-my-stickers": "Add to my stickers",
       "corrupted-file": "(Corrupted)"
