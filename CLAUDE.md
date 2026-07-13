@@ -7,4 +7,4 @@ And open-source self-hostable E2EE chat app for friends and family.
 - The app has two parts, the main landing page etc in src/routes/[lang=lang]/(main) and articles in src/routes/[lang=lang]/articles.
 - The app can be used in web, as a PWA or in a custom Flutter wrapper app.
 - When updating the db remember to run `npx prisma migrate dev` and `npx prisma generate` if needed
-- You can run normal `npm` commands, it is on my PATH
+- If you need to test the app while logged in please use the connected Chrome browser, it is already logged in (if not please tell me)

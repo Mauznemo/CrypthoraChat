@@ -124,9 +124,9 @@
 						<p class="pr-9 whitespace-pre-line text-white">{$t('common.loading')}</p>
 					{/if}
 				{:then decryptedContent}
-					<p class="pr-9 break-words whitespace-pre-line text-white">
+					<div class="pr-9 break-words whitespace-pre-line text-white">
 						{@html processMessageText(decryptedContent)}
-					</p>
+					</div>
 				{:catch error}
 					<p class="pr-9 whitespace-pre-line text-red-400">
 						{$t('chat.failed-to-decrypt-message')}

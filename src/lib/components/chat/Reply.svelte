@@ -25,7 +25,7 @@
 					<p
 						class="line-clamp-4 max-w-[40ch] text-sm break-words whitespace-pre-line text-gray-100"
 					>
-						{@html processMessageText(decryptedContent)}
+						{@html processMessageText(decryptedContent, { tables: false })}
 					</p>
 				{/if}
 			{:catch error}
