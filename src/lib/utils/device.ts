@@ -35,6 +35,12 @@ export function getDeviceInfo() {
 	return { os, browser };
 }
 
+export function isPwaStandalone(): boolean {
+	if (typeof window === 'undefined') return false;
+	const nav = window.navigator as Navigator & { standalone?: boolean };
+	return window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+}
+
 export function checkIfTouchDevice(): boolean {
 	if (typeof window === 'undefined') return false;
 	// Check for fine pointer (mouse) as primary input method

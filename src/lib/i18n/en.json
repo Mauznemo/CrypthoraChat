@@ -156,6 +156,12 @@
       "failed-to-remove-user": "Failed to remove user:",
       "user-removed": "Successfully removed user from chat"
     },
+    "link-modal": {
+      "title": "Open Link?",
+      "copy": "Copy Link",
+      "open": "Open Link",
+      "copied": "Link copied to clipboard"
+    },
     "chats": {
       "failed-to-select-chat": "Failed to select chat, make sure you are online.",
       "failed-to-decrypt-chat-key": "Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: {error})",
@@ -260,7 +266,8 @@
       "reset-sw": "Reset Service Workers",
       "service-worker": "Service Worker",
       "clear-cache": "Clear Caches",
-      "show-debug-info": "Show Debug Info"
+      "show-debug-info": "Show Debug Info",
+      "confirm-links": "Confirm Before Opening Links"
     },
     "settings": "Settings"
   },

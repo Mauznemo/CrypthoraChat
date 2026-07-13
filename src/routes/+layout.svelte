@@ -14,8 +14,45 @@
 	import { get } from 'svelte/store';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 	import { layoutStore } from '$lib/stores/layout.svelte';
+	import { isPwaStandalone } from '$lib/utils/device';
+	import { linkConfirmation } from '$lib/utils/linkConfirmation';
+	import { modalStore } from '$lib/stores/modal.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from 'svelte-i18n';
 
 	let { children } = $props();
+
+	function handleChatLinkClick(event: MouseEvent) {
+		if (window.isFlutterWebView || !isPwaStandalone() || !linkConfirmation.isEnabled()) return;
+
+		const anchor = (event.target as HTMLElement).closest('a[data-chat-link]');
+		if (!anchor) return;
+
+		const url = (anchor as HTMLAnchorElement).href;
+		event.preventDefault();
+
+		modalStore.open({
+			title: get(t)('chat.link-modal.title'),
+			content: url,
+			buttons: [
+				{
+					text: get(t)('chat.link-modal.copy'),
+					variant: 'secondary',
+					onClick: () => {
+						navigator.clipboard.writeText(url);
+						toastStore.success(get(t)('chat.link-modal.copied'));
+					}
+				},
+				{
+					text: get(t)('chat.link-modal.open'),
+					variant: 'primary',
+					onClick: () => {
+						window.open(url, '_blank', 'noopener,noreferrer');
+					}
+				}
+			]
+		});
+	}
 
 	onMount(() => {
 		onboardingStore.init();
@@ -27,6 +64,9 @@
 				locale: currentLocale
 			});
 		});
+
+		document.addEventListener('click', handleChatLinkClick);
+		return () => document.removeEventListener('click', handleChatLinkClick);
 	});
 </script>
 

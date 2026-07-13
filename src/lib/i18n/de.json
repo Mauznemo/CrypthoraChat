@@ -195,7 +195,13 @@
     },
     "chat": "Chat",
     "today": "Heute",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "link-modal": {
+      "copied": "Link in die Zwischenablage kopiert",
+      "copy": "Link kopieren",
+      "open": "Link öffnen",
+      "title": "Link öffnen?"
+    }
   },
   "profile": {
     "change-confirm": "Dadurch werden alle Ihre anderen Geräte abgemeldet und Sie müssen den Master-Schlüssel erneut eingeben.",
@@ -236,7 +242,8 @@
       "clear-cache": "Caches löschen",
       "reset-sw": "Service Workers zurücksetzen",
       "service-worker": "Service Worker",
-      "show-debug-info": "Debug-Info anzeigen"
+      "show-debug-info": "Debug-Info anzeigen",
+      "confirm-links": "Bestätigen bevor Links geöffnet werden"
     },
     "appearance": {
       "background": "Hintergrund",

@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { developer } from '$lib/utils/debug';
+	import { linkConfirmation } from '$lib/utils/linkConfirmation';
+	import { isPwaStandalone } from '$lib/utils/device';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	let showDebugInfo = $state(false);
+	let confirmLinks = $state(true);
+	let isPwa = $state(false);
 
 	onMount(() => {
 		showDebugInfo = developer.showDebugInfo();
+		confirmLinks = linkConfirmation.isEnabled();
+		isPwa = isPwaStandalone();
 	});
 
 	async function resetServiceWorkers(): Promise<void> {
@@ -62,4 +68,25 @@
 		</div>
 		<span>{$t('settings.advanced.show-debug-info')}</span>
 	</label>
+	{#if isPwa}
+		<label class="flex cursor-pointer items-center gap-3">
+			<div class="relative">
+				<input
+					type="checkbox"
+					class="peer sr-only"
+					bind:checked={confirmLinks}
+					onchange={() => {
+						linkConfirmation.setEnabled(confirmLinks);
+					}}
+				/>
+				<div
+					class="peer h-8 w-14 rounded-full bg-gray-700/40 frosted-glass transition-colors peer-checked:bg-accent-600/60"
+				></div>
+				<div
+					class="absolute top-1 left-1 h-6 w-6 rounded-full bg-white transition-transform peer-checked:translate-x-6"
+				></div>
+			</div>
+			<span>{$t('settings.advanced.confirm-links')}</span>
+		</label>
+	{/if}
 </div>
