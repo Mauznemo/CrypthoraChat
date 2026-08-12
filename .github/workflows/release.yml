@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to preview notes for (dry run, creates nothing)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          # Full history and tags are needed to find the previous tag
+          fetch-depth: 0
+
+      - name: Verify package.json version matches tag
+        run: |
+          pkg_version="v$(jq -r .version package.json)"
+          if [ "$pkg_version" != "$TAG" ]; then
+            echo "::error::package.json is $pkg_version but the tag is $TAG. Bump the version and re-tag."
+            exit 1
+          fi
+
+      - name: Generate release notes
+        run: |
+          bash .github/scripts/release-notes.sh "$TAG" > release-notes.md
+          {
+            echo "## Release notes for \`$TAG\`"
+            echo
+            cat release-notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=""
+          case "$TAG" in
+            *-alpha*|*-beta*|*-rc*) prerelease="--prerelease" ;;
+          esac
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            $prerelease
