@@ -78,7 +78,8 @@
       "is-typing": "tippt",
       "placeholder": "Nachricht eingeben...",
       "remaining": "Übrig",
-      "reply-to": "Antwort auf:"
+      "reply-to": "Antwort auf:",
+      "tracking-removed": "Tracking aus dem eingefügten Link entfernt"
     },
     "info-bar": {
       "confirm-remove-user": "Sind Sie sicher, dass Sie @{username} aus der Gruppe entfernen möchten?",
@@ -238,7 +239,8 @@
       "appearance": "Aussehen",
       "sessions": "Sitzungen",
       "storage": "Speicher",
-      "open-wrapper-settings": "Wrapper-Einstellungen"
+      "open-wrapper-settings": "Wrapper-Einstellungen",
+      "privacy": "Privatsphäre"
     },
     "advanced": {
       "clear-cache": "Caches löschen",
@@ -271,7 +273,12 @@
       "clear-media-success": "Zwischengespeicherte Medien gelöscht",
       "used": "Verwendet {usedStorage} aus {totalStorage} ({percentage}% verwendet)"
     },
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "privacy": {
+      "clean-links": "Tracking von eingefügten Links entfernen",
+      "clean-links-description": "Entfernt Share-Tracking-Parameter (wie YouTubes ?si=) von Links, die Sie in einen Chat einfügen. Wichtige Teile des Links, wie zum Beispiel Zeitstempel, bleiben stets erhalten.",
+      "links": "Links"
+    }
   },
   "utils": {
     "color-picker": {

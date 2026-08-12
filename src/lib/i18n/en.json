@@ -78,7 +78,8 @@
       "file": "File",
       "files": "Files",
       "remaining": "Remaining",
-      "placeholder": "Type your message here..."
+      "placeholder": "Type your message here...",
+      "tracking-removed": "Removed tracking info from the pasted link"
     },
     "info-bar": {
       "remove-user": "Remove from group",
@@ -237,6 +238,7 @@
       "appearance": "Appearance",
       "sessions": "Sessions",
       "storage": "Storage",
+      "privacy": "Privacy",
       "advanced": "Advanced",
       "open-wrapper-settings": "Wrapper Settings"
     },
@@ -263,6 +265,11 @@
       "used": "Used {usedStorage} from {totalStorage} ({percentage}% used)",
       "clear-media": "Clear cached media",
       "clear-media-success": "Cached media cleared"
+    },
+    "privacy": {
+      "links": "Links",
+      "clean-links": "Remove Tracking From Pasted Links",
+      "clean-links-description": "Removes share-tracking parameters (like YouTube's ?si=) from links you paste into a chat. Meaningful parts of the link, such as timestamps, are always kept."
     },
     "advanced": {
       "reset-sw": "Reset Service Workers",

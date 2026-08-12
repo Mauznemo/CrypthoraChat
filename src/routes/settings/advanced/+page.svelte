@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { developer } from '$lib/utils/debug';
 	import { linkConfirmation } from '$lib/utils/linkConfirmation';
 	import { isPwaStandalone } from '$lib/utils/device';
@@ -49,44 +50,16 @@
 		class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
 		>{$t('settings.advanced.clear-cache')}</button
 	>
-	<label class="flex cursor-pointer items-center gap-3">
-		<div class="relative">
-			<input
-				type="checkbox"
-				class="peer sr-only"
-				bind:checked={showDebugInfo}
-				onchange={(e) => {
-					developer.setDebug(showDebugInfo);
-				}}
-			/>
-			<div
-				class="peer h-8 w-14 rounded-full bg-gray-700/40 frosted-glass transition-colors peer-checked:bg-accent-600/60"
-			></div>
-			<div
-				class="absolute top-1 left-1 h-6 w-6 rounded-full bg-white transition-transform peer-checked:translate-x-6"
-			></div>
-		</div>
-		<span>{$t('settings.advanced.show-debug-info')}</span>
-	</label>
+	<Toggle
+		bind:checked={showDebugInfo}
+		label={$t('settings.advanced.show-debug-info')}
+		onchange={(checked) => developer.setDebug(checked)}
+	/>
 	{#if isPwa}
-		<label class="flex cursor-pointer items-center gap-3">
-			<div class="relative">
-				<input
-					type="checkbox"
-					class="peer sr-only"
-					bind:checked={confirmLinks}
-					onchange={() => {
-						linkConfirmation.setEnabled(confirmLinks);
-					}}
-				/>
-				<div
-					class="peer h-8 w-14 rounded-full bg-gray-700/40 frosted-glass transition-colors peer-checked:bg-accent-600/60"
-				></div>
-				<div
-					class="absolute top-1 left-1 h-6 w-6 rounded-full bg-white transition-transform peer-checked:translate-x-6"
-				></div>
-			</div>
-			<span>{$t('settings.advanced.confirm-links')}</span>
-		</label>
+		<Toggle
+			bind:checked={confirmLinks}
+			label={$t('settings.advanced.confirm-links')}
+			onchange={(checked) => linkConfirmation.setEnabled(checked)}
+		/>
 	{/if}
 </div>

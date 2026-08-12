@@ -4,6 +4,7 @@
 	import type { PageProps } from './$types';
 	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
+	import { tKey } from '$lib/t-key';
 
 	let { data }: PageProps = $props();
 
@@ -12,22 +13,27 @@
 
 	let categories = [
 		{
-			label: 'settings.categories.appearance',
+			label: tKey('settings.categories.appearance'),
 			path: '/settings/appearance',
 			icon: 'mdi:color'
 		},
 		{
-			label: 'settings.categories.sessions',
+			label: tKey('settings.categories.sessions'),
 			path: '/settings/sessions',
 			icon: 'mdi:important-devices'
 		},
 		{
-			label: 'settings.categories.storage',
+			label: tKey('settings.categories.storage'),
 			path: '/settings/storage',
 			icon: 'mdi:storage'
 		},
 		{
-			label: 'settings.categories.advanced',
+			label: tKey('settings.categories.privacy'),
+			path: '/settings/privacy',
+			icon: 'mdi:shield-lock'
+		},
+		{
+			label: tKey('settings.categories.advanced'),
 			path: '/settings/advanced',
 			icon: 'mdi:gear'
 		}

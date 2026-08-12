@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { extractMentions } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import { linkCleaning } from '$lib/utils/linkCleaning';
+	import { stripTrackingParams } from '$lib/utils/urlCleaning/stripTracking';
 	import { onMount, tick } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	let {
 		value = $bindable(''),
@@ -307,7 +311,15 @@
 		}
 
 		event.preventDefault();
-		const text = event.clipboardData?.getData('text/plain') || '';
+		let text = event.clipboardData?.getData('text/plain') || '';
+
+		if (linkCleaning.isEnabled()) {
+			const cleaned = stripTrackingParams(text);
+			if (cleaned.removedCount > 0) {
+				text = cleaned.text;
+				toastStore.info($t('chat.chat-input.tracking-removed'), undefined, 4000);
+			}
+		}
 
 		const selection = window.getSelection();
 		if (selection?.rangeCount) {
