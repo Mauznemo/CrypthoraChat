@@ -50,9 +50,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           prerelease=""
-          case "$TAG" in
-            *-alpha*|*-beta*|*-rc*) prerelease="--prerelease" ;;
-          esac
+
+          # Everything is alpha right now and there is no stable release to
+          # contrast it with, so tags are published as normal releases.
+          # Uncomment once a stable version exists:
+          # case "$TAG" in
+          #   *-alpha*|*-beta*|*-rc*) prerelease="--prerelease" ;;
+          # esac
 
           gh release create "$TAG" \
             --title "$TAG" \
