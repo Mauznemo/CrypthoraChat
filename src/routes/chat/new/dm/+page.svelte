@@ -2,11 +2,9 @@
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
 	import { encryptChatKeyForUser, generateChatKey } from '$lib/crypto/chat';
-	import { isUserVerified, verifyUser } from '$lib/crypto/userVerification';
+	import { ensureUsersVerified } from '$lib/crypto/userVerification';
 	import { encryptKeyForStorage } from '$lib/crypto/utils';
-	import { emojiVerificationStore } from '$lib/stores/emojiVerification.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import { saveEncryptedChatKey } from '$lib/chat/chat.remote';
 	import { createDm } from '../chatCreation.remote';
@@ -24,25 +22,10 @@
 	async function handleDmGroup() {
 		try {
 			loading = true;
-			const userUnverified = await isUserVerified(selectedUser!.id);
 
-			if (!userUnverified) {
-				modalStore.open({
-					title: $t('chat.new.dm.not-verified'),
-					content: $t('chat.new.dm.not-verified-content', {
-						values: { username: selectedUser!.username }
-					}),
-					buttons: [
-						{
-							text: $t('chat.verify-now'),
-							variant: 'primary',
-							onClick: () => {
-								verifyUser(selectedUser!, true);
-							}
-						}
-					]
-				});
-
+			// Falls through to the creation below once verified, so the user does not have to
+			// press "Start Chat" a second time.
+			if (!(await ensureUsersVerified([selectedUser!]))) {
 				loading = false;
 				return;
 			}
@@ -67,11 +50,7 @@
 			}
 
 			if (result.success) {
-				socketStore.notifyNewChat({
-					chatId: result.chatId,
-					userIds: [selectedUser!.id],
-					type: 'dm'
-				});
+				// createDm notifies the participants server side.
 				localStorage.setItem('lastChatId', result.chatId);
 				goto('/chat');
 			}
@@ -100,7 +79,7 @@
 
 		<button
 			onclick={handleDmGroup}
-			disabled={!selectedUser}
+			disabled={!selectedUser || loading}
 			class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 		>
 			{#if loading}

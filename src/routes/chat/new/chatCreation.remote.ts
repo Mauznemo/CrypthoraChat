@@ -1,5 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { db } from '$lib/db';
+import { sendEventToUsersInChat } from '$lib/server/socketCommands';
 import { safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
@@ -64,6 +65,11 @@ export const createGroup = command(
 					}
 				}
 			});
+
+			// Emitted here rather than relayed by the creator's browser: the client used to
+			// fire-and-forget this right before navigating away, so it was lost whenever its
+			// socket was down. Includes the creator, which is how their other tabs find out.
+			await sendEventToUsersInChat(chat.id, 'new-chat-created', { type: 'group' });
 
 			return { success: true, chatId: chat.id };
 		} catch (e) {
@@ -151,6 +157,9 @@ export const createDm = command(createDmSchema, async ({ userId, encryptedChatKe
 				}
 			}
 		});
+
+		await sendEventToUsersInChat(chat.id, 'new-chat-created', { type: 'dm' });
+
 		return { success: true, chatId: chat.id };
 	} catch (e) {
 		console.error('Failed to create DM:', e);

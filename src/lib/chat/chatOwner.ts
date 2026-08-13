@@ -1,11 +1,10 @@
 import { encryptChatKeyForUsers, generateChatKey } from '$lib/crypto/chat';
-import { getUnverifiedUsers, verifyUser } from '$lib/crypto/userVerification';
+import { ensureUsersVerified } from '$lib/crypto/userVerification';
 import { encryptKeyForStorage } from '$lib/crypto/utils';
 import { modalStore } from '$lib/stores/modal.svelte';
-import { socketStore } from '$lib/stores/socket.svelte';
 import type { ChatWithoutMessages } from '$lib/types';
 import { t } from 'svelte-i18n';
-import { getCurrentChatKeyVersion, saveEncryptedChatKey } from './chat.remote';
+import { saveEncryptedChatKey } from './chat.remote';
 import { removeUserFromChat, rotateChatKey } from './chatOwner.remote';
 import { chats } from './chats';
 import { get } from 'svelte/store';
@@ -15,60 +14,40 @@ export const chatOwner = {
 	/** Tries to rotate the chat key and shows an error modal if it fails */
 	async tryRotateChatKey(chat: ChatWithoutMessages): Promise<boolean> {
 		try {
-			const users = chat.participants.filter((u) => u.user.id !== chat.ownerId);
-			const unverifiedUserIds = await getUnverifiedUsers(users.map((u) => u.user.id));
-			const unverifiedUsers = users.filter((u) => unverifiedUserIds.includes(u.user.id));
+			const others = chat.participants.filter((u) => u.user.id !== chat.ownerId);
 
-			if (unverifiedUsers.length > 0) {
-				modalStore.open({
-					title:
-						users.length === unverifiedUsers.length
+			// You never verify yourself, so only the other members gate the rotation.
+			const verified = await ensureUsersVerified(
+				others.map((u) => u.user),
+				{
+					titleFor: (unverifiedCount, totalCount) =>
+						unverifiedCount === totalCount
 							? get(t)('chat.chat-owner.all-no-longer-verified')
 							: get(t)('chat.chat-owner.some-no-longer-verified'),
-					content:
-						unverifiedUsers.length === 1
-							? get(t)('chat.chat-owner.user-no-longer-verified', {
-									values: { username: unverifiedUsers[0].user.username }
-								})
-							: get(t)('chat.chat-owner.users-no-longer-verified', {
-									values: {
-										usernames: unverifiedUsers.map((u) => '@' + u.user.username).join(', ')
-									}
-								}),
-					buttons: [
-						{
-							text: get(t)('chat.new.group.verify-user', {
-								values: { username: unverifiedUsers[0].user.username }
-							}),
-							variant: 'primary',
-							onClick: () => {
-								verifyUser(unverifiedUsers[0].user, true);
-							}
-						}
-					]
-				});
-				return false;
-			}
-
-			const newChatKeyVersion = await getCurrentChatKeyVersion(chat.id);
-			if (newChatKeyVersion) chat.currentKeyVersion = newChatKeyVersion;
-
-			const newKeyVersion = chat.currentKeyVersion + 1;
-			console.log('Rotating chat key:', newKeyVersion);
-			const newChatKey = await generateChatKey();
-
-			const encryptedUserChatKeys = await encryptChatKeyForUsers(
-				newChatKey,
-				users.map((u) => u.user.id)
+					contentForOne: (username) =>
+						get(t)('chat.chat-owner.user-no-longer-verified', { values: { username } }),
+					contentForMany: (usernames) =>
+						get(t)('chat.chat-owner.users-no-longer-verified', { values: { usernames } })
+				}
 			);
 
-			await rotateChatKey({
-				chatId: chat.id,
-				newEncryptedUserChatKeys: encryptedUserChatKeys,
-				newKeyVersion
-			});
+			if (!verified) return false;
 
-			socketStore.notifyKeyRotated({ chatId: chat.id });
+			console.log('Rotating chat key for:', chat.id);
+			const newChatKey = await generateChatKey();
+
+			// Includes the owner: without their own PublicUserChatKey row, the owner's other
+			// tabs and devices have no way to recover the new key after a rotation.
+			const encryptedUserChatKeys = await encryptChatKeyForUsers(
+				newChatKey,
+				chat.participants.map((u) => u.user.id)
+			);
+
+			// The version is assigned by the server, which knows the current one.
+			const { newKeyVersion } = await rotateChatKey({
+				chatId: chat.id,
+				newEncryptedUserChatKeys: encryptedUserChatKeys
+			});
 
 			const chatKeyEncrypted = await encryptKeyForStorage(newChatKey);
 
@@ -83,7 +62,7 @@ export const chatOwner = {
 				modalStore.error(err, get(t)('chat.chat-owner.failed-to-save-chat-key'));
 			}
 
-			chats.handleKeyRotated({ newKeyVersion, newKey: newChatKey });
+			chats.applyOwnRotation(chat.id, newKeyVersion, newChatKey);
 
 			return true;
 		} catch (error: any) {

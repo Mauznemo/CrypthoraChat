@@ -175,7 +175,7 @@
 			class="mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4 frosted-glass-shadow"
 		>
 			<button
-				onclick={() => emojiVerificationStore.close()}
+				onclick={() => emojiVerificationStore.close(false)}
 				class="absolute right-5 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 				aria-label="Close modal"
 			>
@@ -206,19 +206,19 @@
 
 			<div class="mt-5 p-5">
 				<button
-					onclick={() => emojiVerificationStore.onMatch?.()}
+					onclick={() => emojiVerificationStore.close(true)}
 					class="mb-5 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass transition-colors hover:bg-accent-600/50 focus:ring-blue-500"
 					>{$t('utils.emoji-key-verification.match')}</button
 				>
 				<button
-					onclick={() => emojiVerificationStore.onFail?.()}
+					onclick={() => emojiVerificationStore.close(false)}
 					class="w-full cursor-pointer rounded-full bg-red-800/40 py-3 text-white frosted-glass transition-colors hover:bg-red-600/40 focus:ring-blue-500"
 					>{$t('utils.emoji-key-verification.fail')}</button
 				>
 			</div>
 
 			<p class=" text-center text-sm text-gray-400">
-				{$t('utils.emoji-key-converter.time-remaining', {
+				{$t('chat.emoji-verification.time-remaining', {
 					values: {
 						hours: timeRemaining.hours,
 						minutes: timeRemaining.minutes

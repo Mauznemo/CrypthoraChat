@@ -103,6 +103,27 @@
     "verification-request-content": "Benutzer @{username} fordert eine Verifizierung an",
     "verification-request-title": "Benutzer verifiziern",
     "verify-now": "Jetzt verifiziern",
+    "verification": {
+      "sending": "Verifizierungsanfrage wird gesendet…",
+      "waiting-title": "Verifiziere @{username}",
+      "waiting": "Warte darauf, dass @{username} die Verifizierungsanfrage annimmt…",
+      "peer-background": "@{username} hat die App im Hintergrund und sieht die Anfrage möglicherweise nicht sofort.",
+      "peer-offline-title": "@{username} ist nicht online",
+      "peer-offline": "@{username} hat die App nicht geöffnet. Bitten Sie ihn, CrypthoraChat zu öffnen, und versuchen Sie es erneut.",
+      "peer-busy": "@{username} verifiziert sich gerade mit jemand anderem. Versuchen Sie es gleich noch einmal.",
+      "rate-limited": "Zu viele Verifizierungsanfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "declined-title": "Verifizierung abgelehnt",
+      "declined": "@{username} hat die Verifizierungsanfrage abgelehnt.",
+      "cancelled": "@{username} hat die Verifizierungsanfrage abgebrochen.",
+      "timeout-title": "Keine Antwort",
+      "timeout": "@{username} hat nicht rechtzeitig geantwortet.",
+      "peer-failed": "@{username} meldet, dass die Emojis nicht übereinstimmen. Vertrauen Sie diesem Schlüssel nicht.",
+      "success": "@{username} ist jetzt verifiziert.",
+      "request-handled": "Diese Verifizierungsanfrage wurde auf einem anderen Gerät bearbeitet.",
+      "progress": "Verifiziere {current} von {total}",
+      "verify-all": "{count} Benutzer verifizieren",
+      "continue-after-verify": "Sie müssen sich einmal verifizieren. Danach wird automatisch fortgefahren."
+    },
     "new": {
       "dm": {
         "create-dm": "Chat Starten",
@@ -161,6 +182,7 @@
     },
     "chats": {
       "failed-to-decrypt-chat-key": "Fehler beim entschlüsseln des Chat-Schlüssels, Sie haben möglicherweise einen falschen Master-Schlüssel eingegeben. \n(Fehler: {error})",
+      "key-refresh-failed": "Der neue Chat-Schlüssel konnte nach der Rotation nicht abgerufen werden. Versuchen Sie, den Chat erneut zu öffnen.",
       "failed-to-get-encrypted-chat-keys-from-public-key": "Fehler beim erhalten des Chat Schlüssels vom öffentlichen Schlüssel. Versuchen Sie, die App neu zu starten oder dem Chat neu beizutreten, wenn das Problem bestehen bleibt.",
       "failed-to-get-encrypted-chat-keys-from-public-key-error": "Fehler beim erhalten des Chat-Schlüssels vom öffentlichen Schlüssel:",
       "failed-to-get-encrypted-chat-keys-from-public-key-version": "Fehler beim erhalten des Chat-Schlüssels vom öffentlichen Schlüssel: Falsche Schlüsselversion. Versuchen Sie, die App neu zu starten oder dem Chat newu beizutreten, wenn das Problem bestehen bleibt.",
@@ -185,6 +207,7 @@
     },
     "emoji-verification": {
       "failed-to-verify-user": "Fehler beim verifiziern des Benutzers",
+      "time-remaining": "Diese Emojis ändern sich in {hours} Stunden und {minutes} Minuten",
       "verify-user": "Verifiziere @{username}, stellen Sie sicher, dass die Emojis übereinstimmung"
     },
     "add-user-to-chat": {

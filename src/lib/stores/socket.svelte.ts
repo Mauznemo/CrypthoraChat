@@ -5,23 +5,70 @@ import type {
 	MessageWithRelations,
 	SafeUser
 } from '$lib/types';
-import type { Prisma, SystemMessage } from '$prisma';
+import type { SystemMessage } from '$prisma';
 import { Socket } from 'socket.io-client';
 import ioClient from 'socket.io-client';
 
+type Handler = (...args: any[]) => void;
+
+/** Removes exactly the one handler it was created for */
+export type Unsubscribe = () => void;
+
+export type VerifyRequestStatus = 'delivered' | 'background' | 'offline' | 'rate-limited';
+export type VerifyResponse = 'accepted' | 'declined' | 'busy' | 'matched' | 'failed';
+
+/**
+ * Collects unsubscribe functions so a component can tear down every listener it
+ * registered without touching listeners it does not own.
+ */
+export class SocketListeners {
+	private unsubs: Unsubscribe[] = [];
+
+	add(unsub: Unsubscribe): void {
+		this.unsubs.push(unsub);
+	}
+
+	dispose(): void {
+		for (const unsub of this.unsubs) unsub();
+		this.unsubs = [];
+	}
+}
+
+export function socketListeners(): SocketListeners {
+	return new SocketListeners();
+}
+
 class SocketStore {
 	private socket: typeof Socket | null = null;
+	/** Every consumer-registered handler, so they can be re-bound to a fresh socket */
+	private handlers = new Map<string, Set<Handler>>();
 	public connected = $state(false);
 	public typing = $state<{ userId: string; username: string; isTyping: boolean }[]>([]);
 
-	connect(serverUrl: string = 'http://localhost:3000') {
-		console.log('Connecting to server...');
-		if (this.socket?.connected) return;
-		console.log('Not connected, connecting...');
+	/** Idempotent. Safe to call from any route, any number of times. */
+	connect() {
+		if (this.socket) {
+			// Re-sync from the real socket: `connected` must never latch independently of it.
+			this.connected = this.socket.connected;
+			if (!this.socket.connected) this.socket.connect();
+			return;
+		}
 
 		const socketUrl = import.meta.env.PROD ? window.location.origin : 'http://localhost:3000';
 
 		this.socket = ioClient(socketUrl);
+
+		this.bindInternalHandlers();
+		this.bindRegisteredHandlers();
+		this.connected = this.socket.connected;
+	}
+
+	/**
+	 * The store's own listeners. Deliberately kept out of `handlers` so no consumer can
+	 * hold a reference to them, and `off()` can never remove them.
+	 */
+	private bindInternalHandlers() {
+		if (!this.socket) return;
 
 		this.socket.on('connect_error', (err: any) => console.log('Connect error:', err));
 
@@ -55,6 +102,14 @@ class SocketStore {
 		);
 	}
 
+	/** Re-attaches every registered handler after the socket object is (re)created */
+	private bindRegisteredHandlers() {
+		if (!this.socket) return;
+		for (const [event, set] of this.handlers) {
+			for (const handler of set) this.socket.on(event, handler);
+		}
+	}
+
 	disconnect() {
 		console.log('Disconnecting from server...');
 		if (this.socket) {
@@ -63,14 +118,64 @@ class SocketStore {
 			this.connected = false;
 			this.typing = [];
 		}
+		// `handlers` is kept so a later connect() re-binds everything.
 	}
 
-	onConnect(callback: () => void) {
-		this.socket?.on('connect', callback);
+	/** Registers a listener that survives socket re-creation. Returns its unsubscribe. */
+	on(event: string, handler: Handler): Unsubscribe {
+		let set = this.handlers.get(event);
+		if (!set) {
+			// Plain Set on purpose: this is internal bookkeeping, never read from a template,
+			// so it does not need to be reactive.
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity
+			set = new Set();
+			this.handlers.set(event, set);
+		}
+		set.add(handler);
+		this.socket?.on(event, handler);
+		return () => this.off(event, handler);
 	}
 
-	off(event: string, callback?: Function) {
-		this.socket?.off(event, callback);
+	/**
+	 * Removes ONE handler. There is deliberately no remove-all-for-event overload: a bare
+	 * `off('connect')` used to strip the store's own connect handler, latching `connected`
+	 * to false while the socket was actually up.
+	 */
+	off(event: string, handler: Handler): void {
+		this.handlers.get(event)?.delete(handler);
+		this.socket?.off(event, handler);
+	}
+
+	/**
+	 * Runs `cb` on every connect. If the socket is already connected when this is called,
+	 * `cb(false)` fires once on the next microtask; every real connect event fires `cb(true)`.
+	 */
+	onConnect(cb: (isReconnect: boolean) => void): Unsubscribe {
+		let disposed = false;
+		const unsub = this.on('connect', () => cb(true));
+
+		if (this.socket?.connected) {
+			queueMicrotask(() => {
+				if (!disposed) cb(false);
+			});
+		}
+
+		return () => {
+			disposed = true;
+			unsub();
+		};
+	}
+
+	/** emit + ack with a timeout. Rejects if the server does not ack in time. */
+	private emitWithAck<T>(event: string, data: any, timeoutMs = 8000): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			if (!this.socket) return reject(new Error('Socket not connected'));
+			// The stale @types/socket.io-client devDep shadows socket.io-client v4's own
+			// types, which do know about .timeout().
+			(this.socket as any)
+				.timeout(timeoutMs)
+				.emit(event, data, (err: any, response: T) => (err ? reject(err) : resolve(response)));
+		});
 	}
 
 	// ---------- Chat selected specific (on only called if currently in that chat) ---------- //
@@ -130,45 +235,41 @@ class SocketStore {
 		this.socket?.emit('typing-stop', data);
 	}
 
-	onNewMessage(callback: (message: MessageWithRelations) => void) {
-		this.socket?.on('new-message', callback);
+	onNewMessage(callback: (message: MessageWithRelations) => void): Unsubscribe {
+		return this.on('new-message', callback);
 	}
 
 	onNewMessageNotify(
 		callback: (data: { chatId: string; chatName: string; username: string }) => void
-	) {
-		this.socket?.on('new-message-notify', callback);
+	): Unsubscribe {
+		return this.on('new-message-notify', callback);
 	}
 
 	onMessageUpdated(
 		callback: (data: { message: MessageWithRelations; type: 'edit' | 'reaction' }) => void
-	) {
-		this.socket?.on('message-updated', callback);
+	): Unsubscribe {
+		return this.on('message-updated', callback);
 	}
 
-	onMessageDeleted(callback: (messageId: string) => void) {
-		this.socket?.on('message-deleted', callback);
+	onMessageDeleted(callback: (messageId: string) => void): Unsubscribe {
+		return this.on('message-deleted', callback);
 	}
 
-	onMessagesRead(callback: (data: { messageIds: string[]; userId: string }) => void) {
-		this.socket?.on('messages-read', callback);
+	onMessagesRead(callback: (data: { messageIds: string[]; userId: string }) => void): Unsubscribe {
+		return this.on('messages-read', callback);
 	}
 
-	onMessageError(callback: (error: { error: string }) => void) {
-		this.socket?.on('message-error', callback);
+	onMessageError(callback: (error: { error: string }) => void): Unsubscribe {
+		return this.on('message-error', callback);
 	}
 
-	onNewSystemMessage(callback: (message: SystemMessage) => void) {
-		this.socket?.on('new-system-message', callback);
+	onNewSystemMessage(callback: (message: SystemMessage) => void): Unsubscribe {
+		return this.on('new-system-message', callback);
 	}
 
-	//TODO: call from server
-	notifyKeyRotated(data: { chatId: string }) {
-		this.socket?.emit('key-rotated', data);
-	}
-
-	onKeyRotated(callback: () => void) {
-		this.socket?.on('key-rotated', callback);
+	/** Emitted by the server from rotateChatKey, to every member regardless of selected chat */
+	onKeyRotated(callback: (data: { chatId: string; newKeyVersion: number }) => void): Unsubscribe {
+		return this.on('key-rotated', callback);
 	}
 
 	onChatUsersUpdated(
@@ -178,8 +279,8 @@ class SocketStore {
 			chatParticipant?: ChatParticipant;
 			action: 'add' | 'remove';
 		}) => void
-	) {
-		this.socket?.on('chat-users-updated', callback);
+	): Unsubscribe {
+		return this.on('chat-users-updated', callback);
 	}
 
 	onChatUpdated(
@@ -188,35 +289,65 @@ class SocketStore {
 			newName: string | null;
 			newImagePath: string | null;
 		}) => void
-	) {
-		this.socket?.on('chat-updated', callback);
+	): Unsubscribe {
+		return this.on('chat-updated', callback);
 	}
 
 	// ---------- Chat specific (only sent to users joined in the chat) ---------- //
 
 	// ---------- User specific ---------- //
-	//TODO: call from server
-	notifyNewChat(data: { userIds: string[]; type: 'dm' | 'group'; chatId: string }) {
-		console.log('Notifying about new chat:', data); // Debug log
-		this.socket?.emit('chat-created', data);
+
+	/** Emitted by the server from createDm/createGroup/addUserToChat */
+	onNewChat(callback: (data: { chatId: string; type: 'dm' | 'group' }) => void): Unsubscribe {
+		return this.on('new-chat-created', callback);
 	}
 
-	onNewChat(callback: (data: { chatId: string; type: 'dm' | 'group' }) => void) {
-		this.socket?.on('new-chat-created', callback);
+	onRemovedFromChat(callback: (data: { chatId: string }) => void): Unsubscribe {
+		return this.on('removed-from-chat', callback);
 	}
 
-	onRemovedFromChat(callback: (data: { chatId: string }) => void) {
-		this.socket?.on('removed-from-chat', callback);
+	// ---------- User verification ---------- //
+
+	/** Asks the server to deliver a verification request; the ack reports peer reachability */
+	requestUserVerify(data: {
+		requestId: string;
+		userId: string;
+	}): Promise<{ status: VerifyRequestStatus }> {
+		return this.emitWithAck<{ status: VerifyRequestStatus }>('request-user-verify', data);
 	}
 
-	requestUserVerify(data: { userId: string }) {
-		this.socket?.emit('request-user-verify', data);
+	respondUserVerify(data: { requestId: string; toUserId: string; response: VerifyResponse }): void {
+		this.socket?.emit('respond-user-verify', data);
+	}
+
+	cancelUserVerify(data: { requestId: string; userId: string }): void {
+		this.socket?.emit('cancel-user-verify', data);
 	}
 
 	onUserVerifyRequested(
-		callback: (data: { requestorId: string; requestorUsername: string }) => void
-	) {
-		this.socket?.on('requested-user-verify', callback);
+		callback: (data: { requestId: string; requestorId: string; requestorUsername: string }) => void
+	): Unsubscribe {
+		return this.on('requested-user-verify', callback);
+	}
+
+	onUserVerifyResponse(
+		callback: (data: {
+			requestId: string;
+			responderId: string;
+			responderUsername: string;
+			response: VerifyResponse;
+		}) => void
+	): Unsubscribe {
+		return this.on('user-verify-response', callback);
+	}
+
+	/** Another tab of mine already answered this request */
+	onUserVerifyHandled(callback: (data: { requestId: string }) => void): Unsubscribe {
+		return this.on('user-verify-handled', callback);
+	}
+
+	onUserVerifyCancelled(callback: (data: { requestId: string }) => void): Unsubscribe {
+		return this.on('user-verify-cancelled', callback);
 	}
 
 	subscribeToNtfyPush(topic: string) {

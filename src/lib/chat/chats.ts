@@ -37,6 +37,31 @@ type KeyVersions = {
 	key: CryptoKey;
 }[];
 
+const RETRY_DELAYS_MS = [300, 800, 2000, 5000];
+
+/**
+ * Reads the RSA-wrapped chat keys, retrying while the wanted version is still missing.
+ * The server commits a rotation before this client necessarily knows about it, so a
+ * first miss is often just a race rather than a real failure.
+ */
+async function fetchPublicKeysForVersion(chatId: string, keyVersion: number, retries: number) {
+	let publicEncryptedChatKeys = await getPublicEncryptedChatKeys(chatId);
+
+	for (let attempt = 0; attempt < retries; attempt++) {
+		if (publicEncryptedChatKeys.some((key) => key.keyVersion === keyVersion)) break;
+
+		await new Promise((resolve) =>
+			setTimeout(resolve, RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)])
+		);
+
+		const query = getPublicEncryptedChatKeys(chatId);
+		if (query.ready) await query.refresh();
+		publicEncryptedChatKeys = await query;
+	}
+
+	return publicEncryptedChatKeys;
+}
+
 export const chats = {
 	hasMoreOlder: false,
 	hasMoreOlderSystem: false,
@@ -47,14 +72,15 @@ export const chats = {
 	newestCursor: null as string | null,
 	newestSystemCursor: null as string | null,
 
-	async handleAddedToChatChat(data: {
-		chatId: string;
-		type: 'dm' | 'group';
-		forUsers?: string[];
-	}): Promise<void> {
-		const chat = await getChatById(data.chatId);
-		if (!chat) return;
-		chatList.addChat(chat);
+	async handleAddedToChatChat(data: { chatId: string; type: 'dm' | 'group' }): Promise<void> {
+		try {
+			const chat = await getChatById(data.chatId);
+			if (!chat) return;
+			chatList.addChat(chat);
+		} catch (e) {
+			// getChatById 403s for non-members; nothing useful to show the user here.
+			console.error('Failed to load newly created chat:', e);
+		}
 	},
 
 	handleRemovedFromChat(data: { chatId: string }): void {
@@ -64,19 +90,75 @@ export const chats = {
 		chatList.removeChat(data.chatId);
 	},
 
-	handleKeyRotated(ownerData?: { newKeyVersion: number; newKey: CryptoKey }): void {
-		console.log('Key rotated');
-		if (!chatStore.activeChat) return;
-		if (ownerData) {
-			chatStore.versionedChatKey[ownerData.newKeyVersion] = ownerData.newKey;
-			chatStore.activeChat.currentKeyVersion = ownerData.newKeyVersion;
-		} else {
-			if (chatStore.activeChat.ownerId === chatStore.user?.id) return;
-			const chat = chatStore.activeChat;
-			chatStore.activeChat = null;
-			chatStore.resetChatKey();
-			chats.trySelectChat(chat.id);
+	/**
+	 * Applies a rotation this tab just performed as the chat owner.
+	 *
+	 * versionedChatKey is keyed by version alone, so writing into it while a *different*
+	 * chat is active would stamp this chat's key onto that one and make everything sent
+	 * there undecryptable. Hence the activeChat guard.
+	 */
+	applyOwnRotation(chatId: string, newKeyVersion: number, newKey: CryptoKey): void {
+		console.log('Applying own key rotation for chat:', chatId, 'version:', newKeyVersion);
+
+		const listed = chatStore.chats.find((chat) => chat.id === chatId);
+		if (listed) {
+			listed.currentKeyVersion = newKeyVersion;
+			chatList.updateChat(listed);
 		}
+
+		if (chatStore.activeChat?.id !== chatId) return;
+
+		chatStore.versionedChatKey[newKeyVersion] = newKey;
+		chatStore.activeChat.currentKeyVersion = newKeyVersion;
+	},
+
+	/** Server-sent key-rotated, delivered to every member regardless of selected chat */
+	async handleKeyRotated(data: { chatId: string; newKeyVersion: number }): Promise<void> {
+		console.log('Key rotated:', data);
+
+		const listed = chatStore.chats.find((chat) => chat.id === data.chatId);
+		if (listed && data.newKeyVersion > listed.currentKeyVersion) {
+			listed.currentKeyVersion = data.newKeyVersion;
+			chatList.updateChat(listed);
+		}
+
+		// Not open: the sidebar is up to date and the next select fetches the key.
+		if (chatStore.activeChat?.id !== data.chatId) return;
+
+		// Already applied locally — this is the owner's own broadcast coming back.
+		if (chatStore.versionedChatKey[data.newKeyVersion]) {
+			chatStore.activeChat.currentKeyVersion = data.newKeyVersion;
+			return;
+		}
+
+		const success = await chats.refreshChatKeys(chatStore.activeChat, data.newKeyVersion);
+		if (!success) modalStore.error(get(t)('chat.chats.key-refresh-failed'));
+	},
+
+	/**
+	 * Re-fetches the chat keys for an already-selected chat and merges them in, keeping
+	 * messages and scroll position (a full re-select used to throw both away).
+	 */
+	async refreshChatKeys(chat: ChatWithoutMessages, expectedKeyVersion: number): Promise<boolean> {
+		const chatKeyResult = await chats.tryGetEncryptedChatKeys(
+			{ ...chat, currentKeyVersion: expectedKeyVersion },
+			{ retries: 4, silent: true }
+		);
+		if (!chatKeyResult.success) return false;
+
+		const decryptResult = await chats.tryDecryptChatKeys(chatKeyResult.keyVersions);
+		if (!decryptResult.success) return false;
+
+		chatStore.versionedChatKey = {
+			...chatStore.versionedChatKey,
+			...Object.fromEntries(decryptResult.keyVersions.map((item) => [item.keyVersion, item.key]))
+		};
+
+		if (chatStore.activeChat?.id === chat.id) {
+			chatStore.activeChat.currentKeyVersion = expectedKeyVersion;
+		}
+
+		return true;
 	},
 
 	handleChatUsersUpdated(data: {
@@ -145,13 +227,14 @@ export const chats = {
 
 		chatList.updateChat(currentNewChat);
 
-		const chatKeyResult = await chats.tryGetEncryptedChatKeys(currentNewChat);
+		const chatKeyResult = await chats.tryGetEncryptedChatKeys(currentNewChat, { retries: 3 });
 
+		// Key failures can be transient (a rotation still propagating), so lastChatId is kept
+		// here — clearing it left the next mount with no chat to restore.
 		if (!chatKeyResult.success) {
 			chatStore.resetChatKey();
 			chatStore.activeChat = null;
 			chatStore.loadingChat = false;
-			localStorage.removeItem('lastChatId');
 			return { success: false };
 		}
 
@@ -161,7 +244,6 @@ export const chats = {
 			chatStore.resetChatKey();
 			chatStore.activeChat = null;
 			chatStore.loadingChat = false;
-			localStorage.removeItem('lastChatId');
 			return { success: false };
 		}
 
@@ -240,7 +322,10 @@ export const chats = {
 	},
 
 	/** Tries to get the encrypted chat key for the chat and shows an error modal if it fails */
-	async tryGetEncryptedChatKeys(chat: ChatWithoutMessages): Promise<{
+	async tryGetEncryptedChatKeys(
+		chat: ChatWithoutMessages,
+		options?: { retries?: number; silent?: boolean }
+	): Promise<{
 		success: boolean;
 		keyVersions: KeyVersionsEncrypted;
 	}> {
@@ -258,16 +343,28 @@ export const chats = {
 		) {
 			try {
 				console.log('Getting chat keys from public key');
-				const publicEncryptedChatKeys = await getPublicEncryptedChatKeys(chat.id);
+
+				// A rotation the server has committed can still be a moment ahead of what this
+				// client sees. Erroring on the first miss made a transient race look permanent.
+				const publicEncryptedChatKeys = await fetchPublicKeysForVersion(
+					chat.id,
+					chat.currentKeyVersion,
+					options?.retries ?? 0
+				);
+
 				if (publicEncryptedChatKeys.length === 0) {
-					modalStore.error(get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key'));
+					if (!options?.silent)
+						modalStore.error(
+							get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key')
+						);
 					return { success: false, keyVersions: [] };
 				}
 
 				if (!publicEncryptedChatKeys.some((key) => key.keyVersion === chat.currentKeyVersion)) {
-					modalStore.error(
-						get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-version')
-					);
+					if (!options?.silent)
+						modalStore.error(
+							get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-version')
+						);
 					return { success: false, keyVersions: [] };
 				}
 
@@ -309,10 +406,11 @@ export const chats = {
 				return { success: true, keyVersions: keyVersions };
 			} catch (e: any) {
 				console.error(e);
-				modalStore.error(
-					e,
-					get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-error')
-				);
+				if (!options?.silent)
+					modalStore.error(
+						e,
+						get(t)('chat.chats.failed-to-get-encrypted-chat-keys-from-public-key-error')
+					);
 			}
 
 			return { success: false, keyVersions: [] };

@@ -34,7 +34,8 @@ declare global {
 		reRegisterPush? = () => {};
 	}
 	var _io: Server | null;
-	var _sessionSocketMap: Map<string, SocketSessionData>;
+	/** Keyed by socket.id, one entry per live connection (a session can have many tabs) */
+	var _socketMap: Map<string, SocketSessionData>;
 }
 
 export {};

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getUserChats, leaveChat } from '$lib/chat/chat.remote';
+	import { leaveChat } from '$lib/chat/chat.remote';
 	import type { ClientChat } from '$lib/types';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import { socketStore } from '$lib/stores/socket.svelte';
@@ -13,7 +13,7 @@
 	import { chatOwner } from '$lib/chat/chatOwner';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import GroupPicture from './GroupPicture.svelte';
-	import { deleteFilesNotContaining, deleteFilesThatContain } from '$lib/idb';
+	import { deleteFilesThatContain } from '$lib/idb';
 	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
@@ -107,10 +107,8 @@
 
 	onMount(async () => {
 		loadingChats = true;
-		chatStore.chats = await getUserChats();
+		await chatList.refresh({ pruneFiles: true });
 		loadingChats = false;
-		const currentChatIds = chatStore.chats.map((c) => c.id);
-		await deleteFilesNotContaining(currentChatIds);
 	});
 </script>
 

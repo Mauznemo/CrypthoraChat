@@ -1,6 +1,11 @@
 import { command, getRequestEvent } from '$app/server';
 import { db } from '$lib/db';
-import { sendEventToChat, sendEventToUser, sendSystemMessage } from '$lib/server/socketCommands';
+import {
+	sendEventToChat,
+	sendEventToUser,
+	sendEventToUsersInChat,
+	sendSystemMessage
+} from '$lib/server/socketCommands';
 import type { SafeUser } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
@@ -95,37 +100,41 @@ export const removeUserFromChat = command(removeUserFromChatSchema, async ({ cha
 
 const rotateChatKeySchema = v.object({
 	chatId: v.string(),
-	newEncryptedUserChatKeys: v.record(v.string(), v.string()),
-	newKeyVersion: v.number()
+	newEncryptedUserChatKeys: v.record(v.string(), v.string())
 });
 
 export const rotateChatKey = command(
 	rotateChatKeySchema,
-	async ({ chatId, newEncryptedUserChatKeys, newKeyVersion }) => {
+	async ({ chatId, newEncryptedUserChatKeys }) => {
 		const { locals } = getRequestEvent();
 
 		if (!locals.sessionId) {
 			error(401, 'Unauthorized');
 		}
 
+		const chat = await db.chat.findUnique({
+			where: { id: chatId },
+			select: { ownerId: true, currentKeyVersion: true }
+		});
+
+		if (!chat) {
+			error(404, 'Chat not found');
+		}
+
+		if (chat.ownerId !== locals.user?.id) {
+			error(403, 'You are not the owner of this chat');
+		}
+
+		// The version is derived here, not supplied by the client: a stale client-side value
+		// collides with the PublicUserChatKey primary key and fails the whole rotation.
+		const newKeyVersion = chat.currentKeyVersion + 1;
+
 		try {
-			const chat = await db.chat.findUnique({
-				where: { id: chatId },
-				select: { ownerId: true }
-			});
-
-			if (!chat) {
-				error(404, 'Chat not found');
-			}
-
-			if (chat?.ownerId !== locals.user?.id) {
-				error(403, 'You are not the owner of this chat');
-			}
-
 			console.log('Rotating chat key:', newKeyVersion);
 
-			const updatedChat = await db.chat.update({
-				where: { id: chatId },
+			await db.chat.update({
+				// Optimistic concurrency: two owner tabs rotating at once must not both win.
+				where: { id: chatId, currentKeyVersion: chat.currentKeyVersion },
 				data: {
 					currentKeyVersion: newKeyVersion,
 					publicUserChatKeys: {
@@ -138,10 +147,16 @@ export const rotateChatKey = command(
 				}
 			});
 
-			sendSystemMessage(chatId, `The chat key has been rotated to version ${newKeyVersion}.`);
+			await sendSystemMessage(chatId, `The chat key has been rotated to version ${newKeyVersion}.`);
+
+			// Sent to every member's sockets, not just the chat room: room membership only
+			// covers clients that currently have this chat selected.
+			await sendEventToUsersInChat(chatId, 'key-rotated', { newKeyVersion });
 		} catch (e) {
 			console.log('Error rotating chat key:', e);
 			error(500, 'Something went wrong.');
 		}
+
+		return { newKeyVersion };
 	}
 );

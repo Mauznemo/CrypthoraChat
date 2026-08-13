@@ -1,7 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
 import { removeDir, removeFile } from '$lib/server/fileUpload';
-import { sendEventToChat, sendSystemMessage } from '$lib/server/socketCommands';
+import { sendEventToChat, sendEventToUsers, sendSystemMessage } from '$lib/server/socketCommands';
 import {
 	chatWithoutMessagesFields,
 	safeUserFields,
@@ -241,7 +241,12 @@ export const addUserToChat = command(
 
 		const chat = await db.chat.findUnique({
 			where: { id: chatId },
-			select: { ownerId: true, currentKeyVersion: true, participants: { select: { userId: true } } }
+			select: {
+				ownerId: true,
+				type: true,
+				currentKeyVersion: true,
+				participants: { select: { userId: true } }
+			}
 		});
 
 		if (!chat) {
@@ -303,6 +308,10 @@ export const addUserToChat = command(
 					action: 'add'
 				});
 			});
+
+			// chat-users-updated above is room-scoped, so the newly added users never see it.
+			// They learn about the chat from here instead of from the adder's browser.
+			await sendEventToUsers(userIds, 'new-chat-created', { chatId, type: chat.type });
 		} catch (e) {
 			console.error('Failed to add users to chat:', e);
 			error(500, 'Failed to add users to chat');

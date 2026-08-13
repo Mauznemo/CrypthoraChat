@@ -19,8 +19,10 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
+	import { socketStore } from '$lib/stores/socket.svelte';
+	import VerificationListener from '$lib/components/VerificationListener.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
 	function handleChatLinkClick(event: MouseEvent) {
 		if (window.isFlutterWebView || !isPwaStandalone() || !linkConfirmation.isEnabled()) return;
@@ -57,6 +59,12 @@
 	onMount(() => {
 		onboardingStore.init();
 		layoutStore.updateSafeAreaPadding();
+
+		// Connect on every authenticated page so verification requests still arrive when the
+		// user is not on /chat. The socket reports itself as foreground only from /chat, so
+		// push notification behaviour is unchanged.
+		if (data?.user) socketStore.connect();
+
 		navigator.serviceWorker?.ready.then((registration) => {
 			const currentLocale = get(locale);
 			registration.active?.postMessage({
@@ -123,6 +131,7 @@
 
 <KeySharer />
 <EmojiVerification />
+<VerificationListener />
 <EmojiPicker />
 <ContextMenu />
 <Modal />

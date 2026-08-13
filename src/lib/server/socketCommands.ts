@@ -56,6 +56,13 @@ export async function sendEventToUsersInChat(chatId: string, event: string, data
 	}
 }
 
+/** Sends an event to each of the given users, on every socket they have connected */
+export async function sendEventToUsers(userIds: string[], event: string, data: any) {
+	for (const userId of userIds) {
+		await sendEventToUser(userId, event, data);
+	}
+}
+
 /** Sends an event to a specific user if they are connected */
 export async function sendEventToUser(userId: string, event: string, data: any) {
 	const io = getIO();

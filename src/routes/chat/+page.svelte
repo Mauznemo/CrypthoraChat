@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { socketStore } from '$lib/stores/socket.svelte';
-	import { getUserById } from '$lib/chat/chat.remote';
+	import { socketStore, socketListeners, type SocketListeners } from '$lib/stores/socket.svelte';
+	import { chatList } from '$lib/chat/chatList';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import ChatMessages from '$lib/components/chat/ChatMessages.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
@@ -14,7 +14,6 @@
 	import SideBar from '$lib/components/chat/SideBar.svelte';
 	import { checkForMasterKey } from '$lib/chat/masterKey';
 	import { chatStore } from '$lib/stores/chat.svelte';
-	import { verifyUser } from '$lib/crypto/userVerification';
 	import { checkPublicKey } from '$lib/crypto/keyPair';
 	import { chats } from '$lib/chat/chats';
 	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
@@ -57,8 +56,6 @@
 		chatStore.user = data.user;
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		const wasConnected = socketStore.connected;
-
 		await checkForMasterKey();
 
 		await checkPublicKey();
@@ -66,94 +63,80 @@
 		checkWrapperVersion();
 
 		socketStore.connect();
+		// Only the chat page reports itself as foreground, so a user parked on another
+		// page still receives push notifications for new messages.
+		socketStore.setSocketSessionActive();
 
 		initializePushNotifications();
 
-		if (wasConnected) {
-			handleConnect();
-		}
-
+		// onConnect fires immediately when the socket is already up, and again on every
+		// reconnect, so there is no separate "was already connected" path to get wrong.
 		subscribeToSocketEvents();
 	});
 
 	onDestroy(() => {
 		unsubscribeFromSocketEvents();
+		socketStore.setSocketSessionInactive();
 	});
 
+	let listeners: SocketListeners | null = null;
+
 	function subscribeToSocketEvents() {
-		socketStore.onNewMessage((m) => {
-			messages.handleNewMessage(m);
-			if (m.senderId === data?.user?.id) chatStore.scrollView?.lockToBottom();
-		});
-		socketStore.onNewMessageNotify((d) => {
-			messages.handleNewMessageNotify(d);
-		});
-		socketStore.onMessageUpdated((d) => {
-			messages.handleMessageUpdated(d.message, {
-				content: d.type === 'edit',
-				reactions: d.type === 'reaction'
-			});
-			messages.markReadIfVisible(d.message);
-		});
-		socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m));
-		socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId));
-		socketStore.onNewChat(chats.handleAddedToChatChat);
-		socketStore.onRemovedFromChat(chats.handleRemovedFromChat);
-		socketStore.onNewSystemMessage((m) => {
-			messages.handleNewSystemMessage(m);
-		});
-		socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d));
-		socketStore.onChatUpdated((d) => chats.handleChatUpdated(d));
-		socketStore.onConnect(() => handleConnect(true));
-		socketStore.onUserVerifyRequested((d) => {
-			console.log('User @' + d.requestorUsername + ' requested a verification');
-			modalStore.open({
-				title: $t('chat.verification-request-title'),
-				content: $t('chat.verification-request-content', {
-					values: { username: d.requestorUsername }
-				}),
-				buttons: [
-					{
-						text: $t('chat.verify-now'),
-						variant: 'primary',
-						onClick: async () => {
-							const user = await getUserById(d.requestorId);
-							verifyUser(user, false);
-						}
-					},
-					{
-						text: $t('common.decline'),
-						variant: 'secondary',
-						onClick: () => {}
-					}
-				]
-			});
-		});
-		socketStore.onKeyRotated(chats.handleKeyRotated);
-		socketStore.onMessageError((error) => {
-			modalStore.error(error.error);
-			console.error('Socket error:', error);
-		});
+		// Idempotent: re-subscribing never stacks handlers.
+		unsubscribeFromSocketEvents();
+		const l = (listeners = socketListeners());
+
+		l.add(
+			socketStore.onNewMessage((m) => {
+				messages.handleNewMessage(m);
+				if (m.senderId === data?.user?.id) chatStore.scrollView?.lockToBottom();
+			})
+		);
+		l.add(
+			socketStore.onNewMessageNotify((d) => {
+				messages.handleNewMessageNotify(d);
+			})
+		);
+		l.add(
+			socketStore.onMessageUpdated((d) => {
+				messages.handleMessageUpdated(d.message, {
+					content: d.type === 'edit',
+					reactions: d.type === 'reaction'
+				});
+				messages.markReadIfVisible(d.message);
+			})
+		);
+		l.add(socketStore.onMessageDeleted((m) => messages.handleMessageDeleted(m)));
+		l.add(
+			socketStore.onMessagesRead(async (d) => messages.handleMessagesRead(d.messageIds, d.userId))
+		);
+		l.add(socketStore.onNewChat(chats.handleAddedToChatChat));
+		l.add(socketStore.onRemovedFromChat(chats.handleRemovedFromChat));
+		l.add(
+			socketStore.onNewSystemMessage((m) => {
+				messages.handleNewSystemMessage(m);
+			})
+		);
+		l.add(socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d)));
+		l.add(socketStore.onChatUpdated((d) => chats.handleChatUpdated(d)));
+		l.add(socketStore.onConnect((isReconnect) => handleConnect(isReconnect)));
+		l.add(socketStore.onKeyRotated((d) => chats.handleKeyRotated(d)));
+		l.add(
+			socketStore.onMessageError((error) => {
+				modalStore.error(error.error);
+				console.error('Socket error:', error);
+			})
+		);
+		// Verification requests are handled globally in VerificationListener, so they still
+		// arrive when the user is sitting on /settings or /chat/new/dm.
 	}
 
 	function unsubscribeFromSocketEvents() {
 		if (chatStore.activeChat) {
 			socketStore.leaveChat(chatStore.activeChat.id);
 		}
-		socketStore.off('new-message');
-		socketStore.off('new-message-notify');
-		socketStore.off('message-updated');
-		socketStore.off('message-deleted');
-		socketStore.off('messages-read');
-		socketStore.off('new-chat', chats.handleAddedToChatChat);
-		socketStore.off('removed-from-chat', chats.handleRemovedFromChat);
-		socketStore.off('connect');
-		socketStore.off('new-system-message');
-		socketStore.off('requested-user-verify');
-		socketStore.off('chat-users-updated');
-		socketStore.off('chat-updated');
-		socketStore.off('key-rotated', chats.handleKeyRotated);
-		socketStore.off('message-error');
+		listeners?.dispose();
+		listeners = null;
 	}
 
 	function handleVisibilityChange(): void {
@@ -181,7 +164,20 @@
 		window.history.replaceState({}, document.title, url);
 	}
 
-	async function handleConnect(shouldRestoreScrollPos = false): Promise<void> {
+	async function handleConnect(isReconnect = false): Promise<void> {
+		// A reconnect is a brand new socket, which the server registers as background. Without
+		// this the user would keep getting push notifications for the chat they are looking at.
+		if (!document.hidden) socketStore.setSocketSessionActive();
+
+		if (isReconnect) {
+			// Nothing is queued server side, so a new-chat-created that landed while we were
+			// disconnected is only recoverable by re-reading the list.
+			await chatList.refresh({ force: true });
+			// Socket.IO rooms are per-socket and lost on every reconnect. Rejoin explicitly:
+			// the selectChat below is skipped entirely when there is no stored chatId.
+			if (chatStore.activeChat) socketStore.joinChat(chatStore.activeChat.id);
+		}
+
 		chatStore.loadingChat = true;
 		const params = new URLSearchParams(window.location.search);
 		removeQueryParams();
@@ -195,7 +191,7 @@
 			return;
 		}
 
-		selectChat(chatId, shouldRestoreScrollPos);
+		selectChat(chatId, isReconnect);
 	}
 
 	function handleCreateChat(): void {
@@ -240,15 +236,11 @@
 	}
 
 	if (browser) {
-		window.setSocketActive = async () => {
+		window.setSocketActive = () => {
+			// connect() is idempotent and listeners survive socket re-creation, so there is no
+			// teardown/resubscribe dance here any more (which used to stack duplicate handlers).
+			socketStore.connect();
 			socketStore.setSocketSessionActive();
-			if (!socketStore.connected) {
-				console.log('window.setSocketActive Connecting socket since it was not connected');
-				socketStore.connect();
-				unsubscribeFromSocketEvents();
-				await tick();
-				subscribeToSocketEvents();
-			}
 		};
 		window.setSocketInactive = () => {
 			socketStore.setSocketSessionInactive();

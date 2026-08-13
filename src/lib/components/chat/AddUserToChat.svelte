@@ -1,10 +1,9 @@
 <script lang="ts">
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
 	import { encryptChatKeyForUsers } from '$lib/crypto/chat';
-	import { getUnverifiedUsers, verifyUser } from '$lib/crypto/userVerification';
+	import { ensureUsersVerified } from '$lib/crypto/userVerification';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import { fade } from 'svelte/transition';
 	import { addUserToChat, getCurrentChatKeyVersion } from '$lib/chat/chat.remote';
@@ -23,44 +22,21 @@
 		}
 	});
 
+	let loading = $state(false);
+
 	async function handleAddUser() {
 		try {
 			if (!addUserToChatStore.chat) return;
 
-			const unverifiedUserIds = await getUnverifiedUsers(selectedUsers.map((u) => u.id));
-			const unverifiedUsers = selectedUsers.filter((u) => unverifiedUserIds.includes(u.id));
+			loading = true;
 
-			if (unverifiedUsers.length > 0) {
-				modalStore.open({
-					title:
-						selectedUsers.length === unverifiedUsers.length
-							? $t('chat.new.group.all-not-verified')
-							: $t('chat.new.group.some-not-verified'),
-					content:
-						unverifiedUsers.length === 1
-							? $t('chat.new.dm.not-verified-content', {
-									values: { username: unverifiedUsers[0].username }
-								})
-							: $t('chat.new.group.not-verified-content', {
-									values: { usernames: unverifiedUsers.map((u) => '@' + u.username).join(', ') }
-								}),
-					buttons: [
-						{
-							text: $t('chat.new.group.verify-user', {
-								values: { username: unverifiedUsers[0].username }
-							}),
-							variant: 'primary',
-							onClick: () => {
-								verifyUser(unverifiedUsers[0], true);
-							}
-						}
-					]
-				});
-				return;
-			}
+			// Verifies every unverified user in one pass, then continues with the add itself.
+			if (!(await ensureUsersVerified(selectedUsers))) return;
 
 			const newChatKeyVersion = await getCurrentChatKeyVersion(addUserToChatStore.chat.id);
-			if (newChatKeyVersion) addUserToChatStore.chat.currentKeyVersion = newChatKeyVersion;
+			// Chats start at version 0, which is falsy — a plain truthiness check never refreshed them.
+			if (newChatKeyVersion !== undefined && newChatKeyVersion !== null)
+				addUserToChatStore.chat.currentKeyVersion = newChatKeyVersion;
 
 			const chatKeyResult = await chats.tryGetEncryptedChatKeys(addUserToChatStore.chat);
 
@@ -95,15 +71,13 @@
 
 			toastStore.success($t('chat.add-user-to-chat.successfully-added-users'));
 
-			socketStore.notifyNewChat({
-				chatId: addUserToChatStore.chat.id,
-				userIds: selectedUsers.map((u) => u.id),
-				type: 'group'
-			});
+			// addUserToChat notifies the added users server side.
 
 			addUserToChatStore.close();
 		} catch (err: any) {
 			modalStore.error(err, $t('chat.add-user-to-chat.failed-to-add-users'));
+		} finally {
+			loading = false;
 		}
 	}
 </script>
@@ -146,7 +120,7 @@
 			/>
 			<button
 				onclick={handleAddUser}
-				disabled={selectedUsers.length < 1}
+				disabled={selectedUsers.length < 1 || loading}
 				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 				>{selectedUsers.length === 1
 					? $t('chat.add-user-to-chat.add-user')

@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { get, type Server as HTTPServer } from 'http';
+import { type Server as HTTPServer } from 'http';
 import { db } from '../db';
 import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
@@ -186,32 +186,45 @@ async function getChatUsers(chatId: string) {
 
 export interface SocketSessionData {
 	userId: string;
+	sessionId: string;
 	socketId: string;
 	userActive: boolean; // Whether the user hast the app in the foreground or not
 }
 
+export type UserPresence = 'active' | 'background' | 'offline';
+
+const VERIFY_RATE_LIMIT = 5;
+const VERIFY_RATE_WINDOW_MS = 30_000;
+
 globalThis._io ??= null;
-globalThis._sessionSocketMap ??= new Map<string, SocketSessionData>();
+// Keyed by socket.id, NOT by sessionId: a session cookie is shared by every tab of a
+// browser, so keying by session made only the newest tab reachable and let a dying
+// socket's late disconnect delete the entry of an already-reconnected live socket.
+globalThis._socketMap ??= new Map<string, SocketSessionData>();
 
 export function getIO(): Server {
 	if (!globalThis._io) throw new Error('Socket not initialized');
 	return globalThis._io;
 }
 
+function getUserSocketData(userId: string): SocketSessionData[] {
+	if (!globalThis._socketMap) throw new Error('User socket map not initialized');
+	return Array.from(globalThis._socketMap.values()).filter((s) => s.userId === userId);
+}
+
 export function getUserSockets(userId: string): string[] {
-	if (!globalThis._sessionSocketMap) throw new Error('User socket map not initialized');
-	const sockets = Array.from(globalThis._sessionSocketMap.values()).filter(
-		(s) => s.userId === userId
-	);
-	return sockets.map((s) => s.socketId);
+	return getUserSocketData(userId).map((s) => s.socketId);
 }
 
 export function hasUserActiveSockets(userId: string): boolean {
-	if (!globalThis._sessionSocketMap) throw new Error('User socket map not initialized');
-	const sockets = Array.from(globalThis._sessionSocketMap.values()).filter(
-		(s) => s.userId === userId
-	);
-	return sockets.some((s) => s.userActive);
+	return getUserSocketData(userId).some((s) => s.userActive);
+}
+
+/** Whether the user has the app open in the foreground, open in the background, or not at all */
+export function getUserPresence(userId: string): UserPresence {
+	const sockets = getUserSocketData(userId);
+	if (sockets.length === 0) return 'offline';
+	return sockets.some((s) => s.userActive) ? 'active' : 'background';
 }
 
 export async function initializeSocket(server: HTTPServer) {
@@ -257,10 +270,13 @@ export async function initializeSocket(server: HTTPServer) {
 
 	io.on('connection', (socket: AuthenticatedSocket) => {
 		if (socket.user) {
-			globalThis._sessionSocketMap.set(socket.user.sessionId, {
+			// Starts inactive: the socket is now connected on every authenticated page, and only
+			// the chat page reports itself as foreground. Keeps push notification behaviour intact.
+			globalThis._socketMap.set(socket.id, {
 				userId: socket.user.id,
+				sessionId: socket.user.sessionId,
 				socketId: socket.id,
-				userActive: true
+				userActive: false
 			});
 		}
 
@@ -276,26 +292,18 @@ export async function initializeSocket(server: HTTPServer) {
 			console.log(`User ${socket.id} left chat ${chatId}`);
 		});
 
+		// Mutated in place rather than re-set, so a late event from a dead socket cannot
+		// resurrect an entry that disconnect already removed.
 		socket.on('inactive', () => {
 			console.log(`User ${socket.id} inactive`);
-			if (socket.user) {
-				globalThis._sessionSocketMap.set(socket.user.sessionId, {
-					userId: socket.user.id,
-					socketId: socket.id,
-					userActive: false
-				});
-			}
+			const entry = globalThis._socketMap.get(socket.id);
+			if (entry) entry.userActive = false;
 		});
 
 		socket.on('active', () => {
 			console.log(`User ${socket.id} active`);
-			if (socket.user) {
-				globalThis._sessionSocketMap.set(socket.user.sessionId, {
-					userId: socket.user.id,
-					socketId: socket.id,
-					userActive: true
-				});
-			}
+			const entry = globalThis._socketMap.get(socket.id);
+			if (entry) entry.userActive = true;
 		});
 
 		socket.on('subscribe-webpush', (data) => {
@@ -328,25 +336,79 @@ export async function initializeSocket(server: HTTPServer) {
 			});
 		});
 
-		socket.on('request-user-verify', (data) => {
-			console.log('Requesting user verification');
-			const socketIds = getUserSockets(data.userId);
-			if (socketIds.length === 0) {
-				console.log('User not online');
-				return;
-			}
+		// A verification request pops a modal on every device of the target, so it is worth
+		// a cheap per-socket cap.
+		const verifyRequestTimes: number[] = [];
 
-			for (const socketId of socketIds) {
-				io.to(socketId).emit('requested-user-verify', {
-					requestorId: socket.user!.id,
-					requestorUsername: socket.user!.username
-				});
+		function isVerifyRateLimited(): boolean {
+			const now = Date.now();
+			while (verifyRequestTimes.length > 0 && now - verifyRequestTimes[0] > VERIFY_RATE_WINDOW_MS) {
+				verifyRequestTimes.shift();
+			}
+			if (verifyRequestTimes.length >= VERIFY_RATE_LIMIT) return true;
+			verifyRequestTimes.push(now);
+			return false;
+		}
+
+		socket.on(
+			'request-user-verify',
+			(data: { requestId: string; userId: string }, ack?: (res: { status: string }) => void) => {
+				console.log('Requesting user verification');
+
+				if (isVerifyRateLimited()) {
+					ack?.({ status: 'rate-limited' });
+					return;
+				}
+
+				const presence = getUserPresence(data.userId);
+
+				// The requester now learns the peer is unreachable instead of waiting forever.
+				if (presence === 'offline') {
+					ack?.({ status: 'offline' });
+					return;
+				}
+
+				for (const socketId of getUserSockets(data.userId)) {
+					io.to(socketId).emit('requested-user-verify', {
+						requestId: data.requestId,
+						// Never taken from the payload: the sender does not get to name themselves.
+						requestorId: socket.user!.id,
+						requestorUsername: socket.user!.username
+					});
+				}
+
+				ack?.({ status: presence === 'active' ? 'delivered' : 'background' });
+			}
+		);
+
+		socket.on(
+			'respond-user-verify',
+			(data: { requestId: string; toUserId: string; response: string }) => {
+				for (const socketId of getUserSockets(data.toUserId)) {
+					io.to(socketId).emit('user-verify-response', {
+						requestId: data.requestId,
+						responderId: socket.user!.id,
+						responderUsername: socket.user!.username,
+						response: data.response
+					});
+				}
+
+				// Dismiss the duplicate request modal on this user's other devices.
+				for (const socketId of getUserSockets(socket.user!.id)) {
+					if (socketId === socket.id) continue;
+					io.to(socketId).emit('user-verify-handled', { requestId: data.requestId });
+				}
+			}
+		);
+
+		socket.on('cancel-user-verify', (data: { requestId: string; userId: string }) => {
+			for (const socketId of getUserSockets(data.userId)) {
+				io.to(socketId).emit('user-verify-cancelled', { requestId: data.requestId });
 			}
 		});
 
-		socket.on('key-rotated', async (data) => {
-			io.to(data.chatId).emit('key-rotated');
-		});
+		// 'key-rotated' is emitted by the rotateChatKey remote function, which has already
+		// checked chat ownership. The old client relay accepted any chatId from any user.
 
 		socket.on(
 			'send-message',
@@ -675,29 +737,16 @@ export async function initializeSocket(server: HTTPServer) {
 			});
 		});
 
-		socket.on(
-			'chat-created',
-			(data: { userIds: string[]; chatId: string; type: 'dm' | 'group' }) => {
-				const targetSockets: string[] = [];
-
-				for (const userId of data.userIds) {
-					const userSocketIds = getUserSockets(userId);
-					targetSockets.push(...userSocketIds);
-				}
-
-				targetSockets.forEach((socketId) => {
-					io.to(socketId).emit('new-chat-created', {
-						chatId: data.chatId,
-						type: data.type
-					});
-				});
-			}
-		);
+		// 'new-chat-created' is emitted by createDm / createGroup / addUserToChat, which derive
+		// the recipients from the DB. The old client relay accepted an arbitrary chatId and an
+		// arbitrary recipient list from any authenticated user.
 
 		socket.on('disconnect', () => {
-			if (socket.user?.sessionId) {
-				globalThis._sessionSocketMap.delete(socket.user.sessionId);
-			}
+			// Scoped to this socket only. Deleting by sessionId meant a dying socket's late
+			// disconnect (pingTimeout fires ~20s after a silent transport drop) wiped the entry
+			// of the socket that had already reconnected, silently dropping every user-targeted
+			// event until the next reconnect.
+			globalThis._socketMap.delete(socket.id);
 			console.log('User disconnected:', socket.id);
 		});
 	});

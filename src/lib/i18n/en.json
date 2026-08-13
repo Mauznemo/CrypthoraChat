@@ -103,6 +103,27 @@
     "verification-request-title": "Verify User Request",
     "verification-request-content": "User @{username} requested a verification",
     "verify-now": "Verify Now",
+    "verification": {
+      "sending": "Sending verification request…",
+      "waiting-title": "Verifying @{username}",
+      "waiting": "Waiting for @{username} to accept the verification request…",
+      "peer-background": "@{username} has the app in the background and may not see the request right away.",
+      "peer-offline-title": "@{username} is not online",
+      "peer-offline": "@{username} does not have the app open. Ask them to open CrypthoraChat, then try again.",
+      "peer-busy": "@{username} is already verifying with someone else. Try again in a moment.",
+      "rate-limited": "Too many verification requests. Please wait a moment and try again.",
+      "declined-title": "Verification declined",
+      "declined": "@{username} declined the verification request.",
+      "cancelled": "@{username} cancelled the verification request.",
+      "timeout-title": "No response",
+      "timeout": "@{username} did not respond in time.",
+      "peer-failed": "@{username} reported that the emojis do not match. Do not trust this key.",
+      "success": "@{username} is now verified.",
+      "request-handled": "This verification request was handled on another device.",
+      "progress": "Verifying {current} of {total}",
+      "verify-all": "Verify {count} users",
+      "continue-after-verify": "You need to verify with them once. This will continue automatically afterwards."
+    },
     "new": {
       "dm": {
         "not-verified": "User not verified",
@@ -167,6 +188,7 @@
     },
     "chats": {
       "failed-to-select-chat": "Failed to select chat, make sure you are online.",
+      "key-refresh-failed": "Could not get the new chat key after it was rotated. Try reopening the chat.",
       "failed-to-decrypt-chat-key": "Failed to decrypt chat key, you might have entered a wrong master key. \n(Error: {error})",
       "re-import-master-key": "Re-enter",
       "failed-to-get-encrypted-chat-keys-from-public-key": "Failed to get chat key from public key. Try restarting the App or leaving the chat and re-joining if the problem persists.",
@@ -191,7 +213,8 @@
     },
     "emoji-verification": {
       "verify-user": "Verify @{username}, make sure the emojis match",
-      "failed-to-verify-user": "Failed to verify user:"
+      "failed-to-verify-user": "Failed to verify user:",
+      "time-remaining": "These emojis change in {hours} hours and {minutes} minutes"
     },
     "add-user-to-chat": {
       "failed-to-get-key": "Failed to get chat key so cannot be shared with users.",

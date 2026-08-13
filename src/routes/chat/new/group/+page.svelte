@@ -2,10 +2,9 @@
 	import { goto } from '$app/navigation';
 	import UserSelector from '$lib/components/chat/UserSelector.svelte';
 	import { encryptChatKeyForUsers, generateChatKey } from '$lib/crypto/chat';
-	import { getUnverifiedUsers, verifyUser } from '$lib/crypto/userVerification';
+	import { ensureUsersVerified } from '$lib/crypto/userVerification';
 	import { encryptKeyForStorage } from '$lib/crypto/utils';
 	import { modalStore } from '$lib/stores/modal.svelte';
-	import { socketStore } from '$lib/stores/socket.svelte';
 	import type { SafeUser } from '$lib/types';
 	import type { PageProps } from './$types';
 	import { saveEncryptedChatKey } from '$lib/chat/chat.remote';
@@ -29,36 +28,10 @@
 	async function handleCreateGroup() {
 		try {
 			loading = true;
-			const unverifiedUserIds = await getUnverifiedUsers(selectedUsers.map((u) => u.id));
-			const unverifiedUsers = selectedUsers.filter((u) => unverifiedUserIds.includes(u.id));
 
-			if (unverifiedUsers.length > 0) {
-				modalStore.open({
-					title:
-						selectedUsers.length === unverifiedUsers.length
-							? $t('chat.new.group.all-not-verified')
-							: $t('chat.new.group.some-not-verified'),
-					content:
-						unverifiedUsers.length === 1
-							? $t('chat.new.dm.not-verified-content', {
-									values: { username: unverifiedUsers[0].username }
-								})
-							: $t('chat.new.group.not-verified-content', {
-									values: { usernames: unverifiedUsers.map((u) => '@' + u.username).join(', ') }
-								}),
-					buttons: [
-						{
-							text: $t('chat.new.group.verify-user', {
-								values: { username: unverifiedUsers[0].username }
-							}),
-							variant: 'primary',
-							onClick: () => {
-								verifyUser(unverifiedUsers[0], true);
-							}
-						}
-					]
-				});
-
+			// Verifies every unverified member in one pass, then falls through to the actual
+			// creation below, so there is no second press of "Create Group".
+			if (!(await ensureUsersVerified(selectedUsers))) {
 				loading = false;
 				return;
 			}
@@ -100,11 +73,7 @@
 			}
 
 			if (result.success) {
-				socketStore.notifyNewChat({
-					chatId: result.chatId,
-					userIds: selectedUsers.map((u) => u.id),
-					type: 'group'
-				});
+				// createGroup notifies the participants server side.
 				localStorage.setItem('lastChatId', result.chatId);
 				goto('/chat');
 			}
@@ -240,7 +209,7 @@
 		/>
 		<button
 			onclick={handleCreateGroup}
-			disabled={selectedUsers.length < 1 || groupName.trim().length < 1}
+			disabled={selectedUsers.length < 1 || groupName.trim().length < 1 || loading}
 			class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
 		>
 			{#if loading}
