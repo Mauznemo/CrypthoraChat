@@ -160,7 +160,7 @@ model NotificationSubscription {
   id        String @id @default(cuid())
   sessionId String
   userId    String
-  type      String // 'webpush' or 'ntfy'
+  type      String // 'webpush', 'ntfy' or 'fcm'
   data      Json
 
   @@unique([sessionId])

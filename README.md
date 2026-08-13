@@ -103,8 +103,45 @@ networks:
 5. Go to the "Environment variables" tab and set both URLs again there (without the port!), also set a password for the postgres database
 6. Now set your VAPID data (this is needed for push notification everywhere else), you can use [this](https://www.attheminute.com/vapid-key-generator) website to generate the keys, you also need to to input any email address. (It is used for a critical administrative and security function, allowing the push service to communicate with you, the server operator, if problems arise)
 7. Set `PROFILE_PIC_KEY` to a random 32 byte value, you can run this to generate one `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
-8. Now hit "Deploy"
-9. When its done you can click on "Links" and open the chat app, the first user registered will be the server admin that manges the allowed user names
+8. Optionally set `FCM_CLIENT_CONFIG` and `FCM_SERVICE_ACCOUNT` so the wrapper app can use Google FCM instead of ntfy, see [Setting up FCM](#setting-up-fcm)
+9. Now hit "Deploy"
+10. When its done you can click on "Links" and open the chat app, the first user registered will be the server admin that manges the allowed user names
+
+## Push notifications
+There are three ways a device can receive notifications, and the server supports all of them at the same time. Each logged in device (session) uses exactly one of them.
+
+| | Used by | Needs setup |
+|---|---|---|
+| **WebPush (VAPID)** | Browser and PWA on any OS | The `VAPID_*` variables, see [Getting started hosting](#getting-started-hosting) |
+| **Google FCM** | Android [wrapper app](https://github.com/Mauznemo/CrypthoraChatWrapper) | A free Firebase project, see below |
+| **ntfy / UnifiedPush** | Android wrapper app | Nothing, the `ntfy` container is in `docker-compose.yaml` |
+
+FCM is the recommended option for the wrapper app: it needs no extra app installed on the phone and is much more reliable than the ntfy app, which has to keep its own connection alive and gets throttled by Android's battery optimizations. ntfy stays fully supported for anyone who would rather not involve Google.
+
+Either way the push itself only contains metadata (who sent a message, in which chat, when, and the avatar url) and **never any message content** — the notification text is put together on your device. With FCM that metadata passes through Google's servers, with ntfy it stays on your own.
+
+### Setting up FCM
+This is optional. If you skip it, the wrapper app just won't offer FCM as a push provider.
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com/) (the free Spark plan is enough)
+2. In the project, add an **Android** app with the package name `dev.mauznemo.crypthora_chat_wrapper`. You can leave the nickname empty and skip the SHA-1 fingerprint, it's not needed for notifications
+3. Download the `google-services.json` it offers you. You do **not** need to put it into any app — skip the remaining setup steps Firebase shows you
+4. Go to Project settings > Service accounts and click "Generate new private key" to download a second JSON file
+5. Set both files as environment variables. They are single line, so base64 them first:
+```bash
+base64 -i google-services.json      # -> FCM_CLIENT_CONFIG
+```
+```bash
+base64 -i your-service-account.json # -> FCM_SERVICE_ACCOUNT
+```
+   (on Linux use `base64 -w0 google-services.json`. Pasting the raw JSON works too if your host allows multi line values.)
+6. Make sure "Firebase Cloud Messaging API (V1)" is enabled under Project settings > Cloud Messaging
+7. Restart the container. On startup the log should say `FCM push enabled for project: ...`
+
+The wrapper app asks your server for the Firebase client values at runtime (`GET /api/push-config`), so everyone can keep using the same prebuilt apk from the releases page — nothing has to be rebuilt.
+
+> [!NOTE]
+> `google-services.json` is not a secret (it sits inside every app built with Firebase) and is served publicly. The service account key **is** a secret and never leaves your server.
 
 ## Tech stack
 - [SvelteKit 5](https://svelte.dev/) (experimental [Remote Functions](https://svelte.dev/docs/kit/remote-functions) are enabled)

@@ -225,6 +225,12 @@ class SocketStore {
 		});
 	}
 
+	subscribeToFcmPush(token: string) {
+		this.socket?.emit('subscribe-fcm-push', {
+			token
+		});
+	}
+
 	subscribeToWebPush(subscription: PushSubscription) {
 		this.socket?.emit('subscribe-webpush', {
 			subscription: subscription.toJSON()

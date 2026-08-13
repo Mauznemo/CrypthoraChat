@@ -11,6 +11,7 @@ import {
 	sendWebpushNotification,
 	type NotificationDate
 } from './pushNotifications';
+import { sendFcmNotification } from './fcm';
 
 const VAPID_EMAIL = process.env.VAPID_EMAIL;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -40,15 +41,36 @@ interface NtfySubData {
 	subscription: string;
 }
 
+interface FcmSubData {
+	sessionId: string;
+	userId: string;
+	subscription: string;
+}
+
 const webpushSubscriptions = new Map<string, WebpushSubData>();
 const ntfySubscriptions = new Map<string, NtfySubData>();
+const fcmSubscriptions = new Map<string, FcmSubData>();
 
 function getUserSubscriptions(userId: string) {
 	const ntfySubs = Array.from(ntfySubscriptions.values()).filter((sub) => sub.userId === userId);
 	const webpushSubs = Array.from(webpushSubscriptions.values()).filter(
 		(sub) => sub.userId === userId
 	);
-	return { ntfySubs, webpushSubs };
+	const fcmSubs = Array.from(fcmSubscriptions.values()).filter((sub) => sub.userId === userId);
+	return { ntfySubs, webpushSubs, fcmSubs };
+}
+
+/**
+ * Drops a session from all in memory maps.
+ *
+ * A session only ever has one subscription row (`@@unique([sessionId])`), so when it switches
+ * provider the db row is replaced but the old map entry would otherwise linger and the device would
+ * get the same notification twice until the server restarts.
+ */
+function clearSessionSubscriptions(sessionId: string) {
+	webpushSubscriptions.delete(sessionId);
+	ntfySubscriptions.delete(sessionId);
+	fcmSubscriptions.delete(sessionId);
 }
 
 async function saveSubscription(data: {
@@ -56,8 +78,10 @@ async function saveSubscription(data: {
 	userId: string;
 	webpushSubscription?: PushSubscription;
 	ntfySubscription?: string;
+	fcmSubscription?: string;
 }) {
 	if (!data.sessionId || !data.userId) return;
+	clearSessionSubscriptions(data.sessionId);
 	if (data.webpushSubscription) {
 		webpushSubscriptions.set(data.sessionId, {
 			sessionId: data.sessionId,
@@ -65,20 +89,7 @@ async function saveSubscription(data: {
 			subscription: data.webpushSubscription
 		});
 
-		await db.notificationSubscription.upsert({
-			where: {
-				sessionId: data.sessionId
-			},
-			create: {
-				sessionId: data.sessionId,
-				userId: data.userId,
-				type: 'webpush',
-				data: data.webpushSubscription
-			},
-			update: {
-				data: data.webpushSubscription
-			}
-		});
+		await upsertSubscription(data.sessionId, data.userId, 'webpush', data.webpushSubscription);
 	}
 	if (data.ntfySubscription) {
 		ntfySubscriptions.set(data.sessionId, {
@@ -87,27 +98,36 @@ async function saveSubscription(data: {
 			subscription: data.ntfySubscription
 		});
 
-		await db.notificationSubscription.upsert({
-			where: {
-				sessionId: data.sessionId
-			},
-			create: {
-				sessionId: data.sessionId,
-				userId: data.userId,
-				type: 'ntfy',
-				data: data.ntfySubscription
-			},
-			update: {
-				data: data.ntfySubscription
-			}
-		});
+		await upsertSubscription(data.sessionId, data.userId, 'ntfy', data.ntfySubscription);
 	}
+	if (data.fcmSubscription) {
+		fcmSubscriptions.set(data.sessionId, {
+			sessionId: data.sessionId,
+			userId: data.userId,
+			subscription: data.fcmSubscription
+		});
+
+		await upsertSubscription(data.sessionId, data.userId, 'fcm', data.fcmSubscription);
+	}
+}
+
+/** `type` is updated too, so a session that switches provider doesn't keep the old one. */
+async function upsertSubscription(
+	sessionId: string,
+	userId: string,
+	type: 'webpush' | 'ntfy' | 'fcm',
+	subscription: PushSubscription | string
+) {
+	await db.notificationSubscription.upsert({
+		where: { sessionId },
+		create: { sessionId, userId, type, data: subscription },
+		update: { type, data: subscription }
+	});
 }
 
 async function deleteSubscription(sessionId: string) {
 	try {
-		webpushSubscriptions.delete(sessionId);
-		ntfySubscriptions.delete(sessionId);
+		clearSessionSubscriptions(sessionId);
 		await db.notificationSubscription.delete({ where: { sessionId } });
 	} catch (e) {}
 }
@@ -124,6 +144,12 @@ async function loadSubscriptions() {
 			});
 		} else if (sub.type === 'ntfy') {
 			ntfySubscriptions.set(sub.sessionId, {
+				sessionId: sub.sessionId,
+				userId: sub.userId,
+				subscription: sub.data as string
+			});
+		} else if (sub.type === 'fcm') {
+			fcmSubscriptions.set(sub.sessionId, {
 				sessionId: sub.sessionId,
 				userId: sub.userId,
 				subscription: sub.data as string
@@ -292,6 +318,16 @@ export async function initializeSocket(server: HTTPServer) {
 			});
 		});
 
+		socket.on('subscribe-fcm-push', (data) => {
+			const userId = socket.user!.id;
+			console.log(`User ${userId} subscribed to fcm push notifications`);
+			saveSubscription({
+				sessionId: socket.user!.sessionId,
+				userId,
+				fcmSubscription: data.token
+			});
+		});
+
 		socket.on('request-user-verify', (data) => {
 			console.log('Requesting user verification');
 			const socketIds = getUserSockets(data.userId);
@@ -415,7 +451,14 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 
 						for (const ntfyTopic of userSubs.ntfySubs) {
-							const success = await sendNtfyNotification(ntfyTopic.subscription, notificationData);
+							await sendNtfyNotification(ntfyTopic.subscription, notificationData);
+						}
+
+						for (const fcmSub of userSubs.fcmSubs) {
+							const result = await sendFcmNotification(fcmSub.subscription, notificationData);
+							if (result.invalidToken) {
+								await deleteSubscription(fcmSub.sessionId);
+							}
 						}
 					}
 				} catch (error) {

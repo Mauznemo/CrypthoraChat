@@ -7,6 +7,12 @@ import { modalStore } from './stores/modal.svelte';
 export async function initializePushNotifications() {
 	if (!browser) return;
 
+	// The wrapper app handles its own notifications, it tells us which provider it registered with
+	if (window.isFlutterWebView && window.fcmToken) {
+		socketStore.subscribeToFcmPush(window.fcmToken);
+		return;
+	}
+
 	if (window.isFlutterWebView && window.ntfyTopic) {
 		socketStore.subscribeToNtfyPush(window.ntfyTopic);
 		return;

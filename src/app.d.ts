@@ -25,11 +25,13 @@ declare global {
 		wrapperVersion?: string;
 		flutter_inappwebview?: any;
 		ntfyTopic?: string;
+		fcmToken?: string;
 		flutterSafeAreaInsets?: { top: number; bottom: number, left: number, right: number };
 		onFlutterSafeAreaInsetsChanged? = () => {};
 		setSocketActive? = () => {};
 		setSocketInactive? = () => {};
 		goToChat? = (chatId: string) => {};
+		reRegisterPush? = () => {};
 	}
 	var _io: Server | null;
 	var _sessionSocketMap: Map<string, SocketSessionData>;

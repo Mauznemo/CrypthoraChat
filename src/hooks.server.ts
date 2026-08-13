@@ -3,7 +3,14 @@ import { redirect } from '@sveltejs/kit';
 import { validateSession } from '$lib/utils/auth';
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/api/profile-picture'];
+const PUBLIC_ROUTES = [
+	'/',
+	'/login',
+	'/register',
+	'/api/profile-picture',
+	// The wrapper app reads this before the user has logged in
+	'/api/push-config'
+];
 
 const ADMIN_ROUTES = ['/admin'];
 

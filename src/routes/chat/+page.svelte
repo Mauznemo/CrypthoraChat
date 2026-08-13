@@ -260,6 +260,10 @@
 			if (chatStore.activeChat?.id === chatId) return;
 			selectChat(chatId);
 		};
+		// Called by the wrapper app after its FCM token rotated, so the new one gets registered
+		window.reRegisterPush = () => {
+			initializePushNotifications();
+		};
 	}
 </script>
 
