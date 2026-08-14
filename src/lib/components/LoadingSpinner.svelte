@@ -33,37 +33,41 @@
 	</svg>
 </div>
 
+<!--
+	Do not wrap these rules in `@layer`. Svelte extracts component styles into their own
+	stylesheet, which can be linked before the Tailwind one — declaring a layer here would
+	register it first and push Tailwind's `utilities` below `base`, breaking the whole app.
+	Scoped selectors already outrank Tailwind's own `.animate-spin` without a layer.
+-->
 <style>
-	@layer utilities {
-		@keyframes spin-animation {
-			0% {
-				transform: rotate(0deg);
-			}
-			100% {
-				transform: rotate(360deg);
-			}
+	@keyframes spin-animation {
+		0% {
+			transform: rotate(0deg);
 		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
 
-		@keyframes stroke-animation {
-			50% {
-				stroke-dasharray: 80 125.6;
-			}
-			100% {
-				stroke-dasharray: 0 125.6;
-			}
-			50% {
-				stroke-dasharray: 80 125.6;
-			}
+	@keyframes stroke-animation {
+		50% {
+			stroke-dasharray: 80 125.6;
 		}
+		100% {
+			stroke-dasharray: 0 125.6;
+		}
+		50% {
+			stroke-dasharray: 80 125.6;
+		}
+	}
 
-		.animate-spin {
-			animation: spin-animation 1s cubic-bezier(0.25, 0.68, 0.82, 0.44) infinite;
-			transform-origin: center;
-		}
+	.animate-spin {
+		animation: spin-animation 1s cubic-bezier(0.25, 0.68, 0.82, 0.44) infinite;
+		transform-origin: center;
+	}
 
-		.animate-stroke {
-			animation: stroke-animation 1s ease-in-out infinite;
-			transform-origin: center;
-		}
+	.animate-stroke {
+		animation: stroke-animation 1s ease-in-out infinite;
+		transform-origin: center;
 	}
 </style>
