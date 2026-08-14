@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
+	import Toggle from '$lib/components/Toggle.svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { formatHex } from 'culori';
 	import { onMount } from 'svelte';
@@ -13,6 +14,8 @@
 
 	let backgroundTypes = ['circles', 'gradient', 'solid'];
 	let selectedBackgroundType = $state('circles');
+
+	let flatMode = $state(false);
 
 	function handleAccentColorChange(color: string) {
 		selectedAccentColor = color;
@@ -38,6 +41,7 @@
 		currentBackgroundColor2 = themeStore.getBackgroundColor(2);
 
 		selectedBackgroundType = themeStore.getBackgroundType();
+		flatMode = themeStore.flatMode;
 	});
 </script>
 
@@ -48,6 +52,14 @@
 		onColorChange={handleAccentColorChange}
 	/>
 {/if}
+
+<div class="mt-4">
+	<Toggle
+		bind:checked={flatMode}
+		label={$t('settings.appearance.flat-mode')}
+		onchange={(checked) => themeStore.setFlatMode(checked)}
+	/>
+</div>
 
 <p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.preview')}</p>
 <div class="flex w-fit flex-col items-end gap-2 rounded-xl border border-gray-400 p-4">

@@ -19,6 +19,25 @@
 	--color-background-2: var(--color-gray-900);
 }
 
+:root {
+	--frosted-shadow:
+		inset 0 1px 10px rgba(255, 255, 255, 0.133), inset 0 -1px 10px rgba(255, 255, 255, 0.113);
+	--frosted-shadow-lg:
+		inset 0 1px 10px rgba(255, 255, 255, 0.133), inset 0 -1px 10px rgba(255, 255, 255, 0.113),
+		0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+html[data-flat='true'] {
+	--frosted-shadow: none;
+	--frosted-shadow-lg: none;
+}
+
+html[data-flat='true'] .shadow-inner,
+html[data-flat='true'] .shadow-sm,
+html[data-flat='true'] .shadow-lg {
+	box-shadow: var(--frosted-shadow);
+}
+
 @utility no-scrollbar {
 	@apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
 }
@@ -68,20 +87,14 @@
 	backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
 	-webkit-backdrop-filter: blur(5px);
 	border: 1px solid rgba(255, 255, 255, 0.059);
-	box-shadow:
-		inset 0 1px 10px rgba(255, 255, 255, 0.133),
-		inset 0 -1px 10px rgba(255, 255, 255, 0.113);
+	box-shadow: var(--frosted-shadow);
 }
 
 @utility frosted-glass-shadow {
 	backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
 	-webkit-backdrop-filter: blur(5px);
 	border: 1px solid rgba(255, 255, 255, 0.059);
-	box-shadow:
-		inset 0 1px 10px rgba(255, 255, 255, 0.133),
-		inset 0 -1px 10px rgba(255, 255, 255, 0.113),
-		0 20px 25px -5px rgb(0 0 0 / 0.1),
-		0 8px 10px -6px rgb(0 0 0 / 0.1);
+	box-shadow: var(--frosted-shadow-lg);
 }
 
 @layer components {
@@ -109,9 +122,7 @@
 		backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
 		-webkit-backdrop-filter: blur(5px);
 		border: 1px solid rgba(255, 255, 255, 0.059);
-		box-shadow:
-			inset 0 1px 10px rgba(255, 255, 255, 0.133),
-			inset 0 -1px 10px rgba(255, 255, 255, 0.113);
+		box-shadow: var(--frosted-shadow);
 	}
 
 	/* Tooltip arrow */

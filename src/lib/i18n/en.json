@@ -268,6 +268,7 @@
     },
     "appearance": {
       "accent-color": "Accent Color",
+      "flat-mode": "Flat Mode",
       "preview": "Preview",
       "preview-message-1": "Hello",
       "preview-message-2": "This is what a message looks like!",

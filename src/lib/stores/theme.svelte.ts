@@ -37,6 +37,7 @@ class Theme {
 	}
 
 	backgroundType: 'circles' | 'gradient' | 'solid' = $state('circles');
+	flatMode = $state(false);
 	themeLoaded = $state(false);
 
 	setThemeAccentColor(color: string) {
@@ -48,7 +49,16 @@ class Theme {
 		localStorage.setItem('themeBaseColor', color);
 	}
 
+	setFlatMode(enabled: boolean) {
+		this.flatMode = enabled;
+		localStorage.setItem('flatMode', enabled ? 'true' : 'false');
+		document.documentElement.dataset.flat = enabled ? 'true' : 'false';
+	}
+
 	loadTheme() {
+		this.flatMode = localStorage.getItem('flatMode') === 'true';
+		document.documentElement.dataset.flat = this.flatMode ? 'true' : 'false';
+
 		const backgroundType = localStorage.getItem('backgroundType');
 		if (backgroundType) {
 			this.backgroundType = backgroundType as 'circles' | 'gradient' | 'solid';
