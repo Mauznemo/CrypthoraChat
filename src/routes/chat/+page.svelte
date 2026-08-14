@@ -15,7 +15,9 @@
 	import { checkForMasterKey } from '$lib/chat/masterKey';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { checkPublicKey } from '$lib/crypto/keyPair';
-	import { chats } from '$lib/chat/chats';
+	import { chats, getOtherDmUser } from '$lib/chat/chats';
+	import { presenceStore } from '$lib/stores/presence.svelte';
+	import { activityTracker } from '$lib/activityTracker';
 	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 	import Icon from '@iconify/svelte';
@@ -33,18 +35,22 @@
 	let inputField: CustomTextarea;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
+	let otherDmUser = $derived(getOtherDmUser(chatStore.activeChat, chatStore.user?.id));
 	let chatName: string | null = $derived.by(() => {
 		if (chatStore.activeChat) {
 			if (chatStore.activeChat.type === 'group') {
 				return chatStore.activeChat.name;
 			} else {
-				const otherUser = chatStore.activeChat.participants.find(
-					(p) => p.user.id !== chatStore.user?.id
-				);
-				return otherUser?.user.displayName || null;
+				return otherDmUser?.displayName || null;
 			}
 		}
 		return null;
+	});
+
+	// The DM peer is the only user whose presence the chat view itself needs; group members
+	// are fetched by the info bar, only while it is open.
+	$effect(() => {
+		if (otherDmUser) presenceStore.refresh([otherDmUser.id]);
 	});
 
 	onMount(async () => {
@@ -54,7 +60,6 @@
 		}
 
 		chatStore.user = data.user;
-		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		await checkForMasterKey();
 
@@ -64,8 +69,10 @@
 
 		socketStore.connect();
 		// Only the chat page reports itself as foreground, so a user parked on another
-		// page still receives push notifications for new messages.
-		socketStore.setSocketSessionActive();
+		// page still receives push notifications for new messages. The tracker also drops
+		// the session back to background once the user stops interacting with it, so a tab
+		// left open on a second monitor no longer suppresses notifications forever.
+		activityTracker.start(handleVisible);
 
 		initializePushNotifications();
 
@@ -76,7 +83,8 @@
 
 	onDestroy(() => {
 		unsubscribeFromSocketEvents();
-		socketStore.setSocketSessionInactive();
+		// Also removes the visibilitychange listener, which used to leak on every unmount.
+		activityTracker.stop();
 	});
 
 	let listeners: SocketListeners | null = null;
@@ -119,6 +127,7 @@
 		);
 		l.add(socketStore.onChatUsersUpdated((d) => chats.handleChatUsersUpdated(d)));
 		l.add(socketStore.onChatUpdated((d) => chats.handleChatUpdated(d)));
+		l.add(socketStore.onUserPresence((d) => presenceStore.set(d.userId, d.presence === 'online')));
 		l.add(socketStore.onConnect((isReconnect) => handleConnect(isReconnect)));
 		l.add(socketStore.onKeyRotated((d) => chats.handleKeyRotated(d)));
 		l.add(
@@ -139,24 +148,14 @@
 		listeners = null;
 	}
 
-	function handleVisibilityChange(): void {
-		if (!document.hidden && data.user?.id) {
-			if (!chatStore.activeChat) return;
-			//Maybe re-query messages here instead if problems occur late
-			//messages = await getMessagesByChatId(chatId);
+	/** Presence itself is handled by activityTracker; this is the unrelated half */
+	function handleVisible(): void {
+		if (!data.user?.id) return;
+		if (!chatStore.activeChat) return;
+		//Maybe re-query messages here instead if problems occur late
+		//messages = await getMessagesByChatId(chatId);
 
-			messages.handleVisible();
-		}
-
-		if (!socketStore.connected) {
-			return;
-		}
-
-		if (document.hidden) {
-			socketStore.setSocketSessionInactive();
-		} else {
-			socketStore.setSocketSessionActive();
-		}
+		messages.handleVisible();
 	}
 
 	function removeQueryParams() {
@@ -167,9 +166,13 @@
 	async function handleConnect(isReconnect = false): Promise<void> {
 		// A reconnect is a brand new socket, which the server registers as background. Without
 		// this the user would keep getting push notifications for the chat they are looking at.
-		if (!document.hidden) socketStore.setSocketSessionActive();
+		// Routed through the tracker so a reconnect while idle does not resurrect 'active'.
+		activityTracker.reassert();
 
 		if (isReconnect) {
+			// Presence pushed while we were disconnected is gone; re-seed what is on screen.
+			presenceStore.clear();
+			if (otherDmUser) presenceStore.refresh([otherDmUser.id]);
 			// Nothing is queued server side, so a new-chat-created that landed while we were
 			// disconnected is only recoverable by re-reading the list.
 			await chatList.refresh({ force: true });
@@ -240,10 +243,10 @@
 			// connect() is idempotent and listeners survive socket re-creation, so there is no
 			// teardown/resubscribe dance here any more (which used to stack duplicate handlers).
 			socketStore.connect();
-			socketStore.setSocketSessionActive();
+			activityTracker.notifyInteraction();
 		};
 		window.setSocketInactive = () => {
-			socketStore.setSocketSessionInactive();
+			activityTracker.suspend();
 		};
 		window.onFlutterSafeAreaInsetsChanged = () => {
 			layoutStore.updateSafeAreaPadding();
@@ -292,9 +295,20 @@
 			<div class="flex items-center">
 				<div>
 					{#if socketStore.connected}
-						<p class="line-clamp-1 px-3 py-2 text-3xl font-extrabold break-all text-white">
+						{@const dmOnline = presenceStore.isOnline(otherDmUser?.id)}
+						<p
+							class="line-clamp-1 px-3 text-3xl font-extrabold break-all text-white {dmOnline
+								? 'pt-3'
+								: 'py-2'}"
+						>
 							{chatName || $t('chat.chat')}
 						</p>
+						{#if dmOnline}
+							<div class="flex items-center space-x-1.5 px-3 pb-1">
+								<span class="size-2 rounded-full bg-green-500"></span>
+								<p class="text-sm text-white/60">{$t('chat.online')}</p>
+							</div>
+						{/if}
 					{:else}
 						<p class="line-clamp-1 px-3 pt-3 text-3xl font-extrabold break-all text-white">
 							{chatName || $t('chat.chat')} - {$t('common.offline')}

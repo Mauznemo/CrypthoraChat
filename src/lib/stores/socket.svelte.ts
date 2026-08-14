@@ -14,6 +14,7 @@ type Handler = (...args: any[]) => void;
 /** Removes exactly the one handler it was created for */
 export type Unsubscribe = () => void;
 
+export type ClientPresence = 'online' | 'offline';
 export type VerifyRequestStatus = 'delivered' | 'background' | 'offline' | 'rate-limited';
 export type VerifyResponse = 'accepted' | 'declined' | 'busy' | 'matched' | 'failed';
 
@@ -304,6 +305,23 @@ class SocketStore {
 
 	onRemovedFromChat(callback: (data: { chatId: string }) => void): Unsubscribe {
 		return this.on('removed-from-chat', callback);
+	}
+
+	// ---------- Presence ---------- //
+
+	/** Pushed by the server whenever a user sharing a chat with me goes online or offline */
+	onUserPresence(
+		callback: (data: { userId: string; presence: ClientPresence }) => void
+	): Unsubscribe {
+		return this.on('user-presence', callback);
+	}
+
+	/**
+	 * Seeds presence for the given users. The server answers only for users sharing a chat
+	 * with me; anyone else is simply absent from the result.
+	 */
+	requestPresence(userIds: string[]): Promise<Record<string, ClientPresence>> {
+		return this.emitWithAck<Record<string, ClientPresence>>('get-presence', userIds);
 	}
 
 	// ---------- User verification ---------- //

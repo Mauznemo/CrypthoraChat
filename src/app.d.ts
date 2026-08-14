@@ -2,7 +2,7 @@
 // for information about these interfaces
 import type { User } from '$prisma';
 import type { Server } from 'socket.io';
-import type { SocketSessionData } from '$lib/server/socket';
+import type { ClientPresence, SocketSessionData } from '$lib/server/socket';
 
 declare global {
 	namespace App {
@@ -36,6 +36,10 @@ declare global {
 	var _io: Server | null;
 	/** Keyed by socket.id, one entry per live connection (a session can have many tabs) */
 	var _socketMap: Map<string, SocketSessionData>;
+	/** Last presence value broadcast per user, so unchanged transitions emit nothing */
+	var _presenceCache: Map<string, ClientPresence>;
+	/** Interval that expires stale 'active' sockets; kept global so HMR cannot stack timers */
+	var _presenceSweeper: NodeJS.Timeout | null;
 }
 
 export {};

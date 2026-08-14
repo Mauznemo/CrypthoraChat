@@ -94,6 +94,7 @@
       "owner-tooltip": "Owner of the group"
     },
     "offline-message": "You may not see all messages in this chat",
+    "online": "Online",
     "no-selected-chat": "No chat selected",
     "failed-to-select-last-chat": "Failed to load you last selected chat",
     "create-chat-title": "New Chat",

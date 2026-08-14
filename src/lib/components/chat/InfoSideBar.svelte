@@ -16,6 +16,7 @@
 	import { compressImage } from '$lib/utils/imageConverter';
 	import { fileUtils } from '$lib/chat/fileUtils';
 	import { layoutStore } from '$lib/stores/layout.svelte';
+	import { presenceStore } from '$lib/stores/presence.svelte';
 
 	let groupName: string = $state('');
 
@@ -27,6 +28,16 @@
 		if (infoBarStore.isOpen && chatStore.activeChat && infoBarStore.userToShow === null) {
 			groupName = chatStore.activeChat.name!;
 		}
+	});
+
+	// Members' presence is only worth fetching while the list is actually on screen; live
+	// updates then arrive over the socket for as long as the bar stays open.
+	$effect(() => {
+		if (!infoBarStore.isOpen) return;
+		const userIds = infoBarStore.userToShow
+			? [infoBarStore.userToShow.id]
+			: (chatStore.activeChat?.participants.map((p) => p.user.id) ?? []);
+		presenceStore.refresh(userIds);
 	});
 
 	function openFileSelector(): void {
@@ -111,7 +122,12 @@
 			<div>
 				<p class="mb-5 text-2xl font-bold">{$t('chat.info-bar.user-info')}</p>
 				<div class="flex flex-col items-center space-x-2">
-					<ProfilePicture class="mb-5" user={infoBarStore.userToShow} size="5rem" />
+					<ProfilePicture
+						class="mb-5"
+						user={infoBarStore.userToShow}
+						size="5rem"
+						online={presenceStore.isOnline(infoBarStore.userToShow.id)}
+					/>
 					<p class="line-clamp-1 text-xl font-bold break-all">
 						{infoBarStore.userToShow.displayName}
 					</p>
@@ -198,7 +214,10 @@
 				<p>{$t('chat.info-bar.members')}</p>
 				{#each chatStore.activeChat.participants as participant}
 					<div class="flex items-center space-x-2">
-						<ProfilePicture user={participant.user} />
+						<ProfilePicture
+							user={participant.user}
+							online={presenceStore.isOnline(participant.user.id)}
+						/>
 						<div>
 							<div class="flex items-center space-x-2">
 								<p class="line-clamp-1 font-bold break-all">

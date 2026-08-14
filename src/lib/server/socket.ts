@@ -189,18 +189,34 @@ export interface SocketSessionData {
 	sessionId: string;
 	socketId: string;
 	userActive: boolean; // Whether the user hast the app in the foreground or not
+	/** Last time the client confirmed foreground, via 'active' or its periodic heartbeat */
+	lastActiveAt: number;
 }
 
 export type UserPresence = 'active' | 'background' | 'offline';
 
+/** What other users get to see: only the foreground state, never 'background' */
+export type ClientPresence = 'online' | 'offline';
+
 const VERIFY_RATE_LIMIT = 5;
 const VERIFY_RATE_WINDOW_MS = 30_000;
+
+/**
+ * How long an 'active' claim stays valid without a heartbeat. 2.5x the client's 60s
+ * heartbeat, so a client that dies without disconnecting (laptop sleep, killed PWA)
+ * stops blocking its owner's push notifications instead of blocking them forever.
+ */
+const ACTIVE_TTL_MS = 150_000;
+const PRESENCE_SWEEP_MS = 30_000;
+const PEERS_CACHE_TTL_MS = 30_000;
 
 globalThis._io ??= null;
 // Keyed by socket.id, NOT by sessionId: a session cookie is shared by every tab of a
 // browser, so keying by session made only the newest tab reachable and let a dying
 // socket's late disconnect delete the entry of an already-reconnected live socket.
 globalThis._socketMap ??= new Map<string, SocketSessionData>();
+globalThis._presenceCache ??= new Map<string, ClientPresence>();
+globalThis._presenceSweeper ??= null;
 
 export function getIO(): Server {
 	if (!globalThis._io) throw new Error('Socket not initialized');
@@ -212,19 +228,91 @@ function getUserSocketData(userId: string): SocketSessionData[] {
 	return Array.from(globalThis._socketMap.values()).filter((s) => s.userId === userId);
 }
 
+/**
+ * An 'active' flag is only trusted while the heartbeat behind it is fresh. Without the
+ * TTL a single stale foreground socket suppressed push notifications on every one of
+ * that user's devices, indefinitely.
+ */
+function isSocketActive(s: SocketSessionData): boolean {
+	return s.userActive && Date.now() - s.lastActiveAt < ACTIVE_TTL_MS;
+}
+
 export function getUserSockets(userId: string): string[] {
 	return getUserSocketData(userId).map((s) => s.socketId);
 }
 
 export function hasUserActiveSockets(userId: string): boolean {
-	return getUserSocketData(userId).some((s) => s.userActive);
+	return getUserSocketData(userId).some(isSocketActive);
 }
 
 /** Whether the user has the app open in the foreground, open in the background, or not at all */
 export function getUserPresence(userId: string): UserPresence {
 	const sockets = getUserSocketData(userId);
 	if (sockets.length === 0) return 'offline';
-	return sockets.some((s) => s.userActive) ? 'active' : 'background';
+	return sockets.some(isSocketActive) ? 'active' : 'background';
+}
+
+function getClientPresence(userId: string): ClientPresence {
+	return getUserPresence(userId) === 'active' ? 'online' : 'offline';
+}
+
+const peersCache = new Map<string, { userIds: string[]; expiresAt: number }>();
+
+/** Every user sharing at least one chat with `userId` — the only ones allowed to see its presence */
+async function getPresencePeers(userId: string): Promise<string[]> {
+	const cached = peersCache.get(userId);
+	if (cached && cached.expiresAt > Date.now()) return cached.userIds;
+
+	const rows = await db.chatParticipant.findMany({
+		where: { chat: { participants: { some: { userId } } } },
+		select: { userId: true }
+	});
+
+	const userIds = [...new Set(rows.map((r) => r.userId))].filter((id) => id !== userId);
+	peersCache.set(userId, { userIds, expiresAt: Date.now() + PEERS_CACHE_TTL_MS });
+	return userIds;
+}
+
+/**
+ * Tells everyone who shares a chat with `userId` that their online state changed.
+ * No-ops when the value is unchanged, so the multi-tab connect/disconnect churn of a
+ * single user does not turn into a broadcast storm.
+ */
+async function broadcastPresence(userId: string): Promise<void> {
+	const presence = getClientPresence(userId);
+	if (globalThis._presenceCache.get(userId) === presence) return;
+	globalThis._presenceCache.set(userId, presence);
+
+	const io = globalThis._io;
+	if (!io) return;
+
+	for (const peerId of await getPresencePeers(userId)) {
+		for (const socketId of getUserSockets(peerId)) {
+			io.to(socketId).emit('user-presence', { userId, presence });
+		}
+	}
+}
+
+/**
+ * Catches the transitions no client event announces: an 'active' socket whose heartbeat
+ * ran out. Without this the peer's dot would stay lit until that socket disconnects.
+ */
+function startPresenceSweeper(): void {
+	if (globalThis._presenceSweeper) clearInterval(globalThis._presenceSweeper);
+	globalThis._presenceSweeper = setInterval(() => {
+		const userIds = new Set(
+			Array.from(globalThis._socketMap.values())
+				.filter((s) => s.userActive && !isSocketActive(s))
+				.map((s) => s.userId)
+		);
+		for (const userId of userIds) void broadcastPresence(userId);
+
+		// Users with no sockets left can never transition again; drop them so the cache
+		// does not grow for the lifetime of the process.
+		for (const userId of globalThis._presenceCache.keys()) {
+			if (getUserSockets(userId).length === 0) globalThis._presenceCache.delete(userId);
+		}
+	}, PRESENCE_SWEEP_MS);
 }
 
 export async function initializeSocket(server: HTTPServer) {
@@ -264,6 +352,8 @@ export async function initializeSocket(server: HTTPServer) {
 
 	await loadSubscriptions();
 
+	startPresenceSweeper();
+
 	io.engine.on('connection_error', (err) => {
 		console.log('Connection error on server:', err.message);
 	});
@@ -276,8 +366,12 @@ export async function initializeSocket(server: HTTPServer) {
 				userId: socket.user.id,
 				sessionId: socket.user.sessionId,
 				socketId: socket.id,
-				userActive: false
+				userActive: false,
+				lastActiveAt: 0
 			});
+			// The new socket cannot see presence changes it missed while disconnected, but it
+			// does need its own state published (a reconnect below the sweep interval).
+			void broadcastPresence(socket.user.id);
 		}
 
 		console.log('User connected:', socket.id, 'User:', socket.user?.username);
@@ -298,13 +392,41 @@ export async function initializeSocket(server: HTTPServer) {
 			console.log(`User ${socket.id} inactive`);
 			const entry = globalThis._socketMap.get(socket.id);
 			if (entry) entry.userActive = false;
+			void broadcastPresence(socket.user!.id);
 		});
 
+		// Doubles as the client's foreground heartbeat: re-sent every 60s while active, which
+		// is what keeps isSocketActive() true.
 		socket.on('active', () => {
-			console.log(`User ${socket.id} active`);
 			const entry = globalThis._socketMap.get(socket.id);
-			if (entry) entry.userActive = true;
+			if (!entry) return;
+			const wasActive = isSocketActive(entry);
+			entry.userActive = true;
+			entry.lastActiveAt = Date.now();
+			if (!wasActive) {
+				console.log(`User ${socket.id} active`);
+				void broadcastPresence(socket.user!.id);
+			}
 		});
+
+		socket.on(
+			'get-presence',
+			async (
+				userIds: string[],
+				ack?: (res: Record<string, ClientPresence>) => void
+			): Promise<void> => {
+				if (!ack) return;
+				if (!Array.isArray(userIds)) return ack({});
+
+				// Filtered to peers so presence cannot be probed for arbitrary accounts.
+				const peers = new Set(await getPresencePeers(socket.user!.id));
+				const result: Record<string, ClientPresence> = {};
+				for (const userId of userIds) {
+					if (peers.has(userId)) result[userId] = getClientPresence(userId);
+				}
+				ack(result);
+			}
+		);
 
 		socket.on('subscribe-webpush', (data) => {
 			const userId = socket.user!.id;
@@ -747,6 +869,7 @@ export async function initializeSocket(server: HTTPServer) {
 			// of the socket that had already reconnected, silently dropping every user-targeted
 			// event until the next reconnect.
 			globalThis._socketMap.delete(socket.id);
+			if (socket.user) void broadcastPresence(socket.user.id);
 			console.log('User disconnected:', socket.id);
 		});
 	});

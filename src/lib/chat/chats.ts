@@ -62,6 +62,18 @@ async function fetchPublicKeysForVersion(chatId: string, keyVersion: number, ret
 	return publicEncryptedChatKeys;
 }
 
+/**
+ * The participant on the other side of a DM. Returns null for groups, and for a DM the
+ * other user has left.
+ */
+export function getOtherDmUser(
+	chat: ChatWithoutMessages | null | undefined,
+	currentUserId: string | undefined
+): SafeUser | null {
+	if (!chat || chat.type !== 'dm') return null;
+	return chat.participants.find((p) => p.user.id !== currentUserId)?.user ?? null;
+}
+
 export const chats = {
 	hasMoreOlder: false,
 	hasMoreOlderSystem: false,

@@ -8,7 +8,7 @@
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
-	import { chats } from '$lib/chat/chats';
+	import { chats, getOtherDmUser } from '$lib/chat/chats';
 	import { chatList } from '$lib/chat/chatList';
 	import { chatOwner } from '$lib/chat/chatOwner';
 	import ProfilePicture from './ProfilePicture.svelte';
@@ -134,19 +134,19 @@
 				: 'hover:bg-gray-700/40 '}"
 		>
 			{#if chat.type === 'dm'}
-				{@const otherUser = chat.participants.find((p) => p.user.id !== chatStore.user?.id)}
-				<ProfilePicture class="mr-2" user={otherUser?.user || null} size="3rem" />
+				{@const otherUser = getOtherDmUser(chat, chatStore.user?.id)}
+				<ProfilePicture class="mr-2" user={otherUser} size="3rem" />
 
 				<!-- Chat text -->
 				<div class="py-2 pr-3 pl-2 text-lg font-extrabold text-white">
-					<div data-tooltip={otherUser?.user.displayName} class="flex items-center space-x-2">
+					<div data-tooltip={otherUser?.displayName} class="flex items-center space-x-2">
 						<p class="line-clamp-1 max-w-[200px] break-all text-white">
-							{otherUser?.user.displayName || chat.name}
+							{otherUser?.displayName || chat.name}
 						</p>
 					</div>
 
 					<p class="line-clamp-1 text-sm font-semibold break-all text-gray-400">
-						{otherUser ? '@' : ''}{otherUser?.user.username || $t('chat.chat-list.other-left-dm')}
+						{otherUser ? '@' : ''}{otherUser?.username || $t('chat.chat-list.other-left-dm')}
 					</p>
 				</div>
 				<button
