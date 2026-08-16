@@ -31,7 +31,12 @@ declare global {
 		setSocketActive? = () => {};
 		setSocketInactive? = () => {};
 		goToChat? = (chatId: string) => {};
+		shareToChat? = (chatId: string, text: string) => {};
 		reRegisterPush? = () => {};
+		/** Chat the wrapper wants opened, set before the page mounts. Consumed on connect. */
+		__pendingChatId?: string | null;
+		/** Text shared to one of the Android person shortcuts, alongside __pendingChatId. */
+		__pendingSharedText?: string | null;
 	}
 	var _io: Server | null;
 	/** Keyed by socket.id, one entry per live connection (a session can have many tabs) */

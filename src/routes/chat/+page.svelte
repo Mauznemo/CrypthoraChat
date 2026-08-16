@@ -29,6 +29,8 @@
 	import { checkWrapperVersion } from '$lib/utils/device';
 	import { layoutStore } from '$lib/stores/layout.svelte';
 	import CustomTextarea from '$lib/components/chat/CustomTextarea.svelte';
+	import { notifyChatOpened, takePendingLaunch } from '$lib/wrapper';
+	import { idb } from '$lib/idb';
 
 	let { data }: PageProps = $props();
 
@@ -158,6 +160,18 @@
 		messages.handleVisible();
 	}
 
+	/** Appends shared text to the chat's draft, which is what ChatInput loads on selection. */
+	async function saveSharedDraft(chatId: string, text: string): Promise<void> {
+		if (!idb) return;
+		try {
+			const existing = await idb.get('draftMessages', chatId);
+			const message = existing?.message ? `${existing.message}\n${text}` : text;
+			await idb.put('draftMessages', { chatId, message }, chatId);
+		} catch (error) {
+			console.error('Failed to save shared draft:', error);
+		}
+	}
+
 	function removeQueryParams() {
 		const url = window.location.origin + window.location.pathname;
 		window.history.replaceState({}, document.title, url);
@@ -185,7 +199,11 @@
 		const params = new URLSearchParams(window.location.search);
 		removeQueryParams();
 
-		let chatId = params.get('chatId');
+		// The wrapper sets these before the page mounts, so a notification, shortcut or share that
+		// opened the app is honoured even though `goToChat` did not exist yet at that point.
+		const pending = takePendingLaunch();
+
+		let chatId = pending.chatId ?? params.get('chatId');
 
 		if (!chatId) chatId = localStorage.getItem('lastChatId');
 
@@ -193,6 +211,8 @@
 			chatStore.loadingChat = false;
 			return;
 		}
+
+		if (pending.sharedText) await saveSharedDraft(chatId, pending.sharedText);
 
 		selectChat(chatId, isReconnect);
 	}
@@ -229,6 +249,8 @@
 
 		if (result.success) {
 			chatInput.handleChatSelected();
+			// Clears this chat's unread count and notification in the wrapper app.
+			notifyChatOpened(chatId);
 			sideBar?.close();
 			if (!restoreScrollPos) {
 				chatStore.scrollView?.lockToBottom();
@@ -244,6 +266,9 @@
 			// teardown/resubscribe dance here any more (which used to stack duplicate handlers).
 			socketStore.connect();
 			activityTracker.notifyInteraction();
+			// Anything that arrived for the open chat while the app was backgrounded is seen the
+			// moment it comes back.
+			if (chatStore.activeChat) notifyChatOpened(chatStore.activeChat.id);
 		};
 		window.setSocketInactive = () => {
 			activityTracker.suspend();
@@ -252,8 +277,22 @@
 			layoutStore.updateSafeAreaPadding();
 		};
 		window.goToChat = (chatId: string) => {
-			if (chatStore.activeChat?.id === chatId) return;
+			if (chatStore.activeChat?.id === chatId) {
+				notifyChatOpened(chatId);
+				return;
+			}
 			selectChat(chatId);
+		};
+		// Text shared to one of the Android person shortcuts. It lands in the chat's draft rather
+		// than being sent, so the user still gets to look at it before it goes out.
+		window.shareToChat = async (chatId: string, text: string) => {
+			if (!chatId) return;
+			await saveSharedDraft(chatId, text);
+			if (chatStore.activeChat?.id === chatId) {
+				await chatInput.handleChatSelected();
+				return;
+			}
+			await selectChat(chatId);
 		};
 		// Called by the wrapper app after its FCM token rotated, so the new one gets registered
 		window.reRegisterPush = () => {

@@ -59,5 +59,7 @@ export async function sendWebpushNotification(
 
 export function getImageUrl(path: string | null | undefined) {
 	if (!path) return undefined;
-	return `${process.env.CHAT_URL}/api/profile-picture?filePath=${path}`;
+	// Encoded like every other caller of this endpoint. The wrapper appends its own `&size=`, so a
+	// raw path with a reserved character would silently break the avatar in notifications.
+	return `${process.env.CHAT_URL}/api/profile-picture?filePath=${encodeURIComponent(path)}`;
 }

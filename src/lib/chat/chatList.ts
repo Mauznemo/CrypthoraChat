@@ -1,6 +1,7 @@
 import { deleteFilesNotContaining } from '$lib/idb';
 import { chatStore } from '$lib/stores/chat.svelte';
 import type { ClientChat } from '$lib/types';
+import { syncShortcuts } from '$lib/wrapper';
 import { getUserChats } from './chat.remote';
 
 export const chatList = {
@@ -19,6 +20,10 @@ export const chatList = {
 		chatStore.chats = chats;
 
 		if (options?.pruneFiles) await deleteFilesNotContaining(chats.map((chat) => chat.id));
+
+		// Every mutation below does this too, so the wrapper's Android shortcuts follow the list
+		// without any caller having to remember.
+		syncShortcuts();
 	},
 
 	addChat(newChat: ClientChat): void {
@@ -26,6 +31,7 @@ export const chatList = {
 		chatStore.chats = [...chatStore.chats, newChat].sort(
 			(a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
 		);
+		syncShortcuts();
 	},
 
 	removeChat(chatId: string): void {
@@ -33,11 +39,13 @@ export const chatList = {
 			.filter((chat) => chat.id !== chatId)
 			.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
 		if (localStorage.getItem('lastChatId') === chatId) localStorage.removeItem('lastChatId');
+		syncShortcuts();
 	},
 
 	updateChat(updatedChat: ClientChat): void {
 		chatStore.chats = chatStore.chats
 			.map((chat) => (chat.id === updatedChat.id ? updatedChat : chat))
 			.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+		syncShortcuts();
 	}
 };
