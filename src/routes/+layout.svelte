@@ -21,6 +21,7 @@
 	import { t } from 'svelte-i18n';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import VerificationListener from '$lib/components/VerificationListener.svelte';
+	import { handleBackPress } from '$lib/stores/backHandler.svelte';
 
 	let { children, data } = $props();
 
@@ -66,6 +67,11 @@
 			layoutStore.updateSafeAreaPadding();
 		};
 		layoutStore.updateSafeAreaPadding();
+
+		// Android back, so the wrapper can close whatever the web app has open before it falls back
+		// to browser history or leaves the app. Also registered for every route: overlays are not
+		// URL backed, so any of them can be open anywhere.
+		window.handleBackPress = handleBackPress;
 
 		// Connect on every authenticated page so verification requests still arrive when the
 		// user is not on /chat. The socket reports itself as foreground only from /chat, so

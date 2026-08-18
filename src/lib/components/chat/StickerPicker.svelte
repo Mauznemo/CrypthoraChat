@@ -9,6 +9,7 @@
 	import { decryptFile } from '$lib/crypto/file';
 	import { tryGetFile, tryUploadFile } from '$lib/fileUpload/upload';
 	import { getFileFromIDB, saveFileToIDB } from '$lib/idb';
+	import { pushBackHandler } from '$lib/stores/backHandler.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { modalStore } from '$lib/stores/modal.svelte';
@@ -82,6 +83,9 @@
 			if (sticker.previewUrl) URL.revokeObjectURL(sticker.previewUrl);
 		}
 	}
+
+	// Open state lives here rather than in a store, so the back handler has to be registered by hand.
+	$effect(() => (isOpen ? pushBackHandler({ close }) : undefined));
 
 	async function sendStickerMessage(filePath: string): Promise<void> {
 		if (uploadingFile || !chatStore.user) return;

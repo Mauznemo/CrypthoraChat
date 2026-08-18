@@ -36,6 +36,10 @@ declare global {
 		goToChat? = (chatId: string) => {};
 		shareToChat? = (chatId: string, text: string) => {};
 		reRegisterPush? = () => {};
+		/** Android back, from the wrapper. Returns true when an overlay was closed and the wrapper
+		 * should neither navigate back nor leave the app. Must stay synchronous, a promise does not
+		 * survive the trip back over the bridge. */
+		handleBackPress?: () => boolean;
 		/** Chat the wrapper wants opened, set before the page mounts. Consumed on connect. */
 		__pendingChatId?: string | null;
 		/** Text shared to one of the Android person shortcuts, alongside __pendingChatId. */

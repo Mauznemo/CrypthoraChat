@@ -6,6 +6,7 @@
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 	import { version } from '$app/environment';
 	import { layoutStore } from '$lib/stores/layout.svelte';
+	import { pushBackHandler } from '$lib/stores/backHandler.svelte';
 
 	let {
 		children
@@ -22,6 +23,10 @@
 	export function close(): void {
 		isOpen = false;
 	}
+
+	// Open state lives here rather than in a store, so the back handler has to be registered by
+	// hand. Only the mobile drawer is dismissible; from md up the bar is part of the layout.
+	$effect(() => (isOpen ? pushBackHandler({ close }) : undefined));
 </script>
 
 <div
