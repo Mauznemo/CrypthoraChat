@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import Slider from '../Slider.svelte';
+	import { createPlaybackController } from '$lib/utils/mediaPlayback';
 
 	const {
 		src,
@@ -34,14 +35,10 @@
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
 
-	function togglePlayPause() {
-		if (!videoElement) return;
+	const playback = createPlaybackController(() => videoElement);
 
-		if (isPlaying) {
-			videoElement.pause();
-		} else {
-			videoElement.play();
-		}
+	function togglePlayPause() {
+		void playback.toggle();
 	}
 
 	function handleVolumeChange(value: number) {

@@ -3,6 +3,7 @@
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import Icon from '@iconify/svelte';
 	import Slider from '../Slider.svelte';
+	import { createPlaybackController } from '$lib/utils/mediaPlayback';
 
 	const {
 		src,
@@ -37,16 +38,10 @@
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
-	function togglePlayPause() {
-		if (!audioElement) return;
+	const playback = createPlaybackController(() => audioElement);
 
-		if (isPlaying) {
-			audioElement.pause();
-		} else {
-			audioElement.play().catch((error) => {
-				console.warn('Audio play failed:', error);
-			});
-		}
+	function togglePlayPause() {
+		void playback.toggle();
 	}
 
 	function handleVolumeChange(value: number) {
