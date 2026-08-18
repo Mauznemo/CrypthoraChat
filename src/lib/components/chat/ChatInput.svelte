@@ -310,10 +310,7 @@
 		if (!isTyping && chatValue.trim()) {
 			isTyping = true;
 			console.log('start typing');
-			socketStore.startTyping({
-				chatId: chatStore.activeChat.id,
-				username: chatStore.user?.username || 'User'
-			});
+			socketStore.startTyping({ chatId: chatStore.activeChat.id });
 		}
 
 		if (typingTimeout) {

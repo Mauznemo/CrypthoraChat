@@ -228,7 +228,7 @@ class SocketStore {
 		this.socket?.emit('mark-messages-read', data);
 	}
 
-	startTyping(data: { chatId: string; username: string }) {
+	startTyping(data: { chatId: string }) {
 		this.socket?.emit('typing-start', data);
 	}
 

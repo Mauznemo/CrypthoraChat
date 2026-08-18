@@ -1,10 +1,11 @@
 import { Server, Socket } from 'socket.io';
+import path from 'node:path';
 import { type Server as HTTPServer } from 'http';
 import { db } from '../db';
 import { validateSession } from '../utils/auth';
 import webpush from 'web-push';
 import 'dotenv/config';
-import { removeFile } from './fileUpload';
+import { getUploadDir, removeFile, validateAttachmentPath } from './fileUpload';
 import {
 	getImageUrl,
 	sendNtfyNotification,
@@ -156,6 +157,45 @@ async function loadSubscriptions() {
 			});
 		}
 	}
+}
+
+async function assertParticipant(userId: string, chatId: string): Promise<boolean> {
+	const chat = await db.chat.findUnique({
+		where: { id: chatId },
+		select: { participants: { select: { userId: true } } }
+	});
+	return chat?.participants.some((p) => p.userId === userId) ?? false;
+}
+
+/**
+ * Message attachments are always uploaded into the chat's own media directory, so anything a
+ * client claims as an attachment has to resolve there.
+ *
+ * Without this a member could name any other file under /uploads - another user's profile
+ * picture, say - as an attachment of their own message, then delete the message and have the
+ * server unlink it for them.
+ */
+function areAttachmentsInChat(attachmentPaths: string[], chatId: string): boolean {
+	const chatMediaDir = path.resolve(getUploadDir(), 'media', chatId) + path.sep;
+
+	return attachmentPaths.every((attachmentPath) => {
+		const validation = validateAttachmentPath(attachmentPath);
+		return validation.ok && validation.absolute.startsWith(chatMediaDir);
+	});
+}
+
+/** Resolves the chat a message belongs to, or null if the caller is not in it. */
+async function getAuthorizedMessageChatId(
+	userId: string,
+	messageId: string
+): Promise<string | null> {
+	const message = await db.message.findUnique({
+		where: { id: messageId },
+		select: { chatId: true }
+	});
+	if (!message) return null;
+
+	return (await assertParticipant(userId, message.chatId)) ? message.chatId : null;
 }
 
 async function getChatUsers(chatId: string) {
@@ -376,7 +416,10 @@ export async function initializeSocket(server: HTTPServer) {
 
 		console.log('User connected:', socket.id, 'User:', socket.user?.username);
 
-		socket.on('join-chat', (chatId: string) => {
+		socket.on('join-chat', async (chatId: string) => {
+			if (!(await assertParticipant(socket.user!.id, chatId))) {
+				return;
+			}
 			socket.join(chatId);
 			console.log(`User ${socket.id} joined chat ${chatId}`);
 		});
@@ -549,11 +592,29 @@ export async function initializeSocket(server: HTTPServer) {
 				}
 
 				try {
-					console.log('Received message from: ' + socket.user!.id + ' in chat: ' + data.chatId);
 					const chatUsers = await getChatUsers(data.chatId);
 
 					if (!chatUsers.some((user) => user.id === socket.user!.id)) {
 						return;
+					}
+
+					const attachmentPaths = data.attachmentPaths || [];
+					if (!areAttachmentsInChat(attachmentPaths, data.chatId)) {
+						socket.emit('message-error', { error: 'Invalid attachment path' });
+						return;
+					}
+
+					// A reply pointing at another chat's message renders as an undecryptable stub
+					// and leaks that the message exists, so it is rejected rather than stored.
+					if (data.replyToId) {
+						const replyTo = await db.message.findUnique({
+							where: { id: data.replyToId },
+							select: { chatId: true }
+						});
+						if (replyTo?.chatId !== data.chatId) {
+							socket.emit('message-error', { error: 'Invalid reply target' });
+							return;
+						}
 					}
 
 					const newMessage = await db.message.create({
@@ -562,7 +623,7 @@ export async function initializeSocket(server: HTTPServer) {
 							usedKeyVersion: data.keyVersion,
 							senderId: socket.user!.id,
 							encryptedContent: data.encryptedContent,
-							attachmentPaths: data.attachmentPaths || [],
+							attachmentPaths,
 							encryptedReactions: [],
 							replyToId: data.replyToId
 						},
@@ -727,6 +788,8 @@ export async function initializeSocket(server: HTTPServer) {
 			'react-to-message',
 			async (data: { messageId: string; encryptedReaction: string }) => {
 				try {
+					if (!(await getAuthorizedMessageChatId(socket.user!.id, data.messageId))) return;
+
 					const message = await db.message.findUnique({
 						where: { id: data.messageId },
 						select: { encryptedReactions: true }
@@ -773,6 +836,8 @@ export async function initializeSocket(server: HTTPServer) {
 				operation: 'add' | 'remove';
 			}) => {
 				try {
+					if (!(await getAuthorizedMessageChatId(socket.user!.id, data.messageId))) return;
+
 					const message = await db.message.findUnique({
 						where: { id: data.messageId },
 						select: { encryptedReactions: true }
@@ -819,6 +884,8 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('mark-messages-read', async (data: { messageIds: string[]; chatId: string }) => {
 			try {
+				if (!(await assertParticipant(socket.user!.id, data.chatId))) return;
+
 				await Promise.all(
 					data.messageIds.map((messageId) =>
 						db.message.update({
@@ -844,10 +911,14 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 		});
 
-		socket.on('typing-start', (data: { chatId: string; username: string }) => {
+		// Username comes from the socket, never the payload - otherwise a member can put anyone
+		// else's name behind "... is typing".
+		socket.on('typing-start', async (data: { chatId: string }) => {
+			if (!(await assertParticipant(socket.user!.id, data.chatId))) return;
+
 			socket.to(data.chatId).emit('user-typing', {
 				userId: socket.user!.id,
-				username: data.username,
+				username: socket.user!.username,
 				isTyping: true
 			});
 		});
