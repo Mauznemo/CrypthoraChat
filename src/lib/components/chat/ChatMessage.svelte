@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { decryptMessage, decryptReaction } from '$lib/crypto/message';
+	import { decryptMessage, decryptReaction, encryptReaction } from '$lib/crypto/message';
 	import type { ClientMessage } from '$lib/types';
 	import { untrack } from 'svelte';
 	import Reply from './Reply.svelte';
@@ -63,15 +63,19 @@
 						acc[decryptedReaction] = {
 							count: 0,
 							userIds: [],
-							encryptedReaction: ''
+							myEncryptedReaction: ''
 						};
 					}
 					acc[decryptedReaction].count++;
 					acc[decryptedReaction].userIds.push(reactorId);
-					acc[decryptedReaction].encryptedReaction = encryptedReaction;
+					// Only our own ciphertext is worth keeping: it is the one the server has to be
+					// given back verbatim to remove this reaction again.
+					if (reactorId === chatStore.user?.id) {
+						acc[decryptedReaction].myEncryptedReaction = encryptedReaction;
+					}
 					return acc;
 				},
-				{} as Record<string, { count: number; userIds: string[]; encryptedReaction: string }>
+				{} as Record<string, { count: number; userIds: string[]; myEncryptedReaction: string }>
 			);
 		});
 	});
@@ -156,16 +160,20 @@
 					{@const typedData = data as {
 						count: number;
 						userIds: string[];
-						encryptedReaction: string;
+						myEncryptedReaction: string;
 					}}
 					{@const userReacted = typedData.userIds.includes(chatStore.user?.id || '')}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
-						onclick={() => {
+						onclick={async () => {
+							// Remove has to name the exact stored blob, and adding needs a fresh one -
+							// reusing another reactor's ciphertext left removal matching nothing.
 							if (userReacted) {
-								onUpdateReaction(typedData.encryptedReaction, 'remove');
+								if (typedData.myEncryptedReaction) {
+									onUpdateReaction(typedData.myEncryptedReaction, 'remove');
+								}
 							} else {
-								onUpdateReaction(typedData.encryptedReaction, 'add');
+								onUpdateReaction(await encryptReaction(reaction, message.usedKeyVersion), 'add');
 							}
 						}}
 						data-tooltip={userReacted

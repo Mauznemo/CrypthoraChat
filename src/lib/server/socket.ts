@@ -10,9 +10,21 @@ import {
 	getImageUrl,
 	sendNtfyNotification,
 	sendWebpushNotification,
+	isValidNtfyTopic,
 	type NotificationDate
 } from './pushNotifications';
 import { sendFcmNotification } from './fcm';
+
+/**
+ * Per-user and per-message logging, off by default.
+ *
+ * On a server whose whole point is that the operator cannot read messages, writing a running
+ * who-messaged-whom-and-when trail to stdout - where Docker's default json-file driver keeps it
+ * forever, unrotated - gives away most of what the encryption is protecting. Set LOG_LEVEL=debug
+ * to get it back while debugging.
+ */
+const debugLog: (...args: unknown[]) => void =
+	process.env.LOG_LEVEL === 'debug' ? console.log : () => {};
 
 const VAPID_EMAIL = process.env.VAPID_EMAIL;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -379,7 +391,7 @@ export async function initializeSocket(server: HTTPServer) {
 			}
 
 			socket.user = { username: session.user.username, id: session.user.id, sessionId: sessionId };
-			console.log(`User authenticated: ${session.user.username} (${session.user.id})`);
+			debugLog(`User authenticated: ${session.user.username} (${session.user.id})`);
 
 			next();
 		} catch (error) {
@@ -414,25 +426,25 @@ export async function initializeSocket(server: HTTPServer) {
 			void broadcastPresence(socket.user.id);
 		}
 
-		console.log('User connected:', socket.id, 'User:', socket.user?.username);
+		debugLog('User connected:', socket.id, 'User:', socket.user?.username);
 
 		socket.on('join-chat', async (chatId: string) => {
 			if (!(await assertParticipant(socket.user!.id, chatId))) {
 				return;
 			}
 			socket.join(chatId);
-			console.log(`User ${socket.id} joined chat ${chatId}`);
+			debugLog(`User ${socket.id} joined chat ${chatId}`);
 		});
 
 		socket.on('leave-chat', (chatId: string) => {
 			socket.leave(chatId);
-			console.log(`User ${socket.id} left chat ${chatId}`);
+			debugLog(`User ${socket.id} left chat ${chatId}`);
 		});
 
 		// Mutated in place rather than re-set, so a late event from a dead socket cannot
 		// resurrect an entry that disconnect already removed.
 		socket.on('inactive', () => {
-			console.log(`User ${socket.id} inactive`);
+			debugLog(`User ${socket.id} inactive`);
 			const entry = globalThis._socketMap.get(socket.id);
 			if (entry) entry.userActive = false;
 			void broadcastPresence(socket.user!.id);
@@ -447,7 +459,7 @@ export async function initializeSocket(server: HTTPServer) {
 			entry.userActive = true;
 			entry.lastActiveAt = Date.now();
 			if (!wasActive) {
-				console.log(`User ${socket.id} active`);
+				debugLog(`User ${socket.id} active`);
 				void broadcastPresence(socket.user!.id);
 			}
 		});
@@ -473,7 +485,7 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('subscribe-webpush', (data) => {
 			const userId = socket.user!.id;
-			console.log(`User ${userId} subscribed to push notifications`);
+			debugLog(`User ${userId} subscribed to push notifications`);
 			saveSubscription({
 				sessionId: socket.user!.sessionId,
 				userId,
@@ -483,7 +495,9 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('subscribe-ntfy-push', (data) => {
 			const userId = socket.user!.id;
-			console.log(`User ${userId} subscribed to ntfy push notifications`);
+			if (!isValidNtfyTopic(data.topic)) return;
+
+			debugLog(`User ${userId} subscribed to ntfy push notifications`);
 			saveSubscription({
 				sessionId: socket.user!.sessionId,
 				userId,
@@ -493,7 +507,7 @@ export async function initializeSocket(server: HTTPServer) {
 
 		socket.on('subscribe-fcm-push', (data) => {
 			const userId = socket.user!.id;
-			console.log(`User ${userId} subscribed to fcm push notifications`);
+			debugLog(`User ${userId} subscribed to fcm push notifications`);
 			saveSubscription({
 				sessionId: socket.user!.sessionId,
 				userId,
@@ -650,7 +664,7 @@ export async function initializeSocket(server: HTTPServer) {
 
 					io.to(data.chatId).emit('new-message', newMessage);
 
-					console.log('Sending push notifications (users in chat: ' + chatUsers.length + ')');
+					debugLog('Sending push notifications (users in chat: ' + chatUsers.length + ')');
 					for (const user of chatUsers) {
 						const userSocketIds = getUserSockets(user.id);
 						if (userSocketIds.length !== 0) {
@@ -665,7 +679,7 @@ export async function initializeSocket(server: HTTPServer) {
 
 						if (user.id === socket.user!.id) continue; // Don't notify the sender
 						if (hasUserActiveSockets(user.id)) {
-							console.log('User @' + user.username + ' has active sockets, skipping notification');
+							debugLog('User @' + user.username + ' has active sockets, skipping notification');
 							continue;
 						} // Don't notify users that are currently in the app
 
@@ -803,7 +817,7 @@ export async function initializeSocket(server: HTTPServer) {
 						return;
 					}
 
-					console.log('Adding reaction:', reactionKey);
+					debugLog('Adding reaction:', reactionKey);
 					const updatedMessage = await db.message.update({
 						where: { id: data.messageId },
 						data: {
@@ -870,7 +884,7 @@ export async function initializeSocket(server: HTTPServer) {
 						}
 					});
 
-					console.log('Updated reactions, current:', updatedMessage.encryptedReactions.length);
+					debugLog('Updated reactions, current:', updatedMessage.encryptedReactions.length);
 
 					io.to(updatedMessage.chatId).emit('message-updated', {
 						message: updatedMessage,
@@ -941,7 +955,7 @@ export async function initializeSocket(server: HTTPServer) {
 			// event until the next reconnect.
 			globalThis._socketMap.delete(socket.id);
 			if (socket.user) void broadcastPresence(socket.user.id);
-			console.log('User disconnected:', socket.id);
+			debugLog('User disconnected:', socket.id);
 		});
 	});
 

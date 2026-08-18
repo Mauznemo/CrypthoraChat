@@ -1,4 +1,4 @@
-import { encryptReaction } from '$lib/crypto/message';
+import { decryptReaction, encryptReaction } from '$lib/crypto/message';
 import { emojiPickerStore } from '$lib/stores/emojiPicker.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
 import { socketStore } from '$lib/stores/socket.svelte';
@@ -70,12 +70,38 @@ export function handleReaction(
 	console.log('Reaction message:', message.id);
 
 	emojiPickerStore.openAt(position, async (reaction: string) => {
-		const encryptedReaction = await encryptReaction(reaction, userId, message.usedKeyVersion);
+		// Deduped here rather than by the server: reaction ciphertexts are no longer deterministic,
+		// so the server has no way to tell that two blobs are the same emoji.
+		if (await hasReacted(message, userId, reaction)) return;
+
+		const encryptedReaction = await encryptReaction(reaction, message.usedKeyVersion);
 		socketStore.reactToMessage({
 			messageId: message.id,
 			encryptedReaction: encryptedReaction
 		});
 	});
+}
+
+/** True if this user already has this exact reaction on the message. */
+async function hasReacted(
+	message: ClientMessage,
+	userId: string,
+	reaction: string
+): Promise<boolean> {
+	for (const reactionKey of message.encryptedReactions) {
+		const [reactorId, encryptedReaction] = reactionKey.split(':');
+		if (reactorId !== userId) continue;
+
+		try {
+			if ((await decryptReaction(encryptedReaction, message.usedKeyVersion)) === reaction) {
+				return true;
+			}
+		} catch {
+			// An undecryptable reaction is not one we can be duplicating.
+		}
+	}
+
+	return false;
 }
 
 /** Adds or removes a reaction from the message */

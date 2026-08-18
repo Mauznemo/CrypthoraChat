@@ -57,20 +57,23 @@ export async function decryptMessage(data: {
 	}
 }
 
-export async function encryptReaction(
-	reaction: string,
-	userId: string,
-	keyVersion: number
-): Promise<string> {
+/**
+ * The IV is random, like everywhere else in the codebase.
+ *
+ * It used to be SHA-256(`${userId}:${reaction}`), which reused a nonce under the chat key every
+ * time the same person repeated a reaction. That is benign only for as long as the plaintext
+ * stays identical too; it also made identical reactions produce byte-identical ciphertexts, so
+ * the server could link "this user reacted the same way to A, B and C" without holding any key.
+ *
+ * The cost is that the server can no longer dedupe or match reactions by ciphertext equality, so
+ * both are done client side - see handleReaction and the reaction chips in the message components.
+ */
+export async function encryptReaction(reaction: string, keyVersion: number): Promise<string> {
 	if (!chatStore.versionedChatKey[keyVersion]) throw new Error('Chat key not found');
 
 	const encoder = new TextEncoder();
 	const data = encoder.encode(reaction);
-
-	// Deterministic IV from reaction + userId
-	const seedData = encoder.encode(`${userId}:${reaction}`);
-	const hashBuffer = await crypto.subtle.digest('SHA-256', seedData);
-	const iv = new Uint8Array(hashBuffer.slice(0, 12));
+	const iv = crypto.getRandomValues(new Uint8Array(12));
 
 	const encrypted = await crypto.subtle.encrypt(
 		{ name: 'AES-GCM', iv },

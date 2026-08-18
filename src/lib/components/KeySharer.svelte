@@ -96,7 +96,6 @@
 		if (!base64Seed) {
 			throw new Error('Seed not found.');
 		}
-		console.log('In Seed:', base64Seed);
 		const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
 		const dateSalt = getDateSalt();
 		const saltArray = new Uint8Array(dateSalt);

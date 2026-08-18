@@ -52,7 +52,6 @@ export async function getMasterSeedForSharing(): Promise<string> {
 /** Import and save master key from shared base64 */
 export async function importAndSaveMasterSeed(masterSeedBase64: string): Promise<void> {
 	try {
-		console.log('Importing master seed:', masterSeedBase64);
 		const rawBuffer = base64ToArrayBuffer(masterSeedBase64);
 		const rawBytes = new Uint8Array(rawBuffer);
 

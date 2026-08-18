@@ -41,9 +41,6 @@ export async function generateAndStoreKeyPair(): Promise<void> {
 		const publicKeyBase64 = await exportPublicKeyBase64(keyPair.publicKey);
 		const encryptedPrivateKeyBase64 = await encryptKeyForStorage(keyPair.privateKey, 'private');
 
-		console.log('Public Key Base64:', publicKeyBase64);
-		console.log('Encrypted Private Key Base64:', encryptedPrivateKeyBase64);
-
 		const publicKeyHmac = await hmacPublicKey(publicKeyBase64);
 
 		await createUserKeyPair({
@@ -76,9 +73,6 @@ export async function regenerateAndStoreKeyPair(): Promise<void> {
 
 		const publicKeyBase64 = await exportPublicKeyBase64(keyPair.publicKey);
 		const encryptedPrivateKeyBase64 = await encryptKeyForStorage(keyPair.privateKey, 'private');
-
-		console.log('Public Key Base64:', publicKeyBase64);
-		console.log('Encrypted Private Key Base64:', encryptedPrivateKeyBase64);
 
 		const publicKeyHmac = await hmacPublicKey(publicKeyBase64);
 

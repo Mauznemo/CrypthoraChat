@@ -9,7 +9,23 @@ export interface NotificationDate {
 
 const NTFY_URL = process.env.NTFY_PUSH_URL || 'http://ntfy:80';
 
+/**
+ * ntfy's own topic-name rule. The topic is pasted straight into the request URL, so anything
+ * outside this alphabet - a slash, a ".." - could steer the server's POST at another path on the
+ * ntfy host.
+ */
+const NTFY_TOPIC_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+export function isValidNtfyTopic(topic: string): boolean {
+	return NTFY_TOPIC_PATTERN.test(topic);
+}
+
 export async function sendNtfyNotification(topic: string, data: NotificationDate) {
+	if (!isValidNtfyTopic(topic)) {
+		console.error('Refusing to send ntfy notification to invalid topic');
+		return false;
+	}
+
 	const url = `${NTFY_URL}/${topic}`;
 
 	const headers = {
@@ -24,7 +40,6 @@ export async function sendNtfyNotification(topic: string, data: NotificationDate
 		});
 
 		if (response.ok) {
-			console.log('Notification sent successfully to:', topic);
 			return true;
 		} else {
 			console.error('Failed to send notification:', response.status);
