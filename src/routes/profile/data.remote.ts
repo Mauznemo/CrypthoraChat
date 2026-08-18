@@ -1,5 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/utils/auth';
+import { invalidateCachedUser } from '$lib/chat/chat.remote';
 import { db } from '$lib/db';
 import { assertOwnedUpload, removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
@@ -33,6 +34,8 @@ export const updateDisplayName = command(displayNameSchema, async (displayName: 
 		where: { id: locals.user!.id },
 		data: { displayName }
 	});
+
+	invalidateCachedUser(locals.user!.id);
 });
 
 export const updateProfilePicture = command(v.string(), async (filePath: string) => {
@@ -60,6 +63,8 @@ export const updateProfilePicture = command(v.string(), async (filePath: string)
 		where: { id: locals.user!.id },
 		data: { profilePicPath }
 	});
+
+	invalidateCachedUser(locals.user!.id);
 });
 
 const changePasswordSchema = v.pipe(

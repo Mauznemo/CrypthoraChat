@@ -35,6 +35,13 @@ export const removeUserFromChat = command(removeUserFromChatSchema, async ({ cha
 		error(403, 'You do not own this chat, please ask the owner to remove members.');
 	}
 
+	// Otherwise the chat is left with an owner who is not a participant, and nobody can add
+	// members or rotate the key again. leaveChat is the path that handles owner departure,
+	// because it hands ownership on first.
+	if (userId === chat.ownerId) {
+		error(400, 'You cannot remove yourself from a chat you own, leave the chat instead.');
+	}
+
 	const user = await db.user.findUnique({
 		where: {
 			id: userId

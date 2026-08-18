@@ -26,16 +26,42 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function createUser(username: string, password: string) {
 	const hashedPassword = await hashPassword(password);
 
-	const userCount = await db.user.count();
+	// Counted and inserted in one serializable transaction: read outside it, two registrations
+	// racing on a fresh instance both saw zero users and both became admin.
+	return db.$transaction(
+		async (tx) => {
+			const userCount = await tx.user.count();
 
-	return db.user.create({
-		data: {
-			displayName: username,
-			username,
-			password: hashedPassword,
-			isAdmin: userCount === 0 // First user becomes admin
-		}
+			return tx.user.create({
+				data: {
+					displayName: username,
+					username,
+					password: hashedPassword,
+					isAdmin: userCount === 0 // First user becomes admin
+				}
+			});
+		},
+		{ isolationLevel: 'Serializable' }
+	);
+}
+
+/**
+ * Deletes sessions that have already expired, and any push subscriptions left behind with them.
+ *
+ * Nothing else ever removes them: validateSession only cleans up a session someone still happens
+ * to present, so abandoned ones accumulate for as long as the instance lives.
+ */
+export async function deleteExpiredSessions(): Promise<void> {
+	const expired = await db.session.findMany({
+		where: { expiresAt: { lt: new Date() } },
+		select: { id: true }
 	});
+
+	if (expired.length === 0) return;
+
+	const ids = expired.map((session) => session.id);
+	await db.notificationSubscription.deleteMany({ where: { sessionId: { in: ids } } });
+	await db.session.deleteMany({ where: { id: { in: ids } } });
 }
 
 export async function validateUser(username: string, password: string): Promise<User | null> {

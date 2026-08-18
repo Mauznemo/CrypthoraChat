@@ -1,8 +1,12 @@
 import http from 'http';
 import express from 'express';
+import { assertRequiredEnv } from '../src/lib/server/env';
 import { initializeSocket } from '../src/lib/server/socket';
+import { deleteExpiredSessions } from '../src/lib/utils/auth';
 import { handler } from '../build/handler.js';
 import cors from 'cors';
+
+assertRequiredEnv();
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +42,17 @@ initializeSocket(server);
 
 // SvelteKit handlers
 app.use(handler);
+
+const SESSION_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+function sweepExpiredSessions() {
+	deleteExpiredSessions().catch((error) => {
+		console.error('Failed to clean up expired sessions:', error);
+	});
+}
+
+sweepExpiredSessions();
+setInterval(sweepExpiredSessions, SESSION_CLEANUP_INTERVAL_MS).unref();
 
 server.listen(3000, () => {
 	console.log('Running on http://localhost:3000');

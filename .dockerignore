@@ -1,0 +1,16 @@
+node_modules
+build
+.svelte-kit
+.git
+.github
+.vscode
+.claude
+uploads
+src/generated
+.env
+.env.*
+!.env.example
+*.md
+!README.md
+.DS_Store
+icon.afphoto
