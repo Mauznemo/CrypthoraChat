@@ -51,10 +51,19 @@ export function checkIfTouchDevice(): boolean {
 	return !hasFinePrimaryPointer || (hasTouchCapability && navigator.maxTouchPoints > 1);
 }
 
+/** The GitHub API is rate limited and the release rarely changes, so once a day is plenty. */
+const WRAPPER_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 export function checkWrapperVersion() {
 	if (!window.wrapperVersion) {
 		return;
 	}
+
+	const lastCheck = Number(localStorage.getItem('wrapperUpdateCheckedAt') ?? 0);
+	if (Date.now() - lastCheck < WRAPPER_CHECK_INTERVAL_MS) {
+		return;
+	}
+	localStorage.setItem('wrapperUpdateCheckedAt', Date.now().toString());
 
 	fetch('https://api.github.com/repos/Mauznemo/CrypthoraChatWrapper/releases/latest')
 		.then((response) => {
