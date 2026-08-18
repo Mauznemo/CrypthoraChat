@@ -21,6 +21,7 @@
 	import { t } from 'svelte-i18n';
 	import { socketStore } from '$lib/stores/socket.svelte';
 	import VerificationListener from '$lib/components/VerificationListener.svelte';
+	import PasswordConfirm from '$lib/components/PasswordConfirm.svelte';
 	import { handleBackPress } from '$lib/stores/backHandler.svelte';
 
 	let { children, data } = $props();
@@ -148,4 +149,5 @@
 <EmojiPicker />
 <ContextMenu />
 <Modal />
+<PasswordConfirm />
 <Toast />

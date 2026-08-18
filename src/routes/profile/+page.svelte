@@ -12,6 +12,7 @@
 	import { keySharerStore } from '$lib/stores/keySharer.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import { showMasterKeyImport } from '$lib/chat/masterKey';
+	import { passwordConfirmStore } from '$lib/stores/passwordConfirm.svelte';
 	import { t } from 'svelte-i18n';
 	import { compressImage } from '$lib/utils/imageConverter';
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
@@ -137,7 +138,16 @@
 		</button>
 		<button
 			class="cursor-pointer text-left text-blue-400 underline hover:text-blue-300"
-			onclick={() => showMasterKeyImport()}>{$t('profile.re-import-master-key')}</button
+			onclick={() => {
+				// Importing overwrites the current master seed, which is just as unrecoverable as
+				// generating a new one. The recovery paths that reach the importer from an error
+				// stay ungated - there is nothing left to lose by then.
+				passwordConfirmStore.open({
+					title: $t('profile.re-import-confirm-password-title'),
+					content: $t('profile.re-import-confirm-password'),
+					onConfirm: () => showMasterKeyImport()
+				});
+			}}>{$t('profile.re-import-master-key')}</button
 		>
 		<br />
 

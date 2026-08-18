@@ -8,6 +8,7 @@ import { imagePreviewStore } from './imagePreview.svelte';
 import { infoBarStore } from './infoBar.svelte';
 import { keySharerStore } from './keySharer.svelte';
 import { modalStore } from './modal.svelte';
+import { passwordConfirmStore } from './passwordConfirm.svelte';
 
 export interface BackHandler {
 	/** Dismisses the overlay. Must be synchronous, see `handleBackPress`. */
@@ -77,6 +78,7 @@ if (browser) {
 			close: () => modalStore.close(),
 			canClose: () => modalStore.config.dismissible !== false
 		});
+		trackOverlay(() => passwordConfirmStore.isOpen, { close: () => passwordConfirmStore.close() });
 		trackOverlay(() => contextMenuStore.isOpen, { close: () => contextMenuStore.close() });
 		trackOverlay(() => emojiPickerStore.isOpen, { close: () => emojiPickerStore.close() });
 		trackOverlay(() => imagePreviewStore.isOpen, { close: () => imagePreviewStore.close() });

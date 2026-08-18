@@ -202,6 +202,8 @@
       "generate-new": "Generate New",
       "generate-new-warning": "You will no longer have access to your current chats and stickers, only new ones created after re-generating your master key.",
       "no-master-key-found": "Could not find your maser key.",
+      "generate-new-confirm-password-title": "Confirm Your Password",
+      "generate-new-confirm-password": "Generating a new master key cannot be undone. Enter your account password to confirm that it is really you.",
       "import-master-key": "Import Master Key"
     },
     "key-pair": {
@@ -241,6 +243,8 @@
     "master-key": "Master Key (Don't share with anyone)",
     "show-master-key": "Export Master Key",
     "re-import-master-key": "Re-import Master Key",
+    "re-import-confirm-password-title": "Confirm Your Password",
+    "re-import-confirm-password": "Importing a master key replaces the one on this device. If the current one is not backed up, this cannot be undone. Enter your account password to confirm that it is really you.",
     "current-password": "Current Password:",
     "new-password": "New Password:",
     "confirm-password": "Confirm New Password:",
@@ -346,8 +350,15 @@
       "match": "They match",
       "fail": "They don't match"
     },
+    "password-confirm": {
+      "password": "Password:",
+      "incorrect-password": "Incorrect password.",
+      "failed-to-confirm": "Failed to confirm password:"
+    },
     "key-sharer": {
       "select-mode": "Select Mode",
+      "export-confirm-password-title": "Confirm Your Password",
+      "export-confirm-password": "The emoji sequence is your master key itself and does not expire. Enter your account password to confirm that it is really you.",
       "select-mode-import-content": "What do you want to use for importing the key?",
       "select-mode-export-content": "What do you want to use for exporting/showing the key?",
       "qr-code": "QR code",

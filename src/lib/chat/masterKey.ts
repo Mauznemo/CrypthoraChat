@@ -5,6 +5,7 @@ import {
 } from '$lib/crypto/master';
 import { keySharerStore } from '$lib/stores/keySharer.svelte';
 import { modalStore } from '$lib/stores/modal.svelte';
+import { passwordConfirmStore } from '$lib/stores/passwordConfirm.svelte';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
@@ -51,8 +52,19 @@ export async function checkForMasterKey(): Promise<void> {
 							get(t)('common.are-you-sure'),
 							get(t)('chat.master-key.generate-new-warning'),
 							{
+								// Generating a new master key cannot be undone, so make sure it is really the
+								// account owner and not someone who just got hold of an unlocked device.
 								onConfirm: () => {
-									generateAndStoreMasterKey();
+									passwordConfirmStore.open({
+										title: get(t)('chat.master-key.generate-new-confirm-password-title'),
+										content: get(t)('chat.master-key.generate-new-confirm-password'),
+										onConfirm: () => {
+											generateAndStoreMasterKey();
+										},
+										onCancel: () => {
+											checkForMasterKey();
+										}
+									});
 								}
 							}
 						);

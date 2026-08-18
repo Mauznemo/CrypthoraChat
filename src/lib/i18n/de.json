@@ -196,6 +196,8 @@
       "generate-new-warning": "Sie werden keinen Zugriff mehr auf Ihre aktuellen Chats und Sticker haben, nur neue, die nach der neu generierung Ihres Master-Schlüssels erstellt wurden.",
       "import-existing": "Bestehenden importieren",
       "import-master-key": "Master-Schlüssel importieren",
+      "generate-new-confirm-password-title": "Bestätigen Sie Ihr Passwort",
+      "generate-new-confirm-password": "Das Generieren eines neuen Master-Schlüssels kann nicht rückgängig gemacht werden. Geben Sie Ihr Konto-Passwort ein, um zu bestätigen, dass Sie es wirklich sind.",
       "no-master-key-found": "Master-Schlüssel nicht gefunden."
     },
     "key-pair": {
@@ -247,6 +249,8 @@
     "master-key": "Master-Schlüssel (mit niemanden teilen)",
     "new-password": "Neues Passwort:",
     "re-import-master-key": "Master-Schlüssel reimportieren",
+    "re-import-confirm-password-title": "Bestätigen Sie Ihr Passwort",
+    "re-import-confirm-password": "Das Importieren eines Master-Schlüssels ersetzt den auf diesem Gerät. Wenn der aktuelle nicht gesichert ist, kann dies nicht rückgängig gemacht werden. Geben Sie Ihr Konto-Passwort ein, um zu bestätigen, dass Sie es wirklich sind.",
     "show-master-key": "Master-Schlüssel exportieren",
     "user-id": "Benutzer-ID:",
     "username": "Benutzername:",
@@ -346,6 +350,11 @@
       "fail": "Sie stimmen nicht überein",
       "match": "Sie stimmen überein"
     },
+    "password-confirm": {
+      "password": "Passwort:",
+      "incorrect-password": "Falsches Passwort.",
+      "failed-to-confirm": "Fehler beim Bestätigen des Passworts:"
+    },
     "key-sharer": {
       "qr-code": "QR-Code",
       "add-emoji": "Emoji hinzufügen",
@@ -357,6 +366,8 @@
       "emoji-sequence": "Emoji-Sequenz",
       "key-imported-successfully": "Schlüssel erfolgreich importiert",
       "select-mode": "Modus auswählen",
+      "export-confirm-password-title": "Bestätigen Sie Ihr Passwort",
+      "export-confirm-password": "Die Emoji-Sequenz ist Ihr Master-Schlüssel selbst und läuft nicht ab. Geben Sie Ihr Konto-Passwort ein, um zu bestätigen, dass Sie es wirklich sind.",
       "select-mode-export-content": "Was möchten Sie den Schlüssel exportieren/anzeigen?",
       "select-mode-import-content": "Was möchten Sie den Schlüssel importieren?",
       "backup-master-key-notice-content": "Bitte sichern Sie Ihren Master-Schlüssels, indem Sie die Emoji-Namen aufschreiben oder über einen anderen sicheren Weg.\nWenn Sie diesen Schlüssel verlieren, verlieren Sie auch den Zugriff auf alle Nachrichten!",

@@ -22,6 +22,7 @@
 	import { onboardingStore } from '$lib/stores/onboarding.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
 	import { getEncryptedKey, removeEncryptedKey, saveEncryptedKey } from './keySharer.remote';
+	import { passwordConfirmStore } from '$lib/stores/passwordConfirm.svelte';
 
 	type EmojiDataType = typeof emojiData;
 
@@ -439,12 +440,12 @@
 					variant: 'primary',
 					outlined: onboardingStore.showBackupMasterKeyNotice,
 					onClick: () => {
-						initEmoji();
+						confirmPasswordThen(initEmoji);
 					}
 				}
 			],
 			onClose: () => {
-				if (!isOpen) keySharerStore.close();
+				if (!isOpen && !awaitingPassword) keySharerStore.close();
 			}
 		});
 	}
@@ -480,6 +481,32 @@
 			],
 			onClose: () => {
 				if (!isOpen) keySharerStore.close();
+			}
+		});
+	}
+
+	/**
+	 * Keeps the mode picker's `onClose` from tearing the sharer down while the password prompt is
+	 * still up: at that point `isOpen` is false, but the flow is not over.
+	 */
+	let awaitingPassword = $state(false);
+
+	/**
+	 * The emoji sequence is the master seed itself, so showing it is gated behind the password. The
+	 * QR codes are date salted and expire at UTC midnight, so they are not.
+	 */
+	function confirmPasswordThen(run: () => void) {
+		awaitingPassword = true;
+		passwordConfirmStore.open({
+			title: $t('utils.key-sharer.export-confirm-password-title'),
+			content: $t('utils.key-sharer.export-confirm-password'),
+			onConfirm: () => {
+				awaitingPassword = false;
+				run();
+			},
+			onCancel: () => {
+				awaitingPassword = false;
+				close();
 			}
 		});
 	}
