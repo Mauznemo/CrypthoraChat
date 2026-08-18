@@ -40,17 +40,17 @@ export const deleteUserSticker = command(v.string(), async (id: string) => {
 		error(401, 'Unauthorized');
 	}
 
+	// Scoped by userId throughout: looked up by id alone, these three commands let any account
+	// delete or re-favorite any other account's stickers.
+	const userSticker = await db.userSticker.findFirst({
+		where: { id, userId: locals.user!.id }
+	});
+
+	if (!userSticker) {
+		error(404, 'User sticker not found');
+	}
+
 	try {
-		const userSticker = await db.userSticker.findUnique({
-			where: {
-				id
-			}
-		});
-
-		if (!userSticker) {
-			error(404, 'User sticker not found');
-		}
-
 		await removeFile(userSticker.stickerPath);
 
 		await db.userSticker.delete({
@@ -71,10 +71,8 @@ export const favoriteUserSticker = command(v.string(), async (id: string) => {
 		error(401, 'Unauthorized');
 	}
 
-	await db.userSticker.update({
-		where: {
-			id
-		},
+	await db.userSticker.updateMany({
+		where: { id, userId: locals.user!.id },
 		data: {
 			favorited: true
 		}
@@ -88,10 +86,8 @@ export const unfavoriteUserSticker = command(v.string(), async (id: string) => {
 		error(401, 'Unauthorized');
 	}
 
-	await db.userSticker.update({
-		where: {
-			id
-		},
+	await db.userSticker.updateMany({
+		where: { id, userId: locals.user!.id },
 		data: {
 			favorited: false
 		}

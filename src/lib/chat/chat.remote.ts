@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
-import { removeDir, removeFile } from '$lib/server/fileUpload';
+import { assertOwnedUpload, getUploadDir, removeDir, removeFile } from '$lib/server/fileUpload';
 import { sendEventToChat, sendEventToUsers, sendSystemMessage } from '$lib/server/socketCommands';
 import {
 	chatWithoutMessagesFields,
@@ -319,10 +319,11 @@ export const addUserToChat = command(
 	}
 );
 
-const UPLOAD_BASE_PATH = process.env.UPLOAD_PATH || './uploads';
-
 async function deleteChat(chat: any) {
-	const mediaDir = path.join(UPLOAD_BASE_PATH, 'media', chat.id);
+	// getUploadDir() rather than a second, UPLOAD_PATH-derived constant: that env var is set
+	// nowhere, so this resolved to ./uploads relative to the process CWD in production and every
+	// chat deletion silently left its attachments on disk.
+	const mediaDir = path.join(getUploadDir(), 'media', chat.id);
 	await removeDir(mediaDir);
 	if (chat.imagePath) {
 		await removeFile(chat.imagePath);
@@ -616,7 +617,8 @@ const updateGroupNameSchema = v.object({
 	chatId: v.string(),
 	groupName: v.pipe(
 		v.string('Group name is required'),
-		v.minLength(3, 'Group name must be at least 3 characters')
+		v.minLength(3, 'Group name must be at least 3 characters'),
+		v.maxLength(64, 'Group name must be less than 64 characters')
 	)
 });
 
@@ -683,6 +685,11 @@ export const updateGroupImage = command(
 			error(403, 'You are not a participant of this chat');
 		}
 
+		const ownedImagePath = assertOwnedUpload(imagePath, locals.user!.id, 'picture');
+		if (!ownedImagePath) {
+			error(403, 'Forbidden');
+		}
+
 		if (chat.imagePath) {
 			await removeFile(chat.imagePath);
 		}
@@ -690,12 +697,12 @@ export const updateGroupImage = command(
 		try {
 			await db.chat.update({
 				where: { id: chatId },
-				data: { imagePath: imagePath }
+				data: { imagePath: ownedImagePath }
 			});
 
 			await sendSystemMessage(chatId, `@${locals.user!.username} updated the group image.`);
 
-			await sendEventToChat(chatId, 'chat-updated', { chatId, newImagePath: imagePath });
+			await sendEventToChat(chatId, 'chat-updated', { chatId, newImagePath: ownedImagePath });
 		} catch (e) {
 			console.error('Failed to update group image:', e);
 			error(500, 'Failed to update group image');

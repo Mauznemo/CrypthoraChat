@@ -97,3 +97,36 @@ export function errorResponse(status: number, message: string): Response {
 		headers: { 'Content-Type': 'application/json' }
 	});
 }
+
+/**
+ * Asserts a path a client hands back is one that user just uploaded, and returns it.
+ *
+ * The upload endpoints answer with the path they wrote, and the client replays it into
+ * `saveUserSticker` / `updateProfilePicture` / `updateGroupImage`. Without this the stored path is
+ * whatever the client says, which turns the next replace-and-delete into an unlink of any file
+ * under /uploads - another user's avatar, for instance.
+ */
+export function assertOwnedUpload(
+	filePath: string,
+	userId: string,
+	kind: 'sticker' | 'picture'
+): string {
+	const validation = validateUploadPath(filePath);
+	if (!validation.ok) return '';
+
+	const absolute = validation.absolute;
+
+	if (kind === 'sticker') {
+		// Stickers live in a per-user directory, so containment alone settles ownership.
+		const dir = path.resolve(getUploadDir(), 'users', userId, 'stickers') + path.sep;
+		return absolute.startsWith(dir) ? absolute : '';
+	}
+
+	// Avatars and group images share one directory, so ownership rides in the filename:
+	// <uuid>_<uploaderId>.<ext>.enc
+	const dir = path.resolve(getUploadDir(), 'profiles') + path.sep;
+	if (!absolute.startsWith(dir)) return '';
+
+	const owner = path.basename(absolute).split('.')[0].split('_')[1];
+	return owner === userId ? absolute : '';
+}

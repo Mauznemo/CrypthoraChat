@@ -1,5 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
+import { safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
 
 import * as v from 'valibot';
@@ -11,8 +12,11 @@ export const getUsers = query(async () => {
 		error(401, 'Unauthorized');
 	}
 
-	const users = await db.user.findMany();
-	return users;
+	// Explicit select: a bare findMany() also hands the admin's browser every user's bcrypt hash
+	// and their encryptedKey (the master seed blob), neither of which this page has any use for.
+	return db.user.findMany({
+		select: { ...safeUserFields, isAdmin: true, createdAt: true }
+	});
 });
 
 export const deleteUser = command(v.string(), async (userId: string) => {

@@ -1,7 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { db } from '$lib/db';
 import { validateSession } from '$lib/utils/auth';
-import { error } from 'console';
+import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const getSessions = query(async () => {
@@ -49,14 +49,17 @@ export const logoutSession = command(v.string(), async (sessionId: string) => {
 		error(401, 'Unauthorized');
 	}
 
-	try {
-		await db.session.delete({
-			where: { id: sessionId }
-		});
-		await db.notificationSubscription.deleteMany({
-			where: { sessionId }
-		});
-	} catch (err) {
-		error(500, 'Something went wrong');
+	// Scoped by userId, not just by id - otherwise this signs out any session on the server whose
+	// id the caller can name.
+	const { count } = await db.session.deleteMany({
+		where: { id: sessionId, userId: locals.user!.id }
+	});
+
+	if (count === 0) {
+		error(404, 'Session not found');
 	}
+
+	await db.notificationSubscription.deleteMany({
+		where: { sessionId }
+	});
 });

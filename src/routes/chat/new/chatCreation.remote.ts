@@ -1,5 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { db } from '$lib/db';
+import { assertOwnedUpload } from '$lib/server/fileUpload';
 import { sendEventToUsersInChat } from '$lib/server/socketCommands';
 import { safeUserFields } from '$lib/types';
 import { error } from '@sveltejs/kit';
@@ -8,7 +9,8 @@ import * as v from 'valibot';
 const createGroupSchema = v.object({
 	groupName: v.pipe(
 		v.string('Group name is required'),
-		v.minLength(3, 'Group name must be at least 3 characters')
+		v.minLength(3, 'Group name must be at least 3 characters'),
+		v.maxLength(64, 'Group name must be less than 64 characters')
 	),
 
 	userIds: v.pipe(
@@ -40,6 +42,13 @@ export const createGroup = command(
 			error(400, 'One or more of the selected users do not exist.');
 		}
 
+		const ownedImagePath = imagePath
+			? assertOwnedUpload(imagePath, locals.user!.id, 'picture')
+			: null;
+		if (imagePath && !ownedImagePath) {
+			error(403, 'Forbidden');
+		}
+
 		try {
 			const allParticipantIds = [...new Set([...userIds, locals.user!.id])];
 
@@ -49,7 +58,7 @@ export const createGroup = command(
 					currentKeyVersion: 0,
 					type: 'group',
 					ownerId: locals.user!.id,
-					imagePath: imagePath,
+					imagePath: ownedImagePath,
 					participants: {
 						create: allParticipantIds.map((id) => ({
 							user: { connect: { id } },

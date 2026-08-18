@@ -136,7 +136,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				const tempFilename = `temp_${randomUUID()}`;
 				tempFilePath = path.join(TEMP_PATH, tempFilename);
 
-				const finalFilename = `${randomUUID()}.${fileExtension}.enc`;
+				// Owner id is part of the name so updateProfilePicture / updateGroupImage can tell
+				// that the path a client hands back is one this user actually uploaded.
+				const finalFilename = `${randomUUID()}_${locals.user!.id}.${fileExtension}.enc`;
 				finalFilePath = path.join(UPLOAD_PATH, finalFilename);
 
 				const writeStream = createWriteStream(tempFilePath);

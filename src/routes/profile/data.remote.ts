@@ -1,7 +1,7 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/utils/auth';
 import { db } from '$lib/db';
-import { removeFile } from '$lib/server/fileUpload';
+import { assertOwnedUpload, removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
 import * as v from 'valibot';
 
@@ -16,7 +16,13 @@ export const logout = command(async () => {
 	cookies.delete('session', { path: '/' });
 });
 
-export const updateDisplayName = command(v.string(), async (displayName: string) => {
+const displayNameSchema = v.pipe(
+	v.string('Display name is required'),
+	v.minLength(1, 'Display name is required'),
+	v.maxLength(64, 'Display name must be less than 64 characters')
+);
+
+export const updateDisplayName = command(displayNameSchema, async (displayName: string) => {
 	const { locals } = getRequestEvent();
 
 	if (!locals.sessionId) {
@@ -36,6 +42,11 @@ export const updateProfilePicture = command(v.string(), async (filePath: string)
 		error(401, 'Unauthorized');
 	}
 
+	const profilePicPath = assertOwnedUpload(filePath, locals.user!.id, 'picture');
+	if (!profilePicPath) {
+		error(403, 'Forbidden');
+	}
+
 	const user = await db.user.findUnique({
 		where: { id: locals.user!.id },
 		select: { profilePicPath: true }
@@ -47,7 +58,7 @@ export const updateProfilePicture = command(v.string(), async (filePath: string)
 
 	await db.user.update({
 		where: { id: locals.user!.id },
-		data: { profilePicPath: filePath }
+		data: { profilePicPath }
 	});
 });
 
