@@ -31,6 +31,8 @@
 	import CustomTextarea from '$lib/components/chat/CustomTextarea.svelte';
 	import { notifyChatOpened, takePendingLaunch } from '$lib/wrapper';
 	import { idb } from '$lib/idb';
+	import { notificationStore } from '$lib/stores/notifications.svelte';
+	import { playNotificationSound } from '$lib/notificationSound';
 
 	let { data }: PageProps = $props();
 
@@ -55,6 +57,15 @@
 		if (otherDmUser) presenceStore.refresh([otherDmUser.id]);
 	});
 
+	/**
+	 * The service worker cannot play audio and cannot navigate, so it hands both back to the page.
+	 */
+	function handleServiceWorkerMessage(event: MessageEvent) {
+		if (event.data?.type === 'PLAY_NOTIFICATION_SOUND') void playNotificationSound();
+		else if (event.data?.type === 'OPEN_CHAT' && event.data.chatId)
+			window.goToChat?.(event.data.chatId);
+	}
+
 	onMount(async () => {
 		if (!data || !data.user) {
 			goto('/login');
@@ -78,12 +89,17 @@
 
 		initializePushNotifications();
 
+		if ('serviceWorker' in navigator)
+			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
 		// onConnect fires immediately when the socket is already up, and again on every
 		// reconnect, so there is no separate "was already connected" path to get wrong.
 		subscribeToSocketEvents();
 	});
 
 	onDestroy(() => {
+		if (browser && 'serviceWorker' in navigator)
+			navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
 		unsubscribeFromSocketEvents();
 		// Also removes the visibilitychange listener, which used to leak on every unmount.
 		activityTracker.stop();
@@ -253,8 +269,10 @@
 
 		if (result.success) {
 			chatInput.handleChatSelected();
-			// Clears this chat's unread count and notification in the wrapper app.
+			// Clears this chat's unread count and notification, in the wrapper app as well as
+			// in the web/PWA notifications.
 			notifyChatOpened(chatId);
+			void notificationStore.clearChat(chatId);
 			sideBar?.close();
 			if (!restoreScrollPos) {
 				// The list lives inside the loadingChat block, so it was destroyed and rebuilt by
@@ -276,7 +294,10 @@
 			activityTracker.notifyInteraction();
 			// Anything that arrived for the open chat while the app was backgrounded is seen the
 			// moment it comes back.
-			if (chatStore.activeChat) notifyChatOpened(chatStore.activeChat.id);
+			if (chatStore.activeChat) {
+				notifyChatOpened(chatStore.activeChat.id);
+				void notificationStore.clearChat(chatStore.activeChat.id);
+			}
 		};
 		window.setSocketInactive = () => {
 			activityTracker.suspend();
@@ -284,6 +305,7 @@
 		window.goToChat = (chatId: string) => {
 			if (chatStore.activeChat?.id === chatId) {
 				notifyChatOpened(chatId);
+				void notificationStore.clearChat(chatId);
 				// Tapping a notification is a request to see what arrived, even when that chat was
 				// already the open one and there is nothing to select.
 				chatStore.scrollView?.lockToBottom();

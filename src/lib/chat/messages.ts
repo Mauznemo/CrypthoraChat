@@ -5,6 +5,7 @@ import { socketStore } from '$lib/stores/socket.svelte';
 import type { ClientMessage, SafeUser } from '$lib/types';
 import { untrack } from 'svelte';
 import { getUserById } from './chat.remote';
+import { getOtherDmUser } from './chats';
 import { chatStore } from '$lib/stores/chat.svelte';
 import type { SystemMessage } from '$prisma';
 import { showChatNotification } from '$lib/stores/notifications.svelte';
@@ -313,11 +314,20 @@ export function handleNewMessageNotify(data: {
 
 	if (!document.hidden || data.username === chatStore.user?.username) return;
 
+	// Same picture the chat list shows, so the notification is not just a browser icon.
+	const imagePath =
+		chat.type === 'group'
+			? chat.imagePath
+			: getOtherDmUser(chat, chatStore.user?.id)?.profilePicPath;
+
 	showChatNotification(
 		data.username,
 		data.chatId,
 		chat.type === 'group' ? 'group' : 'dm',
-		data.chatName || ''
+		data.chatName || '',
+		imagePath
+			? `/api/profile-picture?filePath=${encodeURIComponent(imagePath)}&size=256`
+			: undefined
 	);
 }
 

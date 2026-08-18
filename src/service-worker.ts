@@ -1,18 +1,23 @@
 /// <reference lib="webworker" />
 import { build, files, version } from '$service-worker';
 import i18next from 'i18next';
+import { recordChatNotification, totalNotificationCount } from '$lib/notificationState';
 
 const translations = {
 	en: {
 		translation: {
 			'push.new-message-group': 'New Message from {username} in {chatName}',
-			'push.new-message-dm': 'New Message from {username}'
+			'push.new-message-dm': 'New Message from {username}',
+			'push.new-messages-group': '{count} new messages in {chatName}',
+			'push.new-messages-dm': '{count} new messages from {username}'
 		}
 	},
 	de: {
 		translation: {
 			'push.new-message-group': 'Neue Nachricht von {username} in {chatName}',
-			'push.new-message-dm': 'Neue Nachricht von {username}'
+			'push.new-message-dm': 'Neue Nachricht von {username}',
+			'push.new-messages-group': '{count} neue Nachrichten in {chatName}',
+			'push.new-messages-dm': '{count} neue Nachrichten von {username}'
 		}
 	}
 };
@@ -182,6 +187,7 @@ self.addEventListener('push', (event) => {
 			let title = 'New Message';
 			let body = 'Failed to load translation, local: ' + currentLocale;
 			let chatId = '';
+			let imageUrl: string | undefined;
 
 			if (event.data) {
 				try {
@@ -199,16 +205,36 @@ self.addEventListener('push', (event) => {
 							interpolation: { prefix: '{', suffix: '}' }
 						});
 
-						const groupType = notificationData.groupType || '';
+						const groupType = notificationData.groupType === 'group' ? 'group' : 'dm';
 						const username = notificationData.username || '';
 						const chatName = notificationData.chatName || '';
 						chatId = notificationData.chatId || '';
-						title = groupType === 'group' ? chatName : username;
+						imageUrl = notificationData.imageUrl || undefined;
+
+						// One notification per chat, so the body has to say how many messages are
+						// behind it rather than only describing the latest one.
+						const entry = await recordChatNotification({
+							chatId,
+							username,
+							chatName,
+							groupType,
+							imageUrl,
+							timestamp: notificationData.timestamp || Date.now()
+						});
+						const count = entry.count;
+
+						title = groupType === 'group' ? chatName || username : username;
 
 						if (groupType === 'group') {
-							body = instance.t('push.new-message-group', { username, chatName });
+							body =
+								count > 1
+									? instance.t('push.new-messages-group', { count, chatName })
+									: instance.t('push.new-message-group', { username, chatName });
 						} else {
-							body = instance.t('push.new-message-dm', { username });
+							body =
+								count > 1
+									? instance.t('push.new-messages-dm', { count, username })
+									: instance.t('push.new-message-dm', { username });
 						}
 					}
 				} catch (error) {
@@ -218,9 +244,14 @@ self.addEventListener('push', (event) => {
 
 			const options = {
 				body: body,
-				// icon: '/icon-192x192.png', // maybe change to group or dm pic
+				// The sender's (or the group's) picture, so notifications are not all one browser icon
+				icon: imageUrl,
 				badge: '/icon-badge-96x96.png',
 				// vibrate: [100, 50, 100],
+				// Replaces this chat's existing notification instead of stacking a new one next to
+				// it. `renotify` keeps the replacement from being delivered silently.
+				tag: chatId || undefined,
+				renotify: true,
 				data: {
 					dateOfArrival: Date.now(),
 					chatId: chatId,
@@ -228,16 +259,62 @@ self.addEventListener('push', (event) => {
 				}
 			};
 
-			await self.registration.showNotification(title, options);
+			await self.registration.showNotification(title, options as NotificationOptions);
+			await updateAppBadge();
+			await requestNotificationSound();
 		})()
 	);
 });
 
+/**
+ * Not every platform plays a sound for web notifications (macOS plays none at all), so an open
+ * client is asked to play one. Nothing to do when the app is fully closed, a worker has no audio.
+ */
+async function requestNotificationSound(): Promise<void> {
+	const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+	for (const client of clients) client.postMessage({ type: 'PLAY_NOTIFICATION_SOUND' });
+}
+
+async function updateAppBadge(): Promise<void> {
+	// Not in the worker typings yet, but Chrome does expose the badging API to service workers.
+	const badging = navigator as WorkerNavigator & {
+		setAppBadge?: (count?: number) => Promise<void>;
+		clearAppBadge?: () => Promise<void>;
+	};
+	if (!badging.setAppBadge) return;
+
+	const total = await totalNotificationCount();
+	try {
+		if (total > 0) await badging.setAppBadge(total);
+		else await badging.clearAppBadge?.();
+	} catch (error) {
+		console.error('Error updating app badge:', error);
+	}
+}
+
 self.addEventListener('notificationclick', (event) => {
 	event.notification.close();
 
-	const chatId = event.notification.data.chatId;
+	const chatId = event.notification.data?.chatId;
 	const chatUrl = chatId ? `/chat?chatId=${chatId}` : '/chat';
 
-	event.waitUntil(self.clients.openWindow(chatUrl));
+	event.waitUntil(
+		(async () => {
+			// Reuse an already open window rather than adding a second one next to it. The page
+			// exposes `goToChat`, which is also what the wrapper app calls.
+			const clients = (await self.clients.matchAll({
+				type: 'window',
+				includeUncontrolled: true
+			})) as WindowClient[];
+			const existing = clients.find((client) => client.url.includes('/chat'));
+
+			if (existing) {
+				await existing.focus();
+				if (chatId) existing.postMessage({ type: 'OPEN_CHAT', chatId });
+				return;
+			}
+
+			await self.clients.openWindow(chatUrl);
+		})()
+	);
 });

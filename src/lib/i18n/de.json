@@ -415,7 +415,9 @@
   },
   "notifications": {
     "new-message-dm": "Neue Nachricht von {username}",
-    "new-message-group": "Neue Nachricht von {username} in {chatName}"
+    "new-message-group": "Neue Nachricht von {username} in {chatName}",
+    "new-messages-dm": "{count} neue Nachrichten von {username}",
+    "new-messages-group": "{count} neue Nachrichten in {chatName}"
   },
   "app": {
     "wrapper": {

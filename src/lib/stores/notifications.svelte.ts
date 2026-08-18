@@ -1,5 +1,10 @@
-import { browser } from '$app/environment';
-import { goto } from '$app/navigation';
+import {
+	clearChatNotificationState,
+	recordChatNotification,
+	totalNotificationCount,
+	type ChatNotification
+} from '$lib/notificationState';
+import { playNotificationSound } from '$lib/notificationSound';
 import { t } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
@@ -43,43 +48,51 @@ class NotificationStore {
 		}
 	}
 
-	async showNotification(
-		title: string,
-		body: string,
-		chatId?: string,
-		groupType?: 'dm' | 'group'
-	): Promise<void> {
+	/**
+	 * Shows (or replaces) the single notification for a chat.
+	 *
+	 * Goes through the service worker registration rather than `new Notification` so that the
+	 * tag based replacement, and `getNotifications` when the chat is opened, behave the same as
+	 * for notifications raised by a push while the app was closed.
+	 */
+	async showChatNotification(entry: ChatNotification): Promise<void> {
 		if (!this.isSupported || this.permission !== 'granted' || window.isFlutterWebView) return;
 
 		try {
-			const notification = new Notification(title, {
-				body,
+			const registration = await navigator.serviceWorker.ready;
+			await registration.showNotification(buildNotificationTitle(entry), {
+				body: buildNotificationBody(entry),
 				badge: '/icon-badge-96x96.png',
-				// icon: '/icon-192x192.png', // Could change based on groupType
-				tag: chatId,
+				icon: entry.imageUrl,
+				// One notification per chat: a new message replaces the chat's existing one instead
+				// of stacking up next to it.
+				tag: entry.chatId,
+				renotify: true,
 				requireInteraction: false,
-				data: {
-					chatId,
-					groupType,
-					timestamp: Date.now()
-				}
-			});
+				data: { chatId: entry.chatId, groupType: entry.groupType, timestamp: entry.timestamp }
+			} as NotificationOptions);
 
-			notification.onclick = (event) => {
-				event.preventDefault();
-				window.focus();
-
-				if (chatId) {
-					if (browser) {
-						goto(`/chat?chatId=${chatId}`);
-					}
-				}
-
-				notification.close();
-			};
+			void playNotificationSound();
 		} catch (error) {
 			console.error('Error showing notification:', error);
 		}
+	}
+
+	/** Dismisses a chat's notification and forgets its unread count, leaving other chats alone. */
+	async clearChat(chatId: string): Promise<void> {
+		if (!this.isSupported || window.isFlutterWebView) return;
+
+		await clearChatNotificationState(chatId);
+
+		try {
+			const registration = await navigator.serviceWorker.ready;
+			const notifications = await registration.getNotifications({ tag: chatId });
+			for (const notification of notifications) notification.close();
+		} catch (error) {
+			console.error('Error clearing notifications:', error);
+		}
+
+		await updateAppBadge();
 	}
 
 	private urlBase64ToUint8Array(base64String: string) {
@@ -98,19 +111,57 @@ class NotificationStore {
 
 export const notificationStore = new NotificationStore();
 
+/** Group chats are titled by the chat, DMs by the sender, same as in the wrapper app. */
+export function buildNotificationTitle(entry: ChatNotification): string {
+	return entry.groupType === 'group' ? entry.chatName || entry.username : entry.username;
+}
+
+/**
+ * A count aware body, so a chat with several unread messages says how many rather than only
+ * showing the latest one.
+ */
+export function buildNotificationBody(entry: ChatNotification): string {
+	const { count, username, chatName } = entry;
+
+	if (entry.groupType === 'group') {
+		return count > 1
+			? get(t)('notifications.new-messages-group', { values: { count, chatName } })
+			: get(t)('notifications.new-message-group', { values: { username, chatName } });
+	}
+
+	return count > 1
+		? get(t)('notifications.new-messages-dm', { values: { count, username } })
+		: get(t)('notifications.new-message-dm', { values: { username } });
+}
+
+async function updateAppBadge(): Promise<void> {
+	if (!('setAppBadge' in navigator)) return;
+
+	const total = await totalNotificationCount();
+	try {
+		if (total > 0) await navigator.setAppBadge(total);
+		else await navigator.clearAppBadge();
+	} catch (error) {
+		console.error('Error updating app badge:', error);
+	}
+}
+
 export async function showChatNotification(
 	username: string,
 	chatId: string,
 	groupType: 'dm' | 'group' = 'dm',
-	chatName?: string
+	chatName?: string,
+	imageUrl?: string
 ): Promise<void> {
-	let body: string;
+	const entry = await recordChatNotification({
+		chatId,
+		username,
+		chatName,
+		groupType,
+		imageUrl,
+		timestamp: Date.now()
+	});
 
-	if (groupType === 'group') {
-		body = get(t)('notifications.new-message-group', { values: { username, chatName } });
-	} else {
-		body = get(t)('notifications.new-message-dm', { values: { username } });
-	}
-
-	await notificationStore.showNotification(username, body, chatId, groupType);
+	await notificationStore.showChatNotification(entry);
+	await updateAppBadge();
 }
