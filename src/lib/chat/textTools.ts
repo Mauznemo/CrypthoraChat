@@ -55,7 +55,7 @@ function linkHtml(text: string, url: string): string {
 	return `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer" data-chat-link="true" class="text-blue-400 hover:text-blue-300 underline">${text}</a>`;
 }
 
-export function processLinks(text: string, placeholders: string[]): string {
+function processLinks(text: string, placeholders: string[]): string {
 	const urlRegex = /(https?:\/\/[^\s<]+|ftp:\/\/[^\s<]+|www\.[^\s<]+)/gi;
 
 	return text.replace(urlRegex, (url) => pushPlaceholder(linkHtml(url, url), placeholders));
@@ -82,7 +82,7 @@ export function processMarkdown(text: string): string {
 // markdown) from re-matching inside markup it produced itself, which is how a mention used to end
 // up spliced into a preceding link's href attribute. The sentinel is a private-use codepoint that
 // is stripped from the input up front, so a message can never forge a token.
-const TOKEN_MARK = '';
+const TOKEN_MARK = '\uE000';
 
 function pushPlaceholder(html: string, placeholders: string[]): string {
 	const token = `${TOKEN_MARK}${placeholders.length}${TOKEN_MARK}`;
@@ -92,14 +92,14 @@ function pushPlaceholder(html: string, placeholders: string[]): string {
 
 function restorePlaceholders(text: string, placeholders: string[]): string {
 	return text.replace(
-		/(\d+)/g,
+		/\uE000(\d+)\uE000/g,
 		(match, idx: string) => placeholders[Number(idx)] ?? match
 	);
 }
 
 // Markdown-style [text](url) links. Handled before bare-URL autolinking so the resulting anchor
 // HTML is protected (via placeholder tokens) from being re-matched/re-wrapped by processLinks.
-export function processMarkdownLinks(text: string, placeholders: string[]): string {
+function processMarkdownLinks(text: string, placeholders: string[]): string {
 	const mdLinkRegex = /\[([^[\]]+)\]\(((?:https?:\/\/|ftp:\/\/|www\.|\/)[^\s()]+)\)/g;
 
 	return text.replace(mdLinkRegex, (_match, linkText: string, url: string) =>

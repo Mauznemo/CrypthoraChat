@@ -23,16 +23,25 @@
 	import VerificationListener from '$lib/components/VerificationListener.svelte';
 	import PasswordConfirm from '$lib/components/PasswordConfirm.svelte';
 	import { handleBackPress } from '$lib/stores/backHandler.svelte';
+	import { openExternalUrl } from '$lib/wrapper';
 
 	let { children, data } = $props();
 
 	function handleChatLinkClick(event: MouseEvent) {
-		if (window.isFlutterWebView || !isPwaStandalone() || !linkConfirmation.isEnabled()) return;
-
 		const anchor = (event.target as HTMLElement).closest('a[data-chat-link]');
 		if (!anchor) return;
 
 		const url = (anchor as HTMLAnchorElement).href;
+
+		// The wrapper hands links to the system browser. Done here rather than from an inline
+		// onclick in the rendered message, so a link never puts message text into a script context.
+		if (openExternalUrl(url)) {
+			event.preventDefault();
+			return;
+		}
+
+		if (!isPwaStandalone() || !linkConfirmation.isEnabled()) return;
+
 		event.preventDefault();
 
 		modalStore.open({

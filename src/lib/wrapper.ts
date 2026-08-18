@@ -43,9 +43,7 @@ async function pushShortcuts(): Promise<void> {
 			return {
 				id: chat.id,
 				label:
-					chat.type === 'group'
-						? (chat.name ?? '')
-						: (other?.displayName ?? other?.username ?? ''),
+					chat.type === 'group' ? (chat.name ?? '') : (other?.displayName ?? other?.username ?? ''),
 				// The endpoint is unauthenticated, so the wrapper can fetch this from its push
 				// isolate without any session plumbing.
 				imageUrl: imagePath
@@ -83,4 +81,19 @@ export function takePendingLaunch(): { chatId: string | null; sharedText: string
 	window.__pendingChatId = null;
 	window.__pendingSharedText = null;
 	return { chatId, sharedText };
+}
+
+/**
+ * Hands a link to the wrapper so it opens in the system browser instead of navigating the WebView.
+ *
+ * Returns false in a browser or PWA, where the caller should let the anchor behave normally.
+ */
+export function openExternalUrl(url: string): boolean {
+	const api = bridge();
+	if (!api) return false;
+
+	void Promise.resolve(api.callHandler('openUrl', url)).catch((error) => {
+		console.error('Flutter handler error:', error);
+	});
+	return true;
 }
