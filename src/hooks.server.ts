@@ -1,5 +1,6 @@
 import type { Handle, HandleValidationError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
+import { setSessionCookie } from '$lib/server/sessionCookie';
 import { validateSession } from '$lib/utils/auth';
 
 // Routes that don't require authentication
@@ -41,6 +42,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (session) {
 			event.locals.user = session.user;
 			event.locals.sessionId = sessionId;
+			if (session.renewed) {
+				setSessionCookie(event.cookies, sessionId);
+			}
 		} else {
 			event.cookies.delete('session', { path: '/' });
 		}
@@ -55,7 +59,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 		throw redirect(302, '/profile');
 	}
 
-	return resolve(event);
+	const response = await resolve(event);
+
+	// Baseline hardening. Not a substitute for escaping or authorization, but it costs nothing and
+	// takes MIME sniffing, framing and referrer leakage off the table.
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('Referrer-Policy', 'same-origin');
+	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+	if (process.env.NODE_ENV === 'production') {
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	}
+
+	return response;
 };
 
 export const handleValidationError: HandleValidationError = async ({ issues }) => {

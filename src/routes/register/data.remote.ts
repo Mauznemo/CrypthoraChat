@@ -1,4 +1,5 @@
 import { form, getRequestEvent } from '$app/server';
+import { setSessionCookie } from '$lib/server/sessionCookie';
 import { createSession, createUser } from '$lib/utils/auth';
 import { db } from '$lib/db';
 import { RegisterSchema } from '$lib/utils/validation';
@@ -25,13 +26,7 @@ export const register = form(RegisterSchema, async (data) => {
 
 		const { cookies } = getRequestEvent();
 
-		cookies.set('session', session.id, {
-			path: '/',
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'lax',
-			maxAge: 60 * 60 * 24 * 360
-		});
+		setSessionCookie(cookies, session.id);
 	} catch (err: any) {
 		if (err.code === 'P2002') {
 			error(400, 'login.server.username-taken');

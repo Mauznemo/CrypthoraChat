@@ -390,6 +390,7 @@
     "server": {
       "invalid-credentials": "Ungültiger Benutzername oder Passwort",
       "something-went-wrong": "Etwas ist schief gelaufen",
+      "too-many-attempts": "Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuche es später erneut.",
       "username-not-allowed": "Benutzername nicht erlaubt (Bitte wenden Sie sich an einen Admin)",
       "username-taken": "Benutzername bereits verwendet"
     },
