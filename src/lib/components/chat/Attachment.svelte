@@ -8,7 +8,7 @@
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import { contextMenuStore, type ContextMenuItem } from '$lib/stores/contextMenu.svelte';
 	import { saveUserSticker } from '../../../routes/sticker-editor/stickerEditor.remote';
 	import { blobToFile } from '$lib/utils/imageConverter';
@@ -30,8 +30,36 @@
 	let ignoreLimit = $state(false);
 	let fileInIDB = $state(false);
 
-	let fileType: 'image' | 'video' | 'audio' | 'pdf' | 'html' | 'other' = $state('other');
-	let subType: string | null = $state(null);
+	/**
+	 * Everything the preview box needs is already in the path, so it is read up front.
+	 *
+	 * Leaving this to `onMount` meant every attachment first painted as a 48px 'other' box and
+	 * then jumped to its real size, which is the largest single layout shift in a message list
+	 * that is trying to hold itself at the bottom.
+	 */
+	function detectFileType(path: string): 'image' | 'video' | 'audio' | 'pdf' | 'html' | 'other' {
+		if (path.startsWith('sticker:')) return 'image';
+		const ext = path.split('.')[1]; //uuid_userId_filename.ext.enc
+		if (fileUtils.isImageExtension(ext)) return 'image';
+		if (fileUtils.isVideoExtension(ext)) return 'video';
+		if (fileUtils.isAudioExtension(ext)) return 'audio';
+		if (fileUtils.isPdfExtension(ext)) return 'pdf';
+		if (fileUtils.isHtmlExtension(ext)) return 'html';
+		return 'other';
+	}
+
+	const DIMENSIONS_REGEX = /^dimensions\((\d+)x(\d+)\):.*$/;
+
+	function detectDimensions(path: string): { width: number; height: number } | null {
+		const match = path.match(DIMENSIONS_REGEX);
+		if (!match) return null;
+		return { width: parseInt(match[1], 10), height: parseInt(match[2], 10) };
+	}
+
+	let fileType: 'image' | 'video' | 'audio' | 'pdf' | 'html' | 'other' = $state(
+		detectFileType(attachmentPath)
+	);
+	let subType: string | null = $state(attachmentPath.startsWith('sticker:') ? 'sticker' : null);
 
 	let previewUrl: string | null = $state(null);
 	let fileSizeBytes: number = $state(0);
@@ -40,33 +68,9 @@
 
 	let corruptedFile = $state(false);
 
-	let previewDimensions: { width: number; height: number } | null = $state(null);
-
-	onMount(() => {
-		console.log('Attachment path:', attachmentPath);
-		const ext = attachmentPath.split('.')[1]; //uuid_userId_filename.ext.enc
-		if (fileUtils.isImageExtension(ext)) fileType = 'image';
-		else if (fileUtils.isVideoExtension(ext)) fileType = 'video';
-		else if (fileUtils.isAudioExtension(ext)) fileType = 'audio';
-		else if (fileUtils.isPdfExtension(ext)) fileType = 'pdf';
-		else if (fileUtils.isHtmlExtension(ext)) fileType = 'html';
-
-		if (fileType === 'image' && attachmentPath.startsWith('sticker:')) subType = 'sticker';
-
-		const dimensionsRegex = /^dimensions\((\d+)x(\d+)\):.*$/;
-
-		if (dimensionsRegex.test(attachmentPath)) {
-			const match = attachmentPath.match(dimensionsRegex);
-
-			if (match) {
-				const width = parseInt(match[1], 10);
-				const height = parseInt(match[2], 10);
-
-				previewDimensions = { width, height };
-				console.log(`Width: ${width}, Height: ${height}`);
-			}
-		}
-	});
+	let previewDimensions: { width: number; height: number } | null = $state(
+		detectDimensions(attachmentPath)
+	);
 
 	onDestroy(() => {
 		if (previewUrl) {
@@ -315,6 +319,7 @@
 					<img
 						src={previewUrl}
 						alt="Attachment"
+						decoding="async"
 						style={getPreviewSize()}
 						class="rounded-lg object-contain"
 					/>
@@ -553,7 +558,9 @@
 {/snippet}
 
 {#snippet documentNameBar(name: string)}
-	<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+	<div
+		class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5"
+	>
 		<p class="line-clamp-1 pr-2 text-xs font-bold break-all text-white">{name}</p>
 	</div>
 {/snippet}

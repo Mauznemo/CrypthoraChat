@@ -54,6 +54,9 @@
 	let messageContainer = $state<HTMLDivElement | null>(null);
 
 	let isLoadingOlder = $state(false);
+	let topSentinel = $state<HTMLDivElement | null>(null);
+	/** False while the ScrollView is still finding its opening position. */
+	let scrollSettled = $state(false);
 
 	let isTouchDevice: boolean = $state(false);
 	let isHovering = false;
@@ -86,7 +89,12 @@
 		};
 	}
 
-	function observeTopElement(node: HTMLDivElement) {
+	// Armed only once the view has settled. A freshly opened chat renders at the top for a frame,
+	// which used to trip this immediately and prepend older messages into a list that was still
+	// trying to reach its bottom.
+	$effect(() => {
+		if (!scrollSettled || !topSentinel) return;
+
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
@@ -101,14 +109,10 @@
 			}
 		);
 
-		observer.observe(node);
+		observer.observe(topSentinel);
 
-		return {
-			destroy() {
-				observer.disconnect();
-			}
-		};
-	}
+		return () => observer.disconnect();
+	});
 
 	async function loadOlderMessages() {
 		isLoadingOlder = true;
@@ -329,10 +333,11 @@
 <ScrollView
 	bind:this={scrollView}
 	bind:container={messageContainer}
+	bind:settled={scrollSettled}
 	handleScroll={handleScrollUpdate}
 	class="min-h-0 p-2 pt-6"
 >
-	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
+	<div bind:this={topSentinel} class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}
 			<LoadingSpinner size="1.5rem" />
 			<div class="py-2 text-center text-sm text-gray-500">{$t('chat.loading-older')}</div>
@@ -341,8 +346,6 @@
 
 	{#each chatStore.combinedMessages as message, index (message.id)}
 		{#if isClientMessage(message)}
-			{console.log('Key[', index, ']:', message.id)}
-			{console.log('ClientMessage:', message.id, 'by:', message.senderId)}
 			<!-- message.id + message.encryptedContent unique id to make sure reactivity works -->
 			{@const isFromMe = message.senderId === chatStore.user?.id}
 			{@const isFirstInGroup =

@@ -58,6 +58,13 @@
 
 	onMount(() => {
 		onboardingStore.init();
+		// Registered here rather than on /chat so it exists for every route, and as early as
+		// hydration can manage. The wrapper also sets window.flutterSafeAreaInsets at document
+		// start, so the read below is correct even when this listener is registered too late for
+		// the wrapper's post-load notification to reach it.
+		window.onFlutterSafeAreaInsetsChanged = () => {
+			layoutStore.updateSafeAreaPadding();
+		};
 		layoutStore.updateSafeAreaPadding();
 
 		// Connect on every authenticated page so verification requests still arrive when the

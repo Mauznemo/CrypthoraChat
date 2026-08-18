@@ -243,6 +243,10 @@
 			restoreScrollPos = true;
 			messagesToLoad = chatStore.messages.length < 15 ? 15 : chatStore.messages.length;
 			chatStore.scrollView?.findReference();
+		} else {
+			// The anchor belongs to the chat that was open, and letting it survive lets the
+			// ScrollView hold the next chat still at a message that is no longer on screen.
+			layoutStore.anchorMessageId = '';
 		}
 
 		const result = await chats.trySelectChat(chatId, messagesToLoad);
@@ -253,6 +257,10 @@
 			notifyChatOpened(chatId);
 			sideBar?.close();
 			if (!restoreScrollPos) {
+				// The list lives inside the loadingChat block, so it was destroyed and rebuilt by
+				// the selection. Without this the bind:this below has not been reassigned yet and
+				// the lock lands on the ScrollView that just went away.
+				await tick();
 				chatStore.scrollView?.lockToBottom();
 			}
 		}
@@ -273,12 +281,12 @@
 		window.setSocketInactive = () => {
 			activityTracker.suspend();
 		};
-		window.onFlutterSafeAreaInsetsChanged = () => {
-			layoutStore.updateSafeAreaPadding();
-		};
 		window.goToChat = (chatId: string) => {
 			if (chatStore.activeChat?.id === chatId) {
 				notifyChatOpened(chatId);
+				// Tapping a notification is a request to see what arrived, even when that chat was
+				// already the open one and there is nothing to select.
+				chatStore.scrollView?.lockToBottom();
 				return;
 			}
 			selectChat(chatId);

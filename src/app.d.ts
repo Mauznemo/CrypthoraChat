@@ -26,7 +26,10 @@ declare global {
 		flutter_inappwebview?: any;
 		ntfyTopic?: string;
 		fcmToken?: string;
+		/** Set by the wrapper at document start, so it is readable during hydration. */
 		flutterSafeAreaInsets?: { top: number; bottom: number, left: number, right: number };
+		/** Notification that flutterSafeAreaInsets changed. Not the initial delivery - the web app
+		 * reads the global itself on mount, since this may be called before it is defined. */
 		onFlutterSafeAreaInsetsChanged? = () => {};
 		setSocketActive? = () => {};
 		setSocketInactive? = () => {};

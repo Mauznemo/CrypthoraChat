@@ -25,8 +25,9 @@ class Layout {
 		};
 	}
 
+	/** Message the ScrollView holds still while content around it grows. Per chat, so it is
+	 * cleared on every selection. */
 	anchorMessageId: string = $state('');
-	lastDistanceToTop = 0;
 }
 
 export const layoutStore = new Layout();
