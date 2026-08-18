@@ -53,7 +53,7 @@
 				const pdfjsLib = await loadPdfJs();
 				if (cancelled) return;
 
-				const pdf = await pdfjsLib.getDocument({ url: currentSrc }).promise;
+				const pdf = await pdfjsLib.getDocument({ url: currentSrc, isEvalSupported: false }).promise;
 				if (cancelled) return;
 
 				const pdfPage = await pdf.getPage(currentPage);
