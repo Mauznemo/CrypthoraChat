@@ -32,15 +32,15 @@
 		<h1 class="mb-4 text-2xl">{$t('login.register')}</h1>
 
 		<form
-			{...register.enhance(async ({ form, data, submit }) => {
+			{...register.enhance(async (form) => {
 				try {
 					redirectToProfile = false;
 					localStorage.clear();
 					await deleteDatabase();
-					await submit();
+					await form.submit();
 
 					if ((register.fields.allIssues()?.length ?? 0) === 0) {
-						form.reset();
+						form.element.reset();
 						await generateAndStoreMasterKey();
 						await generateAndStoreKeyPair();
 						goto('/chat');
@@ -113,7 +113,10 @@
 				class="mb-4 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass hover:bg-accent-600/50 focus:ring-blue-500"
 				type="submit">{$t('login.register')}</button
 			>
-			<input class="hidden" {...register.fields.deviceOs.as('hidden')} />
+			<input
+				class="hidden"
+				{...register.fields.deviceOs.as('hidden', register.fields.deviceOs.value() ?? '')}
+			/>
 
 			<p class="text-center text-red-500">{$t(errorText)}</p>
 

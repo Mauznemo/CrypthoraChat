@@ -29,12 +29,12 @@
 		<h1 class="mb-4 text-2xl">{$t('login.login')}</h1>
 
 		<form
-			{...login.enhance(async ({ form, data, submit }) => {
+			{...login.enhance(async (form) => {
 				try {
 					await deleteDatabase();
-					await submit();
+					await form.submit();
 					if ((login.fields.allIssues()?.length ?? 0) === 0) {
-						form.reset();
+						form.element.reset();
 						localStorage.clear();
 					}
 				} catch (error: any) {
@@ -84,7 +84,10 @@
 				type="submit">{$t('login.login')}</button
 			>
 
-			<input class="hidden" {...login.fields.deviceOs.as('hidden')} />
+			<input
+				class="hidden"
+				{...login.fields.deviceOs.as('hidden', login.fields.deviceOs.value() ?? '')}
+			/>
 
 			<p class="text-center text-red-500">{$t(errorText)}</p>
 

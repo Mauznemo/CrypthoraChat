@@ -7,9 +7,7 @@
 	async function loadPdfJs() {
 		const pdfjsLib = await import('pdfjs-dist');
 		if (!workerConfigured) {
-			const { default: pdfWorkerUrl } = await import(
-				'pdfjs-dist/build/pdf.worker.min.mjs?url'
-			);
+			const { default: pdfWorkerUrl } = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
 			pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 			workerConfigured = true;
 		}
@@ -53,7 +51,9 @@
 				const pdfjsLib = await loadPdfJs();
 				if (cancelled) return;
 
-				const pdf = await pdfjsLib.getDocument({ url: currentSrc, isEvalSupported: false }).promise;
+				// No isEvalSupported here: pdf.js 6.2.108 removed the option along with the
+				// eval-based rendering path it guarded, so passing it is a type error and a no-op.
+				const pdf = await pdfjsLib.getDocument({ url: currentSrc }).promise;
 				if (cancelled) return;
 
 				const pdfPage = await pdf.getPage(currentPage);
