@@ -1,12 +1,10 @@
-import { errorResponse, getUploadDir, validateUploadPath } from '$lib/server/fileUpload';
+import { errorResponse, validateAttachmentPath } from '$lib/server/fileUpload';
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
-import { db } from '$lib/server/db';
-
-const UPLOAD_BASE_PATH = getUploadDir();
+import { db } from '$lib/db';
 
 export const GET: RequestHandler = async ({ url, locals, request }) => {
 	if (!locals.sessionId) {
@@ -18,7 +16,7 @@ export const GET: RequestHandler = async ({ url, locals, request }) => {
 		return errorResponse(400, 'Missing filePath parameter');
 	}
 
-	const validation = validateUploadPath(filePath);
+	const validation = validateAttachmentPath(filePath);
 	if (!validation.ok) {
 		return errorResponse(403, 'Access denied: Invalid file path');
 	}

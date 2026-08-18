@@ -5,8 +5,14 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
-import { ensureUploadDir, errorResponse, getUploadDir, removeFile, validateUploadPath } from '$lib/server/fileUpload';
-import { db } from '$lib/server/db';
+import {
+	ensureUploadDir,
+	errorResponse,
+	getUploadDir,
+	removeFile,
+	validateUploadPath
+} from '$lib/server/fileUpload';
+import { db } from '$lib/db';
 
 const UPLOAD_BASE_PATH = getUploadDir();
 const UPLOAD_SIZE_LIMIT = parseInt(process.env.UPLOAD_SIZE_LIMIT || '104857600');
@@ -66,7 +72,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			} else if (name === 'chatId') {
 				chatId = value && value.match(/^[a-f0-9-]{36}$/) ? value : null;
 			} else if (name === 'encryptedFileNameSafeBase64') {
-				encryptedFileNameSafeBase64 = value;
+				// Goes straight into the filename below, so it has to stay inside the alphabet
+				// base64UrlEncode produces - no separators the parsers downstream rely on ('_', '.'),
+				// and above all no path separators. Length capped so the whole name fits in 255 bytes.
+				encryptedFileNameSafeBase64 = value && /^[A-Za-z0-9~-]{1,170}$/.test(value) ? value : null;
 			}
 		});
 
@@ -146,7 +155,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				await ensureUploadDir(UPLOAD_BASE_PATH + relativePath);
 
 				const filename = `${randomUUID()}_${locals.user!.id}_${encryptedFileNameSafeBase64}.${fileExtension}.enc`;
-				filePath = path.join(UPLOAD_BASE_PATH + relativePath, filename);
+				const candidatePath = path.join(UPLOAD_BASE_PATH + relativePath, filename);
+
+				// Every field above is already validated; this is the backstop that makes it
+				// impossible for a future field to widen into a write outside the uploads root.
+				const validation = validateUploadPath(candidatePath);
+				if (!validation.ok) {
+					file.resume();
+					resolve(errorResponse(400, 'Invalid upload path'));
+					return;
+				}
+				filePath = candidatePath;
 
 				const writeStream = createWriteStream(filePath);
 

@@ -49,8 +49,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			throw error(403, 'Invalid filePath');
 		}
 
+		// Narrower than validateUploadPath: this route is public, so it only ever serves profile
+		// pictures. Compared with a trailing separator so a sibling like /uploads/profiles-old
+		// cannot pass a plain prefix test.
 		const absPath = validation.absolute;
-		if (!absPath.startsWith(path.resolve(UPLOAD_PATH))) {
+		const profilesDir = path.resolve(UPLOAD_PATH);
+		if (absPath !== profilesDir && !absPath.startsWith(profilesDir + path.sep)) {
 			throw error(403, 'Invalid filePath');
 		}
 
