@@ -1,9 +1,10 @@
-import { errorResponse, getUploadDir } from '$lib/server/fileUpload';
+import { errorResponse, getUploadDir, validateUploadPath } from '$lib/server/fileUpload';
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
+import { db } from '$lib/server/db';
 
 const UPLOAD_BASE_PATH = getUploadDir();
 
@@ -12,21 +13,33 @@ export const GET: RequestHandler = async ({ url, locals, request }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	let filePath = url.searchParams.get('filePath');
+	const filePath = url.searchParams.get('filePath');
 	if (!filePath) {
 		return errorResponse(400, 'Missing filePath parameter');
 	}
 
-	if (filePath.indexOf(':') !== -1) {
-		filePath = filePath.substring(filePath.indexOf(':') + 1);
+	const validation = validateUploadPath(filePath);
+	if (!validation.ok) {
+		return errorResponse(403, 'Access denied: Invalid file path');
 	}
 
-	const normalizedPath = path.normalize(filePath);
-	const fullPath = path.resolve(normalizedPath);
-	const allowedBasePath = path.resolve(UPLOAD_BASE_PATH);
+	const fullPath = validation.absolute;
 
-	if (!fullPath.startsWith(allowedBasePath)) {
-		return errorResponse(403, 'Access denied: Invalid file path');
+	const chatIdMatch = fullPath.match(/\/media\/([a-f0-9-]{36})\//);
+	if (chatIdMatch) {
+		const chatId = chatIdMatch[1];
+		try {
+			const chat = await db.chat.findUnique({
+				where: { id: chatId },
+				select: { participants: { select: { userId: true } } }
+			});
+
+			if (!chat || !chat.participants.some((p) => p.userId === locals.user!.id)) {
+				return errorResponse(403, 'Access denied: Not a participant of this chat');
+			}
+		} catch {
+			return errorResponse(403, 'Access denied: Invalid chat');
+		}
 	}
 
 	try {

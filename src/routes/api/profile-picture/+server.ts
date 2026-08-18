@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { base64ToArrayBuffer } from '$lib/crypto/utils';
 import sharp from 'sharp';
-import { getUploadDir } from '$lib/server/fileUpload';
+import { getUploadDir, validateUploadPath } from '$lib/server/fileUpload';
 
 const UPLOAD_PATH = getUploadDir() + '/profiles';
 
@@ -44,9 +44,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			throw error(400, 'Missing filePath');
 		}
 
-		const absPath = path.resolve(filePathParam);
+		const validation = validateUploadPath(filePathParam);
+		if (!validation.ok) {
+			throw error(403, 'Invalid filePath');
+		}
+
+		const absPath = validation.absolute;
 		if (!absPath.startsWith(path.resolve(UPLOAD_PATH))) {
-			throw error(400, 'Invalid filePath');
+			throw error(403, 'Invalid filePath');
 		}
 
 		const combined = await fs.readFile(absPath);
@@ -66,6 +71,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		if (sizeParam) {
 			const size = parseInt(sizeParam, 10);
+			const allowedSizes = [48, 96, 256];
+			if (!allowedSizes.includes(size)) {
+				throw error(400, 'Invalid size parameter');
+			}
 			outputBuffer = await sharp(Buffer.from(decrypted))
 				.resize(size, size, {
 					fit: 'cover'

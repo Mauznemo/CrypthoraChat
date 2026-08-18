@@ -5,7 +5,8 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
-import { ensureUploadDir, errorResponse, getUploadDir, removeFile } from '$lib/server/fileUpload';
+import { ensureUploadDir, errorResponse, getUploadDir, removeFile, validateUploadPath } from '$lib/server/fileUpload';
+import { db } from '$lib/server/db';
 
 const UPLOAD_BASE_PATH = getUploadDir();
 const UPLOAD_SIZE_LIMIT = parseInt(process.env.UPLOAD_SIZE_LIMIT || '104857600');
@@ -61,9 +62,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			if (name === 'type') {
 				type = value;
 			} else if (name === 'fileExtension') {
-				fileExtension = value;
+				fileExtension = value && value.match(/^[a-zA-Z0-9]{1,10}$/) ? value : null;
 			} else if (name === 'chatId') {
-				chatId = value;
+				chatId = value && value.match(/^[a-f0-9-]{36}$/) ? value : null;
 			} else if (name === 'encryptedFileNameSafeBase64') {
 				encryptedFileNameSafeBase64 = value;
 			}
@@ -109,6 +110,25 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				file.resume();
 				resolve(errorResponse(400, 'Missing required fields'));
 				return;
+			}
+
+			if (type === 'chatMedia' && chatId) {
+				try {
+					const chat = await db.chat.findUnique({
+						where: { id: chatId },
+						select: { participants: { select: { userId: true } } }
+					});
+
+					if (!chat || !chat.participants.some((p) => p.userId === locals.user!.id)) {
+						file.resume();
+						resolve(errorResponse(403, 'Not a participant of this chat'));
+						return;
+					}
+				} catch {
+					file.resume();
+					resolve(errorResponse(403, 'Invalid chat'));
+					return;
+				}
 			}
 
 			try {

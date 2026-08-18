@@ -105,7 +105,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		bb.on('field', (name: string, value: string) => {
 			if (name === 'fileExtension') {
-				fileExtension = value || 'png';
+				const allowed = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+				fileExtension = allowed.includes(value?.toLowerCase()) ? value : 'png';
 			}
 		});
 

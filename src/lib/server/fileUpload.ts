@@ -5,6 +5,19 @@ export function getUploadDir(): string {
 	return process.env.NODE_ENV === 'development' ? './uploads' : '/uploads';
 }
 
+export function validateUploadPath(filePath: string): { ok: true; absolute: string } | { ok: false; error: string } {
+	const uploadDir = getUploadDir();
+	const absUploadDir = path.resolve(uploadDir);
+	const absFilePath = path.resolve(filePath);
+	const relative = path.relative(absUploadDir, absFilePath);
+
+	if (relative.startsWith('..') || path.isAbsolute(relative)) {
+		return { ok: false, error: 'Path traversal detected' };
+	}
+
+	return { ok: true, absolute: absFilePath };
+}
+
 export async function ensureUploadDir(path: string) {
 	try {
 		await fs.access(path);
@@ -23,7 +36,9 @@ export async function fileExists(filePath: string) {
 }
 
 export async function removeDir(dirPath: string) {
-	const absPath = path.resolve(dirPath);
+	const validation = validateUploadPath(dirPath);
+	if (!validation.ok) return;
+	const absPath = validation.absolute;
 	try {
 		await fs.access(absPath);
 		await fs.rm(absPath, { recursive: true, force: true });
@@ -31,7 +46,9 @@ export async function removeDir(dirPath: string) {
 }
 
 export async function removeFile(filePath: string) {
-	const absPath = path.resolve(filePath);
+	const validation = validateUploadPath(filePath);
+	if (!validation.ok) return;
+	const absPath = validation.absolute;
 	try {
 		await fs.access(absPath);
 		await fs.unlink(absPath);
