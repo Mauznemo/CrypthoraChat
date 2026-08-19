@@ -1,6 +1,6 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/utils/auth';
-import { invalidateCachedUser } from '$lib/chat/chat.remote';
+import { invalidateCachedUser } from '$lib/server/userCache';
 import { db } from '$lib/db';
 import { assertOwnedUpload, removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';
