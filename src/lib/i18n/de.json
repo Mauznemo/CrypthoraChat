@@ -398,12 +398,12 @@
       "confirm-password": {
         "required": "Passwort bestätigen erforderlich",
         "too-long": "Passwort bestätigen muss weniger als 128 Zeichen betragen",
-        "too-short": "Passwort bestätigen muss mindestens 6 Zeichen lang sein"
+        "too-short": "Passwort bestätigen muss mindestens 10 Zeichen lang sein"
       },
       "password": {
         "required": "Passwort ist erforderlich",
         "too-long": "Das Passwort muss weniger als 128 Zeichen betragen",
-        "too-short": "Das Passwort muss mindestens 6 Zeichen lang sein"
+        "too-short": "Das Passwort muss mindestens 10 Zeichen lang sein"
       },
       "passwords-dont-match": "Passwörter stimmen nicht überein",
       "username": {

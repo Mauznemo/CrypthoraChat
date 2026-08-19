@@ -403,13 +403,13 @@
       },
       "password": {
         "required": "Password is required",
-        "too-short": "Password must be at least 6 characters",
+        "too-short": "Password must be at least 10 characters",
         "too-long": "Password must be less than 128 characters"
       },
       "passwords-dont-match": "Passwords do not match",
       "confirm-password": {
         "required": "Confirm Password is required",
-        "too-short": "Confirm Password must be at least 6 characters",
+        "too-short": "Confirm Password must be at least 10 characters",
         "too-long": "Confirm Password must be less than 128 characters"
       }
     }

@@ -1,6 +1,7 @@
 import { command, getRequestEvent } from '$app/server';
 import { deleteSession, hashPassword, verifyPassword } from '$lib/utils/auth';
 import { invalidateCachedUser } from '$lib/server/userCache';
+import { MIN_PASSWORD_LENGTH } from '$lib/utils/validation';
 import { db } from '$lib/db';
 import { assertOwnedUpload, removeFile } from '$lib/server/fileUpload';
 import { error } from '@sveltejs/kit';

@@ -1,5 +1,11 @@
 import * as v from 'valibot';
 
+/**
+ * Only enforced on registration and password changes, so accounts created under the old
+ * six-character minimum keep working until their owner changes the password.
+ */
+export const MIN_PASSWORD_LENGTH = 10;
+
 export const RegisterSchema = v.pipe(
 	v.object({
 		username: v.pipe(
@@ -10,12 +16,12 @@ export const RegisterSchema = v.pipe(
 		),
 		password: v.pipe(
 			v.string('login.validation.password.required'),
-			v.minLength(6, 'login.validation.password.too-short'),
+			v.minLength(MIN_PASSWORD_LENGTH, 'login.validation.password.too-short'),
 			v.maxLength(128, 'login.validation.password.too-long')
 		),
 		confirmPassword: v.pipe(
 			v.string('login.validation.confirm-password.required'),
-			v.minLength(6, 'login.validation.confirm-password.too-short'),
+			v.minLength(MIN_PASSWORD_LENGTH, 'login.validation.confirm-password.too-short'),
 			v.maxLength(128, 'login.validation.confirm-password.too-long')
 		),
 		deviceOs: v.string()

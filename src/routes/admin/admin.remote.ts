@@ -19,17 +19,21 @@ export const getUsers = query(async () => {
 	});
 });
 
-export const deleteUser = command(v.string(), async (userId: string) => {
+/**
+ * Not implemented.
+ *
+ * Deleting a user needs a cascade the schema does not do for us - messages, participations, chat
+ * keys, sessions, subscriptions, stickers and their files, plus a decision about groups they own.
+ * Left as an explicit 501 rather than a foreign-key 500, and the admin page no longer offers it.
+ */
+export const deleteUser = command(v.string(), async () => {
 	const { locals } = getRequestEvent();
 
 	if (!locals.user?.isAdmin) {
 		error(401, 'Unauthorized');
 	}
 
-	// Does not work at the moment since it would require cascading deletes (all messages by that user)
-	await db.user.delete({
-		where: { id: userId }
-	});
+	error(501, 'Deleting users is not implemented yet.');
 });
 
 export const getAvailableUsernames = query(async () => {
