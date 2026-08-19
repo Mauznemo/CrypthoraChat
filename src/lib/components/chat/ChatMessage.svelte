@@ -98,7 +98,7 @@
 
 	<!-- Chat message container -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-start">
+	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-start lg:max-w-[70%]">
 		<!-- Username (only shown for first message in group and not for own messages) -->
 		{#if showProfile}
 			<div class="mb-0.5 pl-9 lg:pl-1.5">

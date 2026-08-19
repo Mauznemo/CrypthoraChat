@@ -102,7 +102,7 @@
 
 	<!-- Chat message container -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-end">
+	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-end lg:max-w-[70%]">
 		<!-- Chat message bubble -->
 		<div
 			class="relative max-w-full rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow {message.isEdited
