@@ -5,7 +5,8 @@
 	import { processMessageText } from '$lib/chat/textTools';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
-	import Attachment from './Attachment.svelte';
+	import MessageAttachments from './MessageAttachments.svelte';
+	import ExpandableText from './ExpandableText.svelte';
 	import { t } from 'svelte-i18n';
 	import { formatDate } from '$lib/chat/messages';
 
@@ -111,14 +112,10 @@
 			<Reply replyToMessage={message} />
 
 			{#if message.attachmentPaths.length > 0}
-				<p class="text-sm text-gray-400">
-					{$t('chat.attachments', { values: { count: message.attachmentPaths.length } })}
-				</p>
-				<div class="mt-2 flex max-w-full flex-col items-end">
-					{#each message.attachmentPaths as attachmentPath}
-						<Attachment {attachmentPath} keyVersion={message.usedKeyVersion} />
-					{/each}
-				</div>
+				<MessageAttachments
+					attachmentPaths={message.attachmentPaths}
+					keyVersion={message.usedKeyVersion}
+				/>
 			{/if}
 
 			<svelte:boundary>
@@ -127,9 +124,10 @@
 						<p class="pr-9 whitespace-pre-line text-white">{$t('common.loading')}</p>
 					{/if}
 				{:then decryptedContent}
-					<div class="pr-9 break-words whitespace-pre-line text-white">
-						{@html processMessageText(decryptedContent)}
-					</div>
+					<ExpandableText
+						html={processMessageText(decryptedContent)}
+						class="pr-9 break-words whitespace-pre-line text-white"
+					/>
 				{:catch error}
 					<p class="pr-9 whitespace-pre-line text-red-400">
 						{$t('chat.failed-to-decrypt-message')}

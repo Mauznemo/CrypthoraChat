@@ -33,6 +33,9 @@
     },
     "edited": "Bearbeitet",
     "failed-to-decrypt-message": "Entschlüsseln der Nachricht fehlgeschlagen",
+    "show-more": "Mehr anzeigen",
+    "show-less": "Weniger anzeigen",
+    "show-more-attachments": "{count, plural, one {# weiteren Anhang anzeigen} other {# weitere Anhänge anzeigen}}",
     "react-with": "Reagiere mit {reaction}",
     "remove-reaction": "Reaktion entfernen",
     "attachment": {

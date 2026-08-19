@@ -35,6 +35,9 @@
     "remove-reaction": "Remove reaction",
     "react-with": "React with {reaction}",
     "failed-to-decrypt-message": "Failed to decrypt message",
+    "show-more": "Show more",
+    "show-less": "Show less",
+    "show-more-attachments": "{count, plural, one {Show # more attachment} other {Show # more attachments}}",
     "attachment": {
       "sticker-added-to-my-stickers": "Sticker added to your stickers successfully",
       "loading-image": "Loading image {size}",
