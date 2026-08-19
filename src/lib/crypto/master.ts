@@ -8,29 +8,54 @@ export async function generateAndStoreMasterKey(): Promise<void> {
 	idb!.put('master', base64Seed, 'master');
 }
 
-/** Retrieve and derive master key from stored seed */
-export async function getMasterKey(): Promise<CryptoKey> {
+/**
+ * HKDF salt. Constant on purpose: the seed is already 128 uniformly random bits, so the salt is
+ * only here to domain-separate this app's derivation from any other use of the same seed.
+ */
+const HKDF_SALT = new TextEncoder().encode('crypthora:v1');
+
+/**
+ * Derives a purpose-specific key from the master seed.
+ *
+ * The AES key and the HMAC key used to be the same SHA-256(seed) bytes imported under two
+ * different algorithms. Using one key with two primitives has no known break for this particular
+ * AES-GCM/HMAC pairing, but it removes a layer of safety for nothing - HKDF with distinct `info`
+ * labels costs the same and keeps the two independent.
+ */
+async function deriveKey(
+	info: string,
+	algorithm: AesKeyGenParams | HmacImportParams,
+	usages: KeyUsage[]
+): Promise<CryptoKey> {
 	const base64Seed = await idb!.get('master', 'master');
 	if (!base64Seed) {
 		throw new Error('Master seed not found. Generate or import it first.');
 	}
 	const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
 
-	const keyMaterial = await crypto.subtle.digest('SHA-256', seedBytes);
+	const seedKey = await crypto.subtle.importKey('raw', seedBytes, 'HKDF', false, ['deriveKey']);
 
-	return crypto.subtle.importKey('raw', keyMaterial, 'AES-GCM', false, ['encrypt', 'decrypt']);
+	return crypto.subtle.deriveKey(
+		{
+			name: 'HKDF',
+			hash: 'SHA-256',
+			salt: HKDF_SALT,
+			info: new TextEncoder().encode(info)
+		},
+		seedKey,
+		algorithm,
+		false,
+		usages
+	);
+}
+
+/** Retrieve and derive master key from stored seed */
+export async function getMasterKey(): Promise<CryptoKey> {
+	return deriveKey('crypthora:aes', { name: 'AES-GCM', length: 256 }, ['encrypt', 'decrypt']);
 }
 
 export async function getHmacKey(): Promise<CryptoKey> {
-	const base64Seed = await idb!.get('master', 'master');
-	if (!base64Seed) {
-		throw new Error('Master seed not found. Generate or import it first.');
-	}
-	const seedBytes = new Uint8Array(base64ToArrayBuffer(base64Seed));
-
-	const keyMaterial = await crypto.subtle.digest('SHA-256', seedBytes);
-
-	return crypto.subtle.importKey('raw', keyMaterial, { name: 'HMAC', hash: 'SHA-256' }, false, [
+	return deriveKey('crypthora:hmac', { name: 'HMAC', hash: 'SHA-256', length: 256 }, [
 		'sign',
 		'verify'
 	]);

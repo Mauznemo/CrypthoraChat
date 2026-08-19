@@ -274,7 +274,13 @@
 		}
 
 		if (messageEditing) {
-			const encryptedContent = await encryptMessage(messageContent);
+			// The edit keeps the original message's chat and sender, and only the sender can edit,
+			// so the binding is the same as it was on the first send.
+			const encryptedContent = await encryptMessage(messageContent, {
+				chatId: chatStore.activeChat.id,
+				senderId: chatStore.user.id,
+				keyVersion: chatStore.activeChat.currentKeyVersion
+			});
 			socketStore.editMessage({
 				messageId: messageEditing.id,
 				encryptedContent: encryptedContent,
@@ -286,7 +292,11 @@
 		}
 
 		try {
-			const encryptedContent = await encryptMessage(messageContent);
+			const encryptedContent = await encryptMessage(messageContent, {
+				chatId: chatStore.activeChat.id,
+				senderId: chatStore.user.id,
+				keyVersion: chatStore.activeChat.currentKeyVersion
+			});
 
 			socketStore.sendMessage({
 				chatId: chatStore.activeChat.id,

@@ -73,8 +73,51 @@ When a group is created, a unique, key is generated. This key is used to encrypt
 
 - **Key Rotation & Forward Secrecy:** The application automatically rotates chat keys (**NOTE:** this is planned at the moment only manual rotation is possible) to ensure forward secrecy. When a new member is added to a group, they only receive the new key, preventing them from decrypting past messages. The new key is distributed securely the same way as mentioned before.
 
-- **On-Device Key Storage:** To support multi-device setups, a 16-byte seed (128-bit entropy) is stored in the browser's IndexedDB. This seed is used to derive a master key, which then encrypts all chat keys before they are stored in the database.
+- **On-Device Key Storage:** To support multi-device setups, a 16-byte seed (128-bit entropy) is stored in the browser's IndexedDB. Two independent keys are derived from it with HKDF-SHA256 under separate `info` labels — an AES-GCM key that encrypts all chat keys before they are stored in the database, and an HMAC key used for public-key integrity checks.
 
+- **Message Binding:** Every message ciphertext is bound to its chat, its sender and the chat key version through AES-GCM additional authenticated data. Since everyone in a chat holds the same key, this is what stops one member from re-sending another member's ciphertext as their own message.
+
+### What the server operator can see
+Being explicit about this matters more than any single hardening measure, because it is what lets you decide whether self-hosting this is right for you.
+
+- **Message and file contents:** never. These are encrypted on your device with a key the server never holds.
+- **Metadata:** always. Who is in which chat, who sent a message to whom and when, group names, usernames, read receipts, and how large each attachment is.
+- **System messages** (`@alice added @bob to the chat`) are stored in plaintext, so the membership history of a group is readable.
+- **Reactions** are encrypted, but the reacting user's id is stored alongside each one in plaintext, so the operator knows who reacted to what — just not with which emoji.
+- **Presence:** who is online, and when.
+
+### What your device holds
+The master seed is stored **unencrypted** in the browser's IndexedDB. It is not wrapped with a password-derived key, so it does not survive as a secret against:
+
+- anything that can run JavaScript on the app's origin (a browser extension with storage permission, or an XSS bug),
+- anything with filesystem access to the browser profile — malware, a shared computer, an unencrypted disk, or a stolen unlocked device.
+
+This is a deliberate tradeoff: wrapping the seed would mean re-entering a password on every cold start. If that tradeoff is wrong for you, treat device security as part of your threat model, and use full-disk encryption.
+
+### What push notification providers see
+Push payloads carry metadata only — sender username, chat name, chat id, timestamp and the avatar url — and never message content; the notification text is assembled on your device. But that metadata still goes somewhere:
+
+- **FCM:** Google sees who is messaging whom, in which named group, and when, for every notification. Choose ntfy if that is not acceptable.
+- **ntfy:** the metadata stays on your server, but the bundled `docker-compose.yaml` runs ntfy with **no auth or ACL**. Anyone who learns a topic name can subscribe to that user's notification stream. Topic names are long and random, but if you want this locked down, configure ntfy access control.
+- **Web push (browser/PWA):** payloads are encrypted per the Web Push spec, but the push service still learns that a message was delivered, and when.
+
+### Server logs
+By default the server logs only lifecycle events. Per-user and per-message logging is off, because writing a running who-messaged-whom trail to stdout — where Docker's default log driver keeps it forever, unrotated — gives away most of what the encryption protects. Set `LOG_LEVEL=debug` to turn it on while debugging.
+
+
+## Upgrading to v0.1.0
+
+> [!CAUTION]
+> **v0.1.0 is a clean break from the 0.0.1-alpha releases and there is no migration path.**
+>
+> Two changes to how keys and messages are derived — HKDF key separation, and binding message
+> ciphertexts to their chat, sender and key version — mean data written by an alpha build cannot
+> be read by 0.1.0. Existing messages, stored chat keys, key pairs and stored public-key HMACs
+> will all fail to decrypt or verify.
+>
+> To upgrade: wipe the Postgres volume and the uploads volume, then register again and re-onboard
+> each device. This was chosen deliberately over carrying a versioned dual-format decrypt path
+> through a 0.1.0 release.
 
 ## Getting started hosting
 CrypthoraChat comes with a `docker-compose.yaml` file meaning you can simply deploy it almost everywhere or test locally.

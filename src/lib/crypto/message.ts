@@ -3,14 +3,37 @@ import { chatStore } from '$lib/stores/chat.svelte';
 import type { ClientMessage, MessageWithRelations } from '$lib/types';
 import { arrayBufferToBase64, base64ToArrayBuffer } from './utils';
 
-export async function encryptMessage(message: string): Promise<string> {
+/** Identifies which chat, sender and key version a ciphertext was produced for. */
+export interface MessageContext {
+	chatId: string;
+	senderId: string;
+	keyVersion: number;
+}
+
+/**
+ * Additional authenticated data for message encryption.
+ *
+ * Everyone in a chat holds the same key, so without this a member could lift another member's
+ * ciphertext and re-send it verbatim as their own message - the server takes any blob, and it
+ * would render under the replayer's name. Binding the chat, the sender and the key version into
+ * the GCM tag makes such a message fail to decrypt instead.
+ */
+function messageAad(context: MessageContext): Uint8Array<ArrayBuffer> {
+	return new TextEncoder().encode(`${context.chatId}:${context.senderId}:${context.keyVersion}`);
+}
+
+export async function encryptMessage(message: string, context: MessageContext): Promise<string> {
 	const chatKey = chatStore.getNewestChatKey();
 	if (chatKey === null) throw new Error('Chat key not found');
 
 	const encoder = new TextEncoder();
 	const data = encoder.encode(message);
 	const iv = crypto.getRandomValues(new Uint8Array(12));
-	const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, chatKey, data);
+	const encrypted = await crypto.subtle.encrypt(
+		{ name: 'AES-GCM', iv, additionalData: messageAad(context) },
+		chatKey,
+		data
+	);
 	const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
 	combined.set(iv, 0);
 	combined.set(new Uint8Array(encrypted), iv.byteLength);
@@ -21,18 +44,11 @@ export async function decryptMessage(data: {
 	message?: ClientMessage;
 	messageId?: string;
 }): Promise<string> {
-	let encryptedBase64: string = '';
-	let keyVersion: number | null = null;
+	const message = data.message ?? (data.messageId ? findMessageById(data.messageId) : undefined);
 
-	if (data.message) {
-		encryptedBase64 = data.message.encryptedContent;
-		keyVersion = data.message.usedKeyVersion;
-	} else if (data.messageId) {
-		const m = findMessageById(data.messageId);
+	const encryptedBase64 = message?.encryptedContent ?? '';
+	const keyVersion = message?.usedKeyVersion ?? null;
 
-		encryptedBase64 = m?.encryptedContent || '';
-		keyVersion = m?.usedKeyVersion || null;
-	}
 	if (keyVersion === null || !chatStore.versionedChatKey[keyVersion])
 		throw new Error('Chat key not found');
 
@@ -45,7 +61,15 @@ export async function decryptMessage(data: {
 		const iv = combined.slice(0, 12);
 		const encryptedData = combined.slice(12);
 		const decrypted = await crypto.subtle.decrypt(
-			{ name: 'AES-GCM', iv },
+			{
+				name: 'AES-GCM',
+				iv,
+				additionalData: messageAad({
+					chatId: message!.chatId,
+					senderId: message!.senderId,
+					keyVersion
+				})
+			},
 			chatStore.versionedChatKey[keyVersion],
 			encryptedData.buffer
 		);
