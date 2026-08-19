@@ -15,6 +15,20 @@ const PUBLIC_ROUTES = [
 
 const ADMIN_ROUTES = ['/admin'];
 
+/**
+ * The one route allowed to evaluate strings as JavaScript.
+ *
+ * @imgly/background-removal depends on `ndarray`, which compiles its view constructors with
+ * `new Function`. That is baked into the dependency, there is no flag for it and 1.7.0 is the
+ * latest release, so the choice is between dropping background removal and allowing eval.
+ *
+ * Scoped to this route rather than added to the global policy because the sticker editor renders
+ * only images the user picked locally - no message content, no other user's data - so the stored
+ * XSS surface the CSP is really defending never reaches it. `script-src 'self'` still holds here,
+ * so an attacker would already need script execution on this page for eval to buy them anything.
+ */
+const EVAL_ROUTES = ['/sticker-editor'];
+
 function isPublicRoute(pathname: string): boolean {
 	return PUBLIC_ROUTES.some((route) => {
 		if (route === '/') return pathname === '/';
@@ -61,6 +75,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const response = await resolve(event);
 
+	if (EVAL_ROUTES.some((route) => event.url.pathname.startsWith(route))) {
+		allowEval(response);
+	}
+
 	// Baseline hardening. Not a substitute for escaping or authorization, but it costs nothing and
 	// takes MIME sniffing, framing and referrer leakage off the table.
 	response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -73,6 +91,23 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return response;
 };
+
+/**
+ * Appends 'unsafe-eval' to the script-src of the policy SvelteKit already generated.
+ *
+ * Done by rewriting the header rather than by loosening `kit.csp`, so the rest of the app keeps
+ * the strict policy and SvelteKit's own nonce survives untouched - unlike 'unsafe-inline', a
+ * nonce does not cause 'unsafe-eval' to be ignored.
+ */
+function allowEval(response: Response): void {
+	const csp = response.headers.get('content-security-policy');
+	if (!csp || csp.includes("'unsafe-eval'")) return;
+
+	response.headers.set(
+		'content-security-policy',
+		csp.replace(/script-src ([^;]*)/, "script-src $1 'unsafe-eval'")
+	);
+}
 
 export const handleValidationError: HandleValidationError = async ({ issues }) => {
 	const messages = (issues as any[]).map((issue: any) => {
