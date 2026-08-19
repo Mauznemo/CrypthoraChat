@@ -26,6 +26,10 @@ const ADMIN_ROUTES = ['/admin'];
  * only images the user picked locally - no message content, no other user's data - so the stored
  * XSS surface the CSP is really defending never reaches it. `script-src 'self'` still holds here,
  * so an attacker would already need script execution on this page for eval to buy them anything.
+ *
+ * A CSP belongs to the document that was served, not to the URL currently in the address bar, so
+ * anything listed here has to be entered by a full page load - a client-side `goto` keeps the
+ * previous page's policy and background removal fails with an EvalError. See StickerPicker.svelte.
  */
 const EVAL_ROUTES = ['/sticker-editor'];
 

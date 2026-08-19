@@ -217,8 +217,11 @@
 		<div
 			class="mini-scrollbar flex h-[300px] w-full flex-wrap items-start justify-start gap-4 overflow-y-auto rounded-2xl bg-gray-600/60 p-6 frosted-glass"
 		>
+			<!-- A real navigation, not `goto`: the editor's background removal needs the looser CSP
+			that hooks.server.ts attaches to that route, and a client-side navigation would keep
+			this page's policy instead. -->
 			<button
-				onclick={() => goto('/sticker-editor')}
+				onclick={() => (location.href = '/sticker-editor')}
 				class="flex size-24 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
 			>
 				<div

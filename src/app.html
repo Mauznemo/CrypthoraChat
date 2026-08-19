@@ -2,9 +2,12 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content" />
-		<link rel="manifest" href="/manifest.json">
-		<script>
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content"
+		/>
+		<link rel="manifest" href="/manifest.json" />
+		<script nonce="%sveltekit.nonce%">
 			// Applied before first paint to avoid a flash of the 3D styling
 			try {
 				document.documentElement.dataset.flat =
@@ -18,15 +21,21 @@
 	</body>
 </html>
 
-<style>
-@font-face {
-  font-family: 'Noto Color Emoji';
-  src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
-  font-display: swap;
-}
+<style nonce="%sveltekit.nonce%">
+	@font-face {
+		font-family: 'Noto Color Emoji';
+		src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+		font-display: swap;
+	}
 
-.emoji-consistent, 
-body {
-  font-family: system-ui, -apple-system, "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-}
+	.emoji-consistent,
+	body {
+		font-family:
+			system-ui,
+			-apple-system,
+			'Noto Color Emoji',
+			'Apple Color Emoji',
+			'Segoe UI Emoji',
+			sans-serif;
+	}
 </style>
