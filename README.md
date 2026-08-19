@@ -105,20 +105,6 @@ Push payloads carry metadata only — sender username, chat name, chat id, times
 By default the server logs only lifecycle events. Per-user and per-message logging is off, because writing a running who-messaged-whom trail to stdout — where Docker's default log driver keeps it forever, unrotated — gives away most of what the encryption protects. Set `LOG_LEVEL=debug` to turn it on while debugging.
 
 
-## Upgrading to v0.1.0
-
-> [!CAUTION]
-> **v0.1.0 is a clean break from the 0.0.1-alpha releases and there is no migration path.**
->
-> Two changes to how keys and messages are derived — HKDF key separation, and binding message
-> ciphertexts to their chat, sender and key version — mean data written by an alpha build cannot
-> be read by 0.1.0. Existing messages, stored chat keys, key pairs and stored public-key HMACs
-> will all fail to decrypt or verify.
->
-> To upgrade: wipe the Postgres volume and the uploads volume, then register again and re-onboard
-> each device. This was chosen deliberately over carrying a versioned dual-format decrypt path
-> through a 0.1.0 release.
-
 ## Getting started hosting
 CrypthoraChat comes with a `docker-compose.yaml` file meaning you can simply deploy it almost everywhere or test locally.
 

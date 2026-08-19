@@ -36,8 +36,15 @@ const config = {
 				'font-src': ['self', 'data:'],
 				// blob: for the pdf.js worker and the ONNX runtime's workers.
 				'worker-src': ['self', 'blob:'],
+				// Attachments are decrypted in memory and handed on as blob: URLs, which pdf.js and
+				// the ONNX runtime then fetch. blob: costs nothing here: the URLs are same-origin and
+				// only readable by the page that made them, so this is no exfiltration channel.
 				// staticimgly.com hosts the background-removal wasm and model files.
-				'connect-src': ['self', 'https://staticimgly.com'],
+				'connect-src': ['self', 'blob:', 'https://staticimgly.com'],
+				// The HTML attachment preview frames a blob: URL. Safe because both iframes are
+				// `sandbox=""` - no scripts, opaque origin - which a blob: frame would otherwise
+				// inherit the app's origin and run attacker-supplied HTML in it.
+				'frame-src': ['self', 'blob:'],
 				'base-uri': ['self'],
 				'form-action': ['self'],
 				'frame-ancestors': ['none'],
