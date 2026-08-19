@@ -8,4 +8,5 @@ And open-source self-hostable E2EE chat app for friends and family.
 - A .remote.ts file may only export remote functions; put shared helpers in a normal module.
 - The app can be used in web, as a PWA or in a custom Flutter wrapper app.
 - When updating the db remember to run `npx prisma migrate dev` and `npx prisma generate` if needed
+- It's no longer an alpha, so all changes must keep existing user data and chats safe
 - If you need to test the app while logged in please use the connected Chrome browser, it is already logged in (if not please tell me)
