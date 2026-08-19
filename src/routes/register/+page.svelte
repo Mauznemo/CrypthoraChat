@@ -3,7 +3,6 @@
 	import { generateAndStoreKeyPair } from '$lib/crypto/keyPair';
 	import { generateAndStoreMasterKey } from '$lib/crypto/master';
 	import { deleteDatabase, idb } from '$lib/idb';
-	import Icon from '@iconify/svelte';
 	import { register } from './data.remote';
 	import { getDeviceInfo } from '$lib/utils/device';
 	import { t } from 'svelte-i18n';
@@ -79,9 +78,9 @@
 					onclick={() => (showPassword = !showPassword)}
 				>
 					{#if showPassword}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-off-outline" />
+						<IconMdiEyeOffOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{:else}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-outline" />
+						<IconMdiEyeOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{/if}
 				</button>
 			</div>
@@ -102,9 +101,9 @@
 					onclick={() => (showPassword = !showPassword)}
 				>
 					{#if showPassword}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-off-outline" />
+						<IconMdiEyeOffOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{:else}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-outline" />
+						<IconMdiEyeOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{/if}
 				</button>
 			</div>

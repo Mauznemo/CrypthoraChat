@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import Slider from '../Slider.svelte';
 	import { createPlaybackController } from '$lib/utils/mediaPlayback';
@@ -190,9 +189,9 @@
 					aria-label={isPlaying ? 'Pause' : 'Play'}
 				>
 					{#if isPlaying}
-						<Icon icon="mdi:pause" class="size-7" />
+						<IconMdiPause class="size-7" />
 					{:else}
-						<Icon icon="mdi:play" class="size-7" />
+						<IconMdiPlay class="size-7" />
 					{/if}
 				</button>
 
@@ -205,13 +204,13 @@
 					>
 						<div class="size-6">
 							{#if isMuted || volume === 0}
-								<Icon icon="mdi:volume-mute" class="size-6" />
+								<IconMdiVolumeMute class="size-6" />
 							{:else if volume > 0.6}
-								<Icon icon="mdi:volume-high" class="size-6" />
+								<IconMdiVolumeHigh class="size-6" />
 							{:else if volume > 0.3}
-								<Icon icon="mdi:volume-medium" class="size-6" />
+								<IconMdiVolumeMedium class="size-6" />
 							{:else}
-								<Icon icon="mdi:volume-low" class="size-6" />
+								<IconMdiVolumeLow class="size-6" />
 							{/if}
 						</div>
 					</button>
@@ -242,9 +241,9 @@
 					aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
 				>
 					{#if isFullscreen}
-						<Icon icon="mdi:fullscreen-exit" class="size-6" />
+						<IconMdiFullscreenExit class="size-6" />
 					{:else}
-						<Icon icon="mdi:fullscreen" class="size-6" />
+						<IconMdiFullscreen class="size-6" />
 					{/if}
 				</button>
 			</div>
@@ -259,7 +258,7 @@
 				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
-				<Icon icon="mdi:play" class="size-12" />
+				<IconMdiPlay class="size-12" />
 			</button>
 		</div>
 	{/if}

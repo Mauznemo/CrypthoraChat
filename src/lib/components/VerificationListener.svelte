@@ -3,7 +3,6 @@
 	import { fade, scale } from 'svelte/transition';
 	import { expoInOut } from 'svelte/easing';
 	import { t } from 'svelte-i18n';
-	import Icon from '@iconify/svelte';
 	import { getUserById } from '$lib/chat/chat.remote';
 	import { verifyUser } from '$lib/crypto/userVerification';
 	import { modalStore } from '$lib/stores/modal.svelte';
@@ -231,7 +230,7 @@
 				{#if view.spinner}
 					<LoadingSpinner size="1.5rem" />
 				{:else}
-					<Icon icon="mdi:account-alert-outline" class="size-6 shrink-0 text-gray-300" />
+					<IconMdiAccountAlertOutline class="size-6 shrink-0 text-gray-300" />
 				{/if}
 				<h3 class="text-lg font-semibold text-white">{view.title}</h3>
 			</div>

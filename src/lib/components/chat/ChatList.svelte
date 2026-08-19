@@ -14,7 +14,6 @@
 	import ProfilePicture from './ProfilePicture.svelte';
 	import GroupPicture from './GroupPicture.svelte';
 	import { deleteFilesThatContain } from '$lib/idb';
-	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 
@@ -51,7 +50,7 @@
 			items.push({
 				id: 'rotate-key',
 				label: $t('chat.chat-list.rotate-key'),
-				icon: 'mdi:rotate-clockwise',
+				icon: IconMdiRotateClockwise,
 				action: async () => {
 					modalStore.confirm($t('common.are-you-sure'), $t('chat.chat-list.rotate-key-confirm'), {
 						onConfirm: () => {
@@ -65,7 +64,7 @@
 				items.push({
 					id: 'add-user',
 					label: $t('chat.chat-list.add-user'),
-					icon: 'mdi:account-multiple-add-outline',
+					icon: IconMdiAccountMultipleAddOutline,
 					action: () => {
 						addUserToChatStore.open(chat);
 					}
@@ -77,7 +76,7 @@
 			items.push({
 				id: 'edit',
 				label: $t('chat.chat-list.edit-group'),
-				icon: 'mdi:edit-outline',
+				icon: IconMdiEditOutline,
 				action: () => {
 					infoBarStore.openChatInfo();
 				}
@@ -88,7 +87,7 @@
 			id: 'leave',
 			label:
 				chat.type === 'group' ? $t('chat.chat-list.leave-group') : $t('chat.chat-list.delete-chat'),
-			icon: 'mdi:account-arrow-left-outline',
+			icon: IconMdiAccountArrowLeftOutline,
 			action: async () => {
 				if (chat.type === 'dm') {
 					modalStore.confirm($t('common.are-you-sure'), $t('chat.chat-list.leave-dm-confirm'), {
@@ -154,7 +153,7 @@
 					aria-label="Options"
 					class="absolute right-5 cursor-pointer"
 				>
-					<Icon icon="mdi:more-vert" class="size-6" />
+					<IconMdiMoreVert class="size-6" />
 				</button>
 			{:else}
 				{@const allParticipants = chat.participants.map((p) => '@' + p.user.username).join(', ')}
@@ -175,7 +174,7 @@
 					class="py-2 pr-3 pl-2 text-lg font-extrabold text-white"
 				>
 					<div data-tooltip={chat.name} class="flex items-center space-x-2">
-						<Icon icon="mdi:account-group" class="size-5" />
+						<IconMdiAccountGroup class="size-5" />
 
 						<p class="line-clamp-1 max-w-[150px] break-all text-white">
 							{chat.name}
@@ -191,7 +190,7 @@
 					aria-label="Options"
 					class="absolute right-5 cursor-pointer"
 				>
-					<Icon icon="mdi:more-vert" class="size-6 text-gray-300 hover:text-white" />
+					<IconMdiMoreVert class="size-6 text-gray-300 hover:text-white" />
 				</button>
 			{/if}
 			{#if chat.unreadMessages && chat.unreadMessages > 0 && chatStore.activeChat?.id !== chat.id}

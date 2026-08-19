@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { modalStore } from '$lib/stores/modal.svelte.js';
-	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
@@ -89,7 +88,7 @@
 						class="cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 						aria-label="Close modal"
 					>
-						<Icon icon="mdi:close" class="size-6" />
+						<IconMdiClose class="size-6" />
 					</button>
 				{/if}
 			</div>

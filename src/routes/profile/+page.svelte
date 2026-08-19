@@ -7,7 +7,6 @@
 	import { changePassword, logout, updateDisplayName, updateProfilePicture } from './data.remote';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { keySharerStore } from '$lib/stores/keySharer.svelte';
 	import { getMasterSeedForSharing } from '$lib/crypto/master';
@@ -98,7 +97,7 @@
 				aria-label="Edit message"
 				type="button"
 			>
-				<Icon icon="mdi:image-edit-outline" class="size-6" />
+				<IconMdiImageEditOutline class="size-6" />
 			</button>
 		</div>
 		<p><strong>{$t('profile.display-name')}</strong></p>
@@ -160,9 +159,9 @@
 					onclick={() => (showPassword = !showPassword)}
 				>
 					{#if showPassword}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-off-outline" />
+						<IconMdiEyeOffOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{:else}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-outline" />
+						<IconMdiEyeOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{/if}
 				</button>
 			</div>

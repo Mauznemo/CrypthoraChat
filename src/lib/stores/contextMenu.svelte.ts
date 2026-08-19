@@ -1,9 +1,14 @@
+import type { Component } from 'svelte';
+import type { SvelteHTMLElements } from 'svelte/elements';
 import { cursorStore } from './cursor.svelte';
+
+/** An icon component from `~icons/*`, e.g. the auto-imported `IconMdiDelete`. */
+export type IconComponent = Component<SvelteHTMLElements['svg']>;
 
 export interface ContextMenuItem {
 	id: string;
 	label: string;
-	icon: string;
+	icon: IconComponent;
 	action: () => void;
 	disabled?: boolean;
 }

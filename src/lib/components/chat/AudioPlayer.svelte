@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
-	import Icon from '@iconify/svelte';
 	import Slider from '../Slider.svelte';
 	import { createPlaybackController } from '$lib/utils/mediaPlayback';
 
@@ -157,9 +156,9 @@
 			{#if isLoading}
 				<LoadingSpinner size="2rem" />
 			{:else if isPlaying}
-				<Icon icon="mdi:pause" class="size-8" />
+				<IconMdiPause class="size-8" />
 			{:else}
-				<Icon icon="mdi:play" class="size-8" />
+				<IconMdiPlay class="size-8" />
 			{/if}
 		</button>
 
@@ -208,13 +207,13 @@
 		>
 			<div class="size-6">
 				{#if isMuted || volume === 0}
-					<Icon icon="mdi:volume-mute" class="size-6" />
+					<IconMdiVolumeMute class="size-6" />
 				{:else if volume > 0.6}
-					<Icon icon="mdi:volume-high" class="size-6" />
+					<IconMdiVolumeHigh class="size-6" />
 				{:else if volume > 0.3}
-					<Icon icon="mdi:volume-medium" class="size-6" />
+					<IconMdiVolumeMedium class="size-6" />
 				{:else}
-					<Icon icon="mdi:volume-low" class="size-6" />
+					<IconMdiVolumeLow class="size-6" />
 				{/if}
 			</div>
 		</button>

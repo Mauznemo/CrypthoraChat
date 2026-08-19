@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { imagePreviewStore } from '$lib/stores/imagePreview.svelte';
-	import Icon from '@iconify/svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
 
@@ -101,7 +100,7 @@
 				class="absolute top-5 right-5 z-10 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-300 transition-colors hover:bg-gray-500/60 hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<Icon icon="mdi:close" class="size-6" />
+				<IconMdiClose class="size-6" />
 			</button>
 			<div
 				class="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-lg bg-gray-500/50 p-2"
@@ -112,7 +111,7 @@
 					class="cursor-pointer rounded-lg bg-gray-600/50 p-2 text-gray-300 transition-colors hover:bg-gray-600/60 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
 					aria-label="Zoom out"
 				>
-					<Icon icon="mdi:minus" class="size-5" />
+					<IconMdiMinus class="size-5" />
 				</button>
 				<button
 					onclick={resetZoom}
@@ -128,7 +127,7 @@
 					class="cursor-pointer rounded-lg bg-gray-600/50 p-2 text-gray-300 transition-colors hover:bg-gray-600/60 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
 					aria-label="Zoom in"
 				>
-					<Icon icon="mdi:plus" class="size-5" />
+					<IconMdiPlus class="size-5" />
 				</button>
 			</div>
 			<div

@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import type { PageProps } from './$types';
-	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
 	import { tKey } from '$lib/t-key';
 
@@ -15,27 +14,27 @@
 		{
 			label: tKey('settings.categories.appearance'),
 			path: '/settings/appearance',
-			icon: 'mdi:color'
+			icon: IconMdiColor
 		},
 		{
 			label: tKey('settings.categories.sessions'),
 			path: '/settings/sessions',
-			icon: 'mdi:important-devices'
+			icon: IconMdiImportantDevices
 		},
 		{
 			label: tKey('settings.categories.storage'),
 			path: '/settings/storage',
-			icon: 'mdi:storage'
+			icon: IconMdiStorage
 		},
 		{
 			label: tKey('settings.categories.privacy'),
 			path: '/settings/privacy',
-			icon: 'mdi:shield-lock'
+			icon: IconMdiShieldLock
 		},
 		{
 			label: tKey('settings.categories.advanced'),
 			path: '/settings/advanced',
-			icon: 'mdi:gear'
+			icon: IconMdiGear
 		}
 	];
 </script>
@@ -46,7 +45,7 @@
 		onclick={() => {
 			settingsTitle.set($t(category.label));
 			goto(category.path);
-		}}><Icon icon={category.icon} class="size-8" /> {$t(category.label)}</button
+		}}><category.icon class="size-8" /> {$t(category.label)}</button
 	>
 {/each}
 {#if window.isFlutterWebView}
@@ -55,7 +54,7 @@
 		onclick={() => {
 			window.flutter_inappwebview.callHandler('openSettings');
 		}}
-		><Icon icon="mdi:open-in-app" class="size-8" />
+		><IconMdiOpenInApp class="size-8" />
 		{$t('settings.categories.open-wrapper-settings')}</button
 	>
 {/if}

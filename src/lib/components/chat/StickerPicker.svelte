@@ -17,7 +17,6 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import type { Prisma } from '$prisma';
-	import Icon from '@iconify/svelte';
 	import { tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
@@ -161,7 +160,7 @@
 			{
 				id: 'delete',
 				label: $t('common.delete'),
-				icon: 'mdi:delete',
+				icon: IconMdiDelete,
 				action: async () => {
 					try {
 						await deleteUserSticker(sticker.id);
@@ -176,7 +175,7 @@
 			items.unshift({
 				id: 'unfavorite',
 				label: $t('chat.sticker-picker.unfavorite'),
-				icon: 'mdi:star-outline',
+				icon: IconMdiStarOutline,
 				action: () => {
 					favoriteSticker(sticker, false);
 				}
@@ -185,7 +184,7 @@
 			items.unshift({
 				id: 'favorite',
 				label: $t('chat.sticker-picker.favorite'),
-				icon: 'mdi:star',
+				icon: IconMdiStar,
 				action: () => {
 					favoriteSticker(sticker, true);
 				}
@@ -225,7 +224,7 @@
 				<div
 					class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-600 frosted-glass"
 				>
-					<Icon icon="mdi:sticker-plus-outline" class="size-6" />
+					<IconMdiStickerPlusOutline class="size-6" />
 				</div>
 				<p>{$t('chat.sticker-picker.create')}</p>
 			</button>
@@ -236,7 +235,7 @@
 				<div
 					class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-600 frosted-glass"
 				>
-					<Icon icon="mdi:import" class="size-6" />
+					<IconMdiImport class="size-6" />
 				</div>
 				<p>{$t('chat.sticker-picker.import')}</p>
 			</button>
@@ -255,16 +254,16 @@
 						tabindex="0"
 					>
 						{#if sticker.favorited}
-							<Icon icon="mdi:star" class="size-6 hover:text-gray-400" />
+							<IconMdiStar class="size-6 hover:text-gray-400" />
 						{:else}
-							<Icon icon="mdi:star-outline" class="size-6 hover:text-yellow-400" />
+							<IconMdiStarOutline class="size-6 hover:text-yellow-400" />
 						{/if}
 					</span>
 				</button>
 			{/each}
 		</div>
 		<button class="absolute top-2 right-2 cursor-pointer" onclick={close}>
-			<Icon icon="mdi:close" class="size-6" />
+			<IconMdiClose class="size-6" />
 		</button>
 	</div>
 {/if}

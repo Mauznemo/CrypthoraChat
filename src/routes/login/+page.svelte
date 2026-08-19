@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Icon from '@iconify/svelte';
 	import { login } from './data.remote';
 	import { deleteDatabase } from '$lib/idb';
 	import { getDeviceInfo } from '$lib/utils/device';
@@ -72,9 +71,9 @@
 					onclick={() => (showPassword = !showPassword)}
 				>
 					{#if showPassword}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-off-outline" />
+						<IconMdiEyeOffOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{:else}
-						<Icon class="h-6 w-6 text-gray-800 dark:text-white" icon="mdi:eye-outline" />
+						<IconMdiEyeOutline class="h-6 w-6 text-gray-800 dark:text-white" />
 					{/if}
 				</button>
 			</div>

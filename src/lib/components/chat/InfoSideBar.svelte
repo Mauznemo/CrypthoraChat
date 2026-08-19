@@ -10,7 +10,6 @@
 	import GroupPicture from './GroupPicture.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import { tryUploadProfilePicture } from '$lib/fileUpload/upload';
-	import Icon from '@iconify/svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from 'svelte-i18n';
 	import { compressImage } from '$lib/utils/imageConverter';
@@ -86,7 +85,7 @@
 			{
 				id: 'remove-user',
 				label: $t('chat.info-bar.remove-user'),
-				icon: 'mdi:user-remove-outline',
+				icon: IconMdiUserRemoveOutline,
 				action: async () => {
 					modalStore.confirm(
 						$t('common.are-you-sure'),
@@ -116,7 +115,7 @@
 			class="absolute right-5 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 			aria-label="Close modal"
 		>
-			<Icon icon="mdi:close" class="size-6" />
+			<IconMdiClose class="size-6" />
 		</button>
 		{#if infoBarStore.userToShow}
 			<div>
@@ -158,7 +157,7 @@
 								aria-label="Edit message"
 								type="button"
 							>
-								<Icon icon="mdi:image-edit-outline" class="size-6" />
+								<IconMdiImageEditOutline class="size-6" />
 							</button>
 						</div>
 
@@ -244,7 +243,7 @@
 								aria-label="Options"
 								class="absolute right-5 cursor-pointer"
 							>
-								<Icon icon="mdi:more-vert" class="size-6 text-gray-300 hover:text-white" />
+								<IconMdiMoreVert class="size-6 text-gray-300 hover:text-white" />
 							</button>
 						{/if}
 					</div>

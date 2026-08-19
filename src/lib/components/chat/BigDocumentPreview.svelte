@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { documentPreviewStore } from '$lib/stores/documentPreview.svelte';
 	import { fileUtils } from '$lib/chat/fileUtils';
-	import Icon from '@iconify/svelte';
 	import { expoInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
 	import PdfCanvas from './PdfCanvas.svelte';
@@ -36,7 +35,7 @@
 				class="absolute top-5 right-16 z-10 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-300 transition-colors hover:bg-gray-500/60 hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<Icon icon="mdi:close" class="size-6" />
+				<IconMdiClose class="size-6" />
 			</button>
 			<button
 				onclick={() =>
@@ -44,7 +43,7 @@
 				class="absolute top-5 right-5 z-10 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-300 transition-colors hover:bg-gray-500/60 hover:text-gray-200"
 				aria-label="Download"
 			>
-				<Icon icon="mdi:tray-download" class="size-6" />
+				<IconMdiTrayDownload class="size-6" />
 			</button>
 
 			{#if documentPreviewStore.type === 'html'}
@@ -86,7 +85,7 @@
 								class="cursor-pointer rounded-lg p-1 text-gray-300 transition-colors hover:text-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
 								aria-label="Previous page"
 							>
-								<Icon icon="mdi:chevron-left" class="size-5" />
+								<IconMdiChevronLeft class="size-5" />
 							</button>
 							<span class="text-sm text-gray-200">{pdfPage} / {pdfPageCount}</span>
 							<button
@@ -95,7 +94,7 @@
 								class="cursor-pointer rounded-lg p-1 text-gray-300 transition-colors hover:text-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
 								aria-label="Next page"
 							>
-								<Icon icon="mdi:chevron-right" class="size-5" />
+								<IconMdiChevronRight class="size-5" />
 							</button>
 						</div>
 					{/if}

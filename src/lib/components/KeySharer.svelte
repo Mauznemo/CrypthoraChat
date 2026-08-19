@@ -13,7 +13,6 @@
 		decryptStringWithKey,
 		encryptStringWithKey
 	} from '$lib/crypto/utils';
-	import Icon from '@iconify/svelte';
 	import emojiData from 'unicode-emoji-json/data-by-emoji.json';
 	import { t } from 'svelte-i18n';
 	import QRCode from 'qrcode';
@@ -552,7 +551,7 @@
 				class="absolute right-5 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<Icon icon="mdi:close" class="size-6" />
+				<IconMdiClose class="size-6" />
 			</button>
 			{#if shareType === 'emojiSequence'}
 				{#if mode === 'export'}

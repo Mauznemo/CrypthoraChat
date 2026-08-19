@@ -4,7 +4,6 @@
 	import { tryGetFile, tryUploadUserSticker } from '$lib/fileUpload/upload';
 	import { getFileSize } from '$lib/fileUpload/upload.remote';
 	import { fileExistsInIDB, getFileFromIDB, saveFileToIDB } from '$lib/idb';
-	import Icon from '@iconify/svelte';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
@@ -164,7 +163,7 @@
 			{
 				id: 'download',
 				label: $t('common.download'),
-				icon: 'mdi:download',
+				icon: IconMdiDownload,
 				action: () => {
 					handleDownloadFile(name);
 				}
@@ -175,7 +174,7 @@
 			items.unshift({
 				id: 'add',
 				label: $t('chat.attachment.add-to-my-stickers'),
-				icon: 'mdi:plus',
+				icon: IconMdiPlus,
 				action: async () => {
 					const getResult = await tryGetFile(attachmentPath);
 					if (!getResult.success) {
@@ -333,7 +332,7 @@
 							class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 							aria-label="Download"
 						>
-							<Icon icon="mdi:tray-download" class="size-6" />
+							<IconMdiTrayDownload class="size-6" />
 						</button>
 					{/if}
 				</div>
@@ -384,7 +383,7 @@
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
-						<Icon icon="mdi:tray-download" class="size-6" />
+						<IconMdiTrayDownload class="size-6" />
 					</button>
 				</div>
 			{/if}
@@ -427,7 +426,7 @@
 						class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 						aria-label="Download"
 					>
-						<Icon icon="mdi:tray-download" class="size-6" />
+						<IconMdiTrayDownload class="size-6" />
 					</button>
 				</div>
 			{/if}
@@ -553,7 +552,7 @@
 		class="absolute top-3 right-3 cursor-pointer rounded-lg bg-gray-500/20 p-1 text-gray-100 hover:text-gray-200"
 		aria-label="Download"
 	>
-		<Icon icon="mdi:tray-download" class="size-6" />
+		<IconMdiTrayDownload class="size-6" />
 	</button>
 {/snippet}
 
@@ -598,10 +597,7 @@
 				</text>
 			</svg>
 		{:else}
-			<Icon
-				icon="mdi:file-document-error-outline"
-				class="mr-2 ml-1 size-8 shrink-0 text-red-400 md:size-10"
-			/>
+			<IconMdiFileDocumentErrorOutline class="mr-2 ml-1 size-8 shrink-0 text-red-400 md:size-10" />
 		{/if}
 		<div>
 			<p class="md:text-md line-clamp-1 pr-6 text-sm font-bold break-all text-gray-200">{name}</p>
@@ -620,7 +616,7 @@
 			{#if downloadingFile}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				<Icon icon="mdi:tray-download" class="size-6" />
+				<IconMdiTrayDownload class="size-6" />
 			{/if}
 		</button>
 	</div>
@@ -640,7 +636,7 @@
 				class="pointer-events-auto cursor-pointer rounded-full bg-black/50 p-4 text-white transition-all duration-200 hover:scale-110 hover:bg-black/70"
 				aria-label="Play video"
 			>
-				<Icon icon="mdi:tray-download" class="size-6" />
+				<IconMdiTrayDownload class="size-6" />
 			</button>
 		</div>
 		<p class="text-md absolute bottom-10 text-center font-bold whitespace-pre-line text-gray-400">
@@ -657,7 +653,7 @@
 			{#if downloadingFile}
 				<LoadingSpinner size="1.5rem" />
 			{:else}
-				<Icon icon="mdi:tray-download" class="size-6" />
+				<IconMdiTrayDownload class="size-6" />
 			{/if}
 		</button>
 	</div>

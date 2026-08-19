@@ -5,7 +5,6 @@
 	import type { ClientMessage, MessageWithRelations } from '$lib/types';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { isClientMessage } from '$lib/chat/messages';
-	import Icon from '@iconify/svelte';
 	import { chats } from '$lib/chat/chats';
 	import LoadingSpinner from '../LoadingSpinner.svelte';
 	import ScrollView from './ScrollView.svelte';
@@ -419,7 +418,7 @@
 			aria-label="Reply to message"
 			type="button"
 		>
-			<Icon icon="material-symbols:reply-rounded" class="size-5" />
+			<IconMaterialSymbolsReplyRounded class="size-5" />
 		</button>
 
 		<button
@@ -429,7 +428,7 @@
 			aria-label="Add Reaction"
 			type="button"
 		>
-			<Icon icon="proicons:emoji" class="size-5" />
+			<IconProiconsEmoji class="size-5" />
 		</button>
 
 		{#if activeMessageFromMe}
@@ -440,7 +439,7 @@
 				aria-label="Edit message"
 				type="button"
 			>
-				<Icon icon="material-symbols:edit-outline-rounded" class="size-5" />
+				<IconMaterialSymbolsEditOutlineRounded class="size-5" />
 			</button>
 
 			<!-- Delete Button -->
@@ -451,7 +450,7 @@
 				aria-label="Delete message"
 				type="button"
 			>
-				<Icon icon="material-symbols:delete-outline-rounded" class="size-5" />
+				<IconMaterialSymbolsDeleteOutlineRounded class="size-5" />
 			</button>
 		{/if}
 		<button
@@ -461,7 +460,7 @@
 			aria-label="Show info"
 			type="button"
 		>
-			<Icon icon="material-symbols:info-outline-rounded" class="size-5" />
+			<IconMaterialSymbolsInfoOutlineRounded class="size-5" />
 		</button>
 	</div>
 {/if}

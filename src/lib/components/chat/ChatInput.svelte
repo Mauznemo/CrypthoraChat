@@ -12,7 +12,6 @@
 	import { removeFile } from '$lib/fileUpload/upload.remote';
 	import { compressImage, isCompressible } from '$lib/utils/imageConverter';
 	import { fileUtils } from '$lib/chat/fileUtils';
-	import Icon from '@iconify/svelte';
 	import { idb } from '$lib/idb';
 	import StickerPicker from './StickerPicker.svelte';
 	import { t } from 'svelte-i18n';
@@ -384,7 +383,7 @@
 			{
 				id: 'add-files',
 				label: $t('chat.chat-input.add-files'),
-				icon: 'mdi:attach-file',
+				icon: IconMdiAttachFile,
 				action: () => {
 					openFileSelector();
 				}
@@ -392,13 +391,13 @@
 			// {
 			// 	id: 'gif',
 			// 	label: 'Gif',
-			// 	icon: 'mdi:file-gif-box',
+			// 	icon: IconMdiFileGifBox,
 			// 	action: () => {}
 			// },
 			{
 				id: 'sticker',
 				label: $t('chat.chat-input.add-sticker'),
-				icon: 'mdi:sticker-emoji',
+				icon: IconMdiStickerEmoji,
 				action: () => {
 					stickerPicker.open();
 				}
@@ -526,7 +525,7 @@
 					class="absolute top-1 right-1 cursor-pointer rounded-lg bg-gray-500/50 p-1 text-gray-200 transition-colors hover:bg-gray-500/70 hover:text-white"
 					aria-label="Close modal"
 				>
-					<Icon icon="mdi:close" class="size-6" />
+					<IconMdiClose class="size-6" />
 				</button>
 				{#if compressibleFiles[index]}
 					<button
@@ -538,9 +537,9 @@
 						aria-label="Close modal"
 					>
 						<div class="relative">
-							<Icon icon="mdi:shimmer-outline" class="size-6" />
+							<IconMdiShimmerOutline class="size-6" />
 							{#if !compressFiles[index]}
-								<Icon icon="fa-solid:slash" class="absolute inset-0 size-6 text-red-400" />
+								<IconFaSolidSlash class="absolute inset-0 size-6 text-red-400" />
 							{/if}
 						</div>
 					</button>
@@ -597,7 +596,7 @@
 						{#if uploadingFile === file}
 							<LoadingSpinner />
 						{:else if uploadedFiles.includes(file)}
-							<Icon icon="mdi:check-circle-outline" class="size-12 text-green-500" />
+							<IconMdiCheckCircleOutline class="size-12 text-green-500" />
 						{/if}
 					</div>
 				{/if}
@@ -608,7 +607,7 @@
 			<div
 				class="relative flex min-h-[140px] w-[120px] flex-col items-center justify-center rounded-xl bg-gray-600/60 p-2"
 			>
-				<Icon icon="mdi:check-circle-outline" class="mb-2 size-12 text-gray-400" />
+				<IconMdiCheckCircleOutline class="mb-2 size-12 text-gray-400" />
 
 				<div class="text-center font-semibold text-gray-100">
 					{#if remainingCount === 1}
@@ -640,7 +639,7 @@
 		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 frosted-glass transition-colors hover:bg-accent-600/60"
 		aria-label="Add attachments"
 	>
-		<Icon icon="mdi:plus-thick" class="size-6" />
+		<IconMdiPlusThick class="size-6" />
 	</button>
 
 	<CustomTextarea
@@ -660,7 +659,7 @@
 		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-accent-600/60 frosted-glass transition-colors hover:bg-accent-600/80 disabled:bg-gray-600"
 		aria-label="Send Message"
 	>
-		<Icon icon="ic:round-send" class="ml-0.5 size-6" />
+		<IconIcRoundSend class="ml-0.5 size-6" />
 	</button>
 </div>
 

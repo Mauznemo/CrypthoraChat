@@ -20,7 +20,6 @@
 	import { activityTracker } from '$lib/activityTracker';
 	import InfoSideBar from '$lib/components/chat/InfoSideBar.svelte';
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
-	import Icon from '@iconify/svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
 	import AddUserToChat from '$lib/components/chat/AddUserToChat.svelte';
@@ -343,7 +342,7 @@
 			onclick={() => goto('/settings')}
 			style="bottom: {layoutStore.safeAreaPadding.bottom + 8}px;"
 			class="absolute left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
-			><Icon icon="mdi:gear" class="size-6" /></button
+			><IconMdiGear class="size-6" /></button
 		>
 	</SideBar>
 
@@ -392,7 +391,7 @@
 					class="size-6 cursor-pointer rounded-full"
 					onclick={() => infoBarStore.openChatInfo()}
 				>
-					<Icon class="h-6 w-6 text-gray-300 hover:text-gray-100" icon="mdi:information-outline" />
+					<IconMdiInformationOutline class="h-6 w-6 text-gray-300 hover:text-gray-100" />
 				</button>
 			</div>
 		</div>

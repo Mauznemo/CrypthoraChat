@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { passwordConfirmStore } from '$lib/stores/passwordConfirm.svelte';
 	import { confirmPassword } from '$lib/utils/password.remote';
-	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
 	import { expoInOut } from 'svelte/easing';
 	import { fade, scale } from 'svelte/transition';
@@ -95,7 +94,7 @@
 					class="cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-200"
 					aria-label={$t('common.close')}
 				>
-					<Icon icon="mdi:close" class="size-6" />
+					<IconMdiClose class="size-6" />
 				</button>
 			</div>
 
@@ -112,9 +111,9 @@
 					aria-label={$t('utils.password-confirm.password')}
 				>
 					{#if showPassword}
-						<Icon class="h-6 w-6 text-white" icon="mdi:eye-off-outline" />
+						<IconMdiEyeOffOutline class="h-6 w-6 text-white" />
 					{:else}
-						<Icon class="h-6 w-6 text-white" icon="mdi:eye-outline" />
+						<IconMdiEyeOutline class="h-6 w-6 text-white" />
 					{/if}
 				</button>
 			</div>

@@ -6,7 +6,6 @@
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import Attachment from './Attachment.svelte';
-	import Icon from '@iconify/svelte';
 	import { t } from 'svelte-i18n';
 	import { formatDate } from '$lib/chat/messages';
 
@@ -221,7 +220,7 @@
 					<div
 						class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-500 text-white shadow-lg"
 					>
-						<Icon icon="mdi:check-bold" class="size-3" />
+						<IconMdiCheckBold class="size-3" />
 					</div>
 				{/if}
 			</div>

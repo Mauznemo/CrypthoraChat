@@ -2,7 +2,6 @@
 	import { infoBarStore } from '$lib/stores/infoBar.svelte';
 	import { layoutStore } from '$lib/stores/layout.svelte';
 	import { developer } from '$lib/utils/debug';
-	import Icon from '@iconify/svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -208,7 +207,7 @@
 				: 'right-10'}"
 			style="bottom: {80 + layoutStore.safeAreaPadding.bottom}px;"
 		>
-			<Icon icon="mdi:arrow-down" class="size-6" />
+			<IconMdiArrowDown class="size-6" />
 		</button>
 	{/if}
 </div>

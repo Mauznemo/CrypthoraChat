@@ -9,7 +9,6 @@
 	import { addUserToChat, getCurrentChatKeyVersion } from '$lib/chat/chat.remote';
 	import { addUserToChatStore } from '$lib/stores/addUserToChat.svelte';
 	import { chats } from '$lib/chat/chats';
-	import Icon from '@iconify/svelte';
 	import { developer } from '$lib/utils/debug';
 	import { t } from 'svelte-i18n';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -108,7 +107,7 @@
 				class="absolute top-3 right-3 p-1 text-gray-400 transition-colors hover:text-gray-200"
 				aria-label="Close modal"
 			>
-				<Icon icon="mdi:close" class="size-6" />
+				<IconMdiClose class="size-6" />
 			</button>
 
 			<UserSelector

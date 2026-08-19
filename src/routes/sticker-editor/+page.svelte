@@ -4,7 +4,6 @@
 	import { modalStore } from '$lib/stores/modal.svelte';
 	import { blobToFile } from '$lib/utils/imageConverter';
 	import { removeBackground } from '$lib/utils/stickerEditor';
-	import Icon from '@iconify/svelte';
 	import { tick } from 'svelte';
 	import { saveUserSticker } from './stickerEditor.remote';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -541,21 +540,21 @@
 				data-tooltip={$t('utils.sticker-editor.add-image')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
-				<Icon icon="mdi:image-plus" class="size-6" />
+				<IconMdiImagePlus class="size-6" />
 			</button>
 			<button
 				onclick={handleImportClick}
 				data-tooltip={$t('utils.sticker-editor.add-sticker')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
-				<Icon icon="mdi:sticker-plus-outline" class="size-6" />
+				<IconMdiStickerPlusOutline class="size-6" />
 			</button>
 			<button
 				onclick={handleAddText}
 				data-tooltip={$t('utils.sticker-editor.add-text')}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
 			>
-				<Icon icon="mdi:format-text" class="size-6" />
+				<IconMdiFormatText class="size-6" />
 			</button>
 			<button
 				onclick={handleDuplicate}
@@ -563,7 +562,7 @@
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
-				<Icon icon="mdi:content-copy" class="size-6" />
+				<IconMdiContentCopy class="size-6" />
 			</button>
 			<button
 				onclick={handleRemoveBackground}
@@ -571,7 +570,7 @@
 				disabled={!selectedObj || removingBackground || selectedObj.backgroundRemoved}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
-				<Icon icon="material-symbols-light:background-replace-rounded" class="size-6" />
+				<IconMaterialSymbolsLightBackgroundReplaceRounded class="size-6" />
 			</button>
 			<button
 				onclick={handleToggleAspectRatio}
@@ -581,7 +580,11 @@
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
-				<Icon icon={aspectRatioLocked ? 'mdi:lock' : 'mdi:lock-open-variant'} class="size-6" />
+				{#if aspectRatioLocked}
+					<IconMdiLock class="size-6" />
+				{:else}
+					<IconMdiLockOpenVariant class="size-6" />
+				{/if}
 			</button>
 			<button
 				onclick={handleDelete}
@@ -589,7 +592,7 @@
 				disabled={!selectedObj}
 				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
 			>
-				<Icon icon="mdi:delete-forever" class="size-6" />
+				<IconMdiDeleteForever class="size-6" />
 			</button>
 			<input
 				bind:this={fileInput}
