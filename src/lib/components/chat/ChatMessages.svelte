@@ -53,9 +53,6 @@
 	let messageContainer = $state<HTMLDivElement | null>(null);
 
 	let isLoadingOlder = $state(false);
-	let topSentinel = $state<HTMLDivElement | null>(null);
-	/** False while the ScrollView is still finding its opening position. */
-	let scrollSettled = $state(false);
 
 	let isTouchDevice: boolean = $state(false);
 	let isHovering = false;
@@ -88,12 +85,7 @@
 		};
 	}
 
-	// Armed only once the view has settled. A freshly opened chat renders at the top for a frame,
-	// which used to trip this immediately and prepend older messages into a list that was still
-	// trying to reach its bottom.
-	$effect(() => {
-		if (!scrollSettled || !topSentinel) return;
-
+	function observeTopElement(node: HTMLDivElement) {
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
@@ -108,10 +100,14 @@
 			}
 		);
 
-		observer.observe(topSentinel);
+		observer.observe(node);
 
-		return () => observer.disconnect();
-	});
+		return {
+			destroy() {
+				observer.disconnect();
+			}
+		};
+	}
 
 	async function loadOlderMessages() {
 		isLoadingOlder = true;
@@ -332,11 +328,10 @@
 <ScrollView
 	bind:this={scrollView}
 	bind:container={messageContainer}
-	bind:settled={scrollSettled}
 	handleScroll={handleScrollUpdate}
 	class="min-h-0 p-2 pt-6"
 >
-	<div bind:this={topSentinel} class="flex h-10 max-w-full flex-col items-center justify-center">
+	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}
 			<LoadingSpinner size="1.5rem" />
 			<div class="py-2 text-center text-sm text-gray-500">{$t('chat.loading-older')}</div>
