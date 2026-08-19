@@ -1,6 +1,6 @@
 import { notificationStore } from './stores/notifications.svelte';
 import { socketStore } from './stores/socket.svelte';
-import { PUBLIC_VAPID_KEY } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { browser } from '$app/environment';
 import { modalStore } from './stores/modal.svelte';
 
@@ -25,8 +25,18 @@ export async function initializePushNotifications() {
 		return;
 	}
 
+	// Read at runtime, not from $env/static/public: the Dockerfile builds with
+	// PUBLIC_VAPID_KEY="placeholder" so the build can run without secrets, and a static import
+	// bakes that placeholder into the shipped bundle - which then fails with InvalidAccessError
+	// on every subscribe, whatever the operator sets in their environment.
+	const vapidKey = env.PUBLIC_VAPID_KEY;
+	if (!vapidKey) {
+		console.warn('PUBLIC_VAPID_KEY is not set, skipping web push subscription');
+		return;
+	}
+
 	// Subscribe to push notifications
-	const subscription = await notificationStore.subscribe(PUBLIC_VAPID_KEY);
+	const subscription = await notificationStore.subscribe(vapidKey);
 	if (subscription) {
 		// Send subscription to your server
 		socketStore.subscribeToWebPush(subscription);

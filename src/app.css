@@ -158,3 +158,26 @@ html[data-flat='true'] .shadow-lg {
 		@apply invisible opacity-0;
 	}
 }
+
+/*
+ * Lives here rather than in a <style> block in app.html: an inline stylesheet needs either
+ * 'unsafe-inline' or a nonce in style-src, and SvelteKit only puts a nonce there when it inlines
+ * a style itself - so in production the block was silently blocked by the CSP and the emoji font
+ * never loaded. As a real stylesheet it is covered by style-src 'self'.
+ */
+@font-face {
+	font-family: 'Noto Color Emoji';
+	src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+	font-display: swap;
+}
+
+.emoji-consistent,
+body {
+	font-family:
+		system-ui,
+		-apple-system,
+		'Noto Color Emoji',
+		'Apple Color Emoji',
+		'Segoe UI Emoji',
+		sans-serif;
+}

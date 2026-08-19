@@ -8,6 +8,9 @@ import { getUploadDir, validateUploadPath } from '$lib/server/fileUpload';
 
 const UPLOAD_PATH = getUploadDir() + '/profiles';
 
+/** Avatars are never displayed larger than this, and it keeps a resize cheap. */
+const MAX_IMAGE_SIZE = 512;
+
 let serverKeyPromise: Promise<CryptoKey> | null = null;
 async function getServerKey(): Promise<CryptoKey> {
 	if (!serverKeyPromise) {
@@ -74,9 +77,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		let outputBuffer: Buffer;
 
 		if (sizeParam) {
-			const size = parseInt(sizeParam, 10);
-			const allowedSizes = [48, 96, 256];
-			if (!allowedSizes.includes(size)) {
+			// Bounded rather than whitelisted: an allow-list of exact sizes silently 404s every
+			// caller that asks for a value nobody remembered to add (the chat avatars ask for 64,
+			// read receipts for 32). The cap is what matters here - `?size=30000` would have sharp
+			// allocate a ~3.6GB buffer, and this route is public.
+			const size = Number(sizeParam);
+			if (!Number.isInteger(size) || size < 1 || size > MAX_IMAGE_SIZE) {
 				throw error(400, 'Invalid size parameter');
 			}
 			outputBuffer = await sharp(Buffer.from(decrypted))
