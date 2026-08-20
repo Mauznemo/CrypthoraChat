@@ -428,11 +428,16 @@ export async function initializeSocket(server: HTTPServer) {
 
 		debugLog('User connected:', socket.id, 'User:', socket.user?.username);
 
-		socket.on('join-chat', async (chatId: string) => {
+		// Acknowledged rather than silently dropped: the realistic way to be refused here is
+		// having been removed from the chat, and a client that thinks it joined just stops
+		// receiving messages with no way to tell that from a quiet conversation.
+		socket.on('join-chat', async (chatId: string, ack?: (res: { status: string }) => void) => {
 			if (!(await assertParticipant(socket.user!.id, chatId))) {
+				ack?.({ status: 'forbidden' });
 				return;
 			}
 			socket.join(chatId);
+			ack?.({ status: 'joined' });
 			debugLog(`User ${socket.id} joined chat ${chatId}`);
 		});
 

@@ -182,7 +182,13 @@ class SocketStore {
 	// ---------- Chat selected specific (on only called if currently in that chat) ---------- //
 
 	joinChat(chatId: string) {
-		this.socket?.emit('join-chat', chatId);
+		this.socket?.emit('join-chat', chatId, (res: { status: string }) => {
+			if (res?.status !== 'joined') {
+				// Almost always means we are no longer a participant. Worth a line in the log,
+				// because the symptom otherwise is just messages never arriving.
+				console.warn('Refused to join chat', chatId, res?.status);
+			}
+		});
 	}
 
 	leaveChat(chatId: string) {
