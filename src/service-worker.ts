@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 import { build, files, version } from '$service-worker';
 import i18next from 'i18next';
-import { recordChatNotification, totalNotificationCount } from '$lib/notificationState';
+import {
+	clearChatNotificationState,
+	recordChatNotification,
+	totalNotificationCount
+} from '$lib/notificationState';
 
 const translations = {
 	en: {
@@ -300,6 +304,17 @@ self.addEventListener('notificationclick', (event) => {
 
 	event.waitUntil(
 		(async () => {
+			// Tapping the notification is the read, so the count is dropped here rather than left
+			// to the page. The page clears it again once the chat opens, but that path can be
+			// missed (a selection already in flight, a failed one, a window still booting), and a
+			// count that survives is one the next push keeps incrementing from.
+			if (chatId) {
+				await clearChatNotificationState(chatId);
+				const stale = await self.registration.getNotifications({ tag: chatId });
+				for (const notification of stale) notification.close();
+				await updateAppBadge();
+			}
+
 			// Reuse an already open window rather than adding a second one next to it. The page
 			// exposes `goToChat`, which is also what the wrapper app calls.
 			const clients = (await self.clients.matchAll({

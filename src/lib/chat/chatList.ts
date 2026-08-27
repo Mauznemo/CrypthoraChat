@@ -1,8 +1,28 @@
 import { deleteFilesNotContaining } from '$lib/idb';
+import { reconcileNotificationState } from '$lib/notificationState';
 import { chatStore } from '$lib/stores/chat.svelte';
+import { updateAppBadge } from '$lib/stores/notifications.svelte';
 import type { ClientChat } from '$lib/types';
 import { syncShortcuts } from '$lib/wrapper';
 import { getUserChats } from './chat.remote';
+
+/**
+ * Prunes notification counts the server's read state says are stale, so the app icon badge
+ * cannot keep a number for a chat that has already been read. The wrapper app owns its own
+ * badge, same as everywhere else the web layer touches notifications.
+ */
+async function reconcileBadge(chats: ClientChat[]): Promise<void> {
+	if (window.isFlutterWebView) return;
+
+	const readChatIds = chats.filter((chat) => !chat.unreadMessages).map((chat) => chat.id);
+	if (chatStore.activeChat) readChatIds.push(chatStore.activeChat.id);
+
+	const changed = await reconcileNotificationState(
+		readChatIds,
+		chats.map((chat) => chat.id)
+	);
+	if (changed) await updateAppBadge();
+}
 
 export const chatList = {
 	/**
@@ -18,6 +38,8 @@ export const chatList = {
 
 		const chats = await query;
 		chatStore.chats = chats;
+
+		await reconcileBadge(chats);
 
 		if (options?.pruneFiles) await deleteFilesNotContaining(chats.map((chat) => chat.id));
 

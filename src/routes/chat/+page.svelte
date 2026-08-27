@@ -173,6 +173,10 @@
 		//messages = await getMessagesByChatId(chatId);
 
 		messages.handleVisible();
+		// Coming back to a backgrounded tab or PWA is the web equivalent of the wrapper's
+		// `setSocketActive` below: whatever arrived for the open chat has now been seen, so its
+		// notification and its share of the app icon badge go with it.
+		void notificationStore.clearChat(chatStore.activeChat.id);
 	}
 
 	/** Appends shared text to the chat's draft, which is what ChatInput loads on selection. */
@@ -245,10 +249,44 @@
 		});
 	}
 
+	/**
+	 * The chat is already the open one, so there is nothing to select - but a notification tap is
+	 * still a request to see what arrived.
+	 */
+	function focusOpenChat(chatId: string): void {
+		notifyChatOpened(chatId);
+		void notificationStore.clearChat(chatId);
+		chatStore.scrollView?.lockToBottom();
+	}
+
 	let processingChatSelection = false;
+	/** Only the most recent request matters, so a newer one replaces whatever else was waiting */
+	let queuedSelection: { chatId: string; shouldRestoreScrollPos: boolean } | null = null;
+
 	async function selectChat(chatId: string, shouldRestoreScrollPos = false): Promise<void> {
-		if (processingChatSelection) return;
+		if (processingChatSelection) {
+			// Used to be dropped on the floor, which is how a notification tap landing while the
+			// startup selection was still running ended up doing nothing at all.
+			queuedSelection = { chatId, shouldRestoreScrollPos };
+			return;
+		}
 		processingChatSelection = true;
+		try {
+			await runSelectChat(chatId, shouldRestoreScrollPos);
+		} finally {
+			// A throw in here used to latch the flag and block every later selection for good.
+			processingChatSelection = false;
+		}
+
+		const queued = queuedSelection;
+		queuedSelection = null;
+		if (!queued) return;
+
+		if (queued.chatId === chatStore.activeChat?.id) focusOpenChat(queued.chatId);
+		else await selectChat(queued.chatId, queued.shouldRestoreScrollPos);
+	}
+
+	async function runSelectChat(chatId: string, shouldRestoreScrollPos: boolean): Promise<void> {
 		await chatInput.saveDraft();
 		await tick();
 
@@ -281,8 +319,6 @@
 				chatStore.scrollView?.lockToBottom();
 			}
 		}
-
-		processingChatSelection = false;
 	}
 
 	if (browser) {
@@ -303,11 +339,7 @@
 		};
 		window.goToChat = (chatId: string) => {
 			if (chatStore.activeChat?.id === chatId) {
-				notifyChatOpened(chatId);
-				void notificationStore.clearChat(chatId);
-				// Tapping a notification is a request to see what arrived, even when that chat was
-				// already the open one and there is nothing to select.
-				chatStore.scrollView?.lockToBottom();
+				focusOpenChat(chatId);
 				return;
 			}
 			selectChat(chatId);

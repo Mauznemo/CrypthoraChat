@@ -69,6 +69,41 @@ export async function clearChatNotificationState(chatId: string): Promise<void> 
 	}
 }
 
+/**
+ * Drops stored counts for chats the server considers fully read, and for chats that are gone.
+ *
+ * These counters are a second unread system next to the server's `readBy` rows, and they only
+ * ever shrink when the web layer explicitly clears a chat. A single missed clear - a chat read
+ * on another device, a notification tap that never reached the page - therefore leaves a count
+ * that every later push keeps incrementing. Reconciling on each chat list load makes the badge
+ * self-healing.
+ *
+ * Only ever deletes: the server's unread count is capped and not a trustworthy replacement
+ * value, but a zero is trustworthy, because an unread message always has an empty `readBy`.
+ *
+ * Returns whether anything was removed, so the caller can skip a needless badge write.
+ */
+export async function reconcileNotificationState(
+	readChatIds: string[],
+	knownChatIds: string[]
+): Promise<boolean> {
+	try {
+		const database = await db();
+		const keys = (await database.getAllKeys(STORE_NAME)) as string[];
+
+		const read = new Set(readChatIds);
+		const known = new Set(knownChatIds);
+		const stale = keys.filter((key) => read.has(key) || !known.has(key));
+
+		for (const key of stale) await database.delete(STORE_NAME, key);
+
+		return stale.length > 0;
+	} catch (error) {
+		console.error('Failed to reconcile notification state:', error);
+		return false;
+	}
+}
+
 /** Total unread messages across all chats, for the app badge. */
 export async function totalNotificationCount(): Promise<number> {
 	try {

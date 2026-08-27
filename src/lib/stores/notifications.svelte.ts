@@ -134,7 +134,8 @@ export function buildNotificationBody(entry: ChatNotification): string {
 		: get(t)('notifications.new-message-dm', { values: { username } });
 }
 
-async function updateAppBadge(): Promise<void> {
+/** Repaints the app icon badge from the stored per-chat counts, or removes it at zero. */
+export async function updateAppBadge(): Promise<void> {
 	if (!('setAppBadge' in navigator)) return;
 
 	const total = await totalNotificationCount();
