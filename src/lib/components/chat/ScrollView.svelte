@@ -25,11 +25,32 @@
 	let hideDownButton = $state(false);
 	let allowUnlock = $state(false);
 	let unlockTimeout: NodeJS.Timeout | null = null;
+	/** Whether there is anything to scroll at all - a short chat has no down button to offer */
+	let isScrollable = $state(false);
 
 	function isNearBottom(threshold = 10): boolean {
 		if (!container) return false;
 		const { scrollTop, scrollHeight, clientHeight } = container;
 		return scrollHeight - clientHeight - scrollTop <= threshold;
+	}
+
+	/**
+	 * Recomputes the button's preconditions from the container itself, for the cases where no
+	 * scroll event ever fires: a chat too short to overflow, or a restored position that is
+	 * already at the bottom. Both used to leave `lockedToBottom` stuck at its initial false and
+	 * showed a button that had nowhere to scroll to.
+	 *
+	 * Only ever locks, never unlocks - unlocking stays with `onScroll` and its `allowUnlock`
+	 * guard, so the grace period after a smooth scroll is untouched.
+	 */
+	function syncScrollState(): void {
+		if (!container) return;
+		isScrollable = container.scrollHeight - container.clientHeight > 10;
+
+		if (!isScrollable || isNearBottom(10)) {
+			lockedToBottom = true;
+			hideDownButton = false;
+		}
 	}
 
 	export function lockToBottom() {
@@ -45,11 +66,9 @@
 
 	function onScroll() {
 		handleScroll?.();
+		syncScrollState();
 
-		if (isNearBottom(10)) {
-			lockedToBottom = true;
-			hideDownButton = false;
-		} else {
+		if (!isNearBottom(10)) {
 			if (!allowUnlock) return;
 			lockedToBottom = false;
 		}
@@ -110,6 +129,11 @@
 
 			/* 3.  pick a new reference for the next cycle */
 			findReference();
+
+			/* 4.  the content or the viewport just changed size, so whether the down button has
+			       anywhere to scroll to may have changed with it. Fires once on observe too,
+			       which is what covers the initial render. */
+			syncScrollState();
 		});
 
 		ro.observe(content);
@@ -118,6 +142,10 @@
 		// shrink the container without touching the content, and used to push the last message
 		// out of sight with nothing left to notice it.
 		ro.observe(container);
+		// The observer covers every later change, but its first delivery is up to the browser and
+		// is withheld entirely while the tab is hidden. Seed the state directly so a view that is
+		// built off screen still starts out consistent.
+		syncScrollState();
 
 		onDestroy(() => {
 			ro.disconnect();
@@ -140,7 +168,7 @@
 			{lockedToBottom ? 'Locked' : 'Unlocked'} | {layoutStore.anchorMessageId}
 		</div>
 	{/if}
-	{#if !lockedToBottom && !hideDownButton}
+	{#if isScrollable && !lockedToBottom && !hideDownButton}
 		<button
 			transition:fly|global={{ duration: 500, y: 200 }}
 			onclick={lockToBottom}
