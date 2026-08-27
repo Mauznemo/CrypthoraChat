@@ -265,6 +265,16 @@ export const chats = {
 		});
 
 		if (success) {
+			const previousChat = chatStore.activeChat;
+			// Rooms are per-socket and were never left on a switch, so typing (and anything else
+			// room-scoped) from a chat opened earlier kept arriving. `user-typing` carries no chat
+			// id, so a leftover indicator would render against the wrong chat.
+			if (previousChat && previousChat.id !== currentNewChat.id) {
+				socketStore.stopTyping({ chatId: previousChat.id });
+				socketStore.leaveChat(previousChat.id);
+			}
+			socketStore.clearTyping();
+
 			chatStore.activeChat = currentNewChat;
 			console.log('Joining chat:', chatStore.activeChat?.id);
 			socketStore.joinChat(chatStore.activeChat.id);

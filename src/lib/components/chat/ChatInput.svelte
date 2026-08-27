@@ -51,6 +51,16 @@
 		messageReplying = null;
 		messageEditing = null;
 
+		// The typing state belongs to the chat that was open; `trySelectChat` already told that
+		// chat we stopped. Without this reset the refresh window would still be running and the
+		// first keystrokes in the new chat would announce nothing.
+		if (typingTimeout) {
+			clearTimeout(typingTimeout);
+			typingTimeout = null;
+		}
+		isTyping = false;
+		lastTypingSentAt = 0;
+
 		if (draftTimeout) {
 			clearTimeout(draftTimeout);
 		}
@@ -71,7 +81,33 @@
 	let typingTimeout: NodeJS.Timeout | null = $state(null);
 	let draftTimeout: NodeJS.Timeout | null = null;
 	let isTyping = $state(false);
+	let lastTypingSentAt = 0;
 	let chatValue: string = $state('');
+
+	/**
+	 * How often `typing-start` is re-sent while the user keeps typing. Must stay comfortably
+	 * below the receiver's expiry, otherwise a long sentence typed without a pause would have
+	 * its indicator time out on the other side.
+	 */
+	const TYPING_REFRESH_MS = 2500;
+
+	/** Announces typing, and keeps announcing it, so the peer's expiry timer never fires early */
+	function sendTypingStart(chatId: string): void {
+		const now = Date.now();
+		if (isTyping && now - lastTypingSentAt < TYPING_REFRESH_MS) return;
+
+		isTyping = true;
+		lastTypingSentAt = now;
+		socketStore.startTyping({ chatId });
+	}
+
+	function sendTypingStop(chatId: string): void {
+		if (!isTyping) return;
+
+		isTyping = false;
+		lastTypingSentAt = 0;
+		socketStore.stopTyping({ chatId });
+	}
 
 	let selectedFiles: File[] = $state([]);
 	let fileInput: HTMLInputElement;
@@ -175,10 +211,8 @@
 			clearTimeout(draftTimeout);
 		}
 
-		if (chatStore.activeChat && isTyping && chatStore.user?.id) {
-			socketStore.stopTyping({
-				chatId: chatStore.activeChat.id
-			});
+		if (chatStore.activeChat && chatStore.user?.id) {
+			sendTypingStop(chatStore.activeChat.id);
 		}
 	});
 
@@ -265,12 +299,7 @@
 		const messageContent = chatValue.trim();
 		inputField.setValue('');
 
-		if (isTyping) {
-			socketStore.stopTyping({
-				chatId: chatStore.activeChat.id
-			});
-			isTyping = false;
-		}
+		sendTypingStop(chatStore.activeChat.id);
 
 		if (messageEditing) {
 			// The edit keeps the original message's chat and sender, and only the sender can edit,
@@ -316,10 +345,10 @@
 		if (!chatStore.user?.id) return;
 		if (!chatStore.activeChat) return;
 
-		if (!isTyping && chatValue.trim()) {
-			isTyping = true;
-			console.log('start typing');
-			socketStore.startTyping({ chatId: chatStore.activeChat.id });
+		if (chatValue.trim()) {
+			sendTypingStart(chatStore.activeChat.id);
+		} else {
+			sendTypingStop(chatStore.activeChat.id);
 		}
 
 		if (typingTimeout) {
@@ -327,21 +356,8 @@
 		}
 
 		typingTimeout = setTimeout(() => {
-			if (isTyping && chatStore.activeChat) {
-				isTyping = false;
-				console.log('stop typing');
-				socketStore.stopTyping({
-					chatId: chatStore.activeChat.id
-				});
-			}
+			if (chatStore.activeChat) sendTypingStop(chatStore.activeChat.id);
 		}, 1000);
-
-		if (!chatValue.trim() && isTyping) {
-			isTyping = false;
-			socketStore.stopTyping({
-				chatId: chatStore.activeChat.id
-			});
-		}
 
 		if (draftTimeout) {
 			clearTimeout(draftTimeout);

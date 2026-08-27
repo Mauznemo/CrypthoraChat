@@ -14,6 +14,16 @@ type Handler = (...args: any[]) => void;
 /** Removes exactly the one handler it was created for */
 export type Unsubscribe = () => void;
 
+/**
+ * How long a typing indicator survives without a refresh from its sender.
+ *
+ * A `typing-stop` that never arrives (the peer's tab died mid-word, the network blipped, the
+ * app was backgrounded before its own stop debounce fired) used to leave the indicator up until
+ * our own socket disconnected. ChatInput re-emits `typing-start` well inside this window while
+ * the user keeps typing, so a live typist is never expired.
+ */
+const TYPING_EXPIRY_MS = 6000;
+
 export type ClientPresence = 'online' | 'offline';
 export type VerifyRequestStatus = 'delivered' | 'background' | 'offline' | 'rate-limited';
 export type VerifyResponse = 'accepted' | 'declined' | 'busy' | 'matched' | 'failed';
@@ -45,6 +55,11 @@ class SocketStore {
 	private handlers = new Map<string, Set<Handler>>();
 	public connected = $state(false);
 	public typing = $state<{ userId: string; username: string; isTyping: boolean }[]>([]);
+	/**
+	 * Expiry timer per typing user. Plain Map on purpose: internal bookkeeping, never read from
+	 * a template, so it does not need to be reactive.
+	 */
+	private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 	/** Idempotent. Safe to call from any route, any number of times. */
 	connect() {
@@ -86,21 +101,46 @@ class SocketStore {
 		this.socket.on(
 			'user-typing',
 			(data: { userId: string; username: string; isTyping: boolean }) => {
-				const existingIndex = this.typing.findIndex((t) => t.userId === data.userId);
-
-				if (data.isTyping) {
-					if (existingIndex === -1) {
-						this.typing.push(data);
-					} else {
-						this.typing[existingIndex] = data;
-					}
-				} else {
-					if (existingIndex !== -1) {
-						this.typing.splice(existingIndex, 1);
-					}
+				if (!data.isTyping) {
+					this.removeTyping(data.userId);
+					return;
 				}
+
+				const existingIndex = this.typing.findIndex((t) => t.userId === data.userId);
+				if (existingIndex === -1) {
+					this.typing.push(data);
+				} else {
+					this.typing[existingIndex] = data;
+				}
+
+				// Every refresh restarts the clock, so the indicator only ever disappears on its
+				// own once the sender has genuinely gone quiet.
+				clearTimeout(this.typingTimeouts.get(data.userId));
+				this.typingTimeouts.set(
+					data.userId,
+					setTimeout(() => this.removeTyping(data.userId), TYPING_EXPIRY_MS)
+				);
 			}
 		);
+	}
+
+	/** Drops one user's indicator and its expiry timer, wherever the removal came from */
+	private removeTyping(userId: string): void {
+		clearTimeout(this.typingTimeouts.get(userId));
+		this.typingTimeouts.delete(userId);
+
+		const index = this.typing.findIndex((t) => t.userId === userId);
+		if (index !== -1) this.typing.splice(index, 1);
+	}
+
+	/**
+	 * Forgets every indicator. `user-typing` carries no chat id, so switching chats has to drop
+	 * what was on screen rather than let a peer typing in the previous chat bleed into the new one.
+	 */
+	clearTyping(): void {
+		for (const timeout of this.typingTimeouts.values()) clearTimeout(timeout);
+		this.typingTimeouts.clear();
+		this.typing = [];
 	}
 
 	/** Re-attaches every registered handler after the socket object is (re)created */
@@ -117,7 +157,7 @@ class SocketStore {
 			this.socket.disconnect();
 			this.socket = null;
 			this.connected = false;
-			this.typing = [];
+			this.clearTyping();
 		}
 		// `handlers` is kept so a later connect() re-binds everything.
 	}
