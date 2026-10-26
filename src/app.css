@@ -57,13 +57,16 @@ html[data-theme='liquid'] {
 	--glass-tint-100: 62%;
 
 	/*
-	 * One hairline, the same colour the whole way round. It is tempting to light the top edge
-	 * more than the bottom, but a border whose four sides differ meets in a hard diagonal
-	 * miter at every rounded corner, and that seam is far more visible than the gain. The
-	 * sense of light falling from above comes from the wash below instead.
+	 * One hairline, the same colour the whole way round, and kept dim so it does not sit
+	 * brightly on top of the shaded edge.
+	 *
+	 * It has to be one colour. Giving the four sides their own leaves a diagonal miter where
+	 * two of them meet, at the top right and the bottom left, and at any contrast worth
+	 * having that seam is plainly visible - it reads as a broken gradient in those two
+	 * corners. The shading below darkens the far edge instead, which it can do continuously.
 	 */
 	--glass-border-width: 1px;
-	--glass-border-color: rgba(255, 255, 255, 0.1);
+	--glass-border-color: rgba(255, 255, 255, 0.08);
 
 	/*
 	 * The lit edge. In Apple's material the bending is governed by the curve of the rim:
@@ -73,17 +76,21 @@ html[data-theme='liquid'] {
 	 * it is not evenly bright: it is lit from the top left and only picks up a little on the
 	 * opposite edges.
 	 *
-	 * Two soft inset glows, one pushed towards the light and one away from it. The blur is
-	 * what makes this work: with a hard edge an offset inset shadow is the gap between two
-	 * rounded rectangles, so it swells at the corner it points into and tapers away at the
-	 * far ends. Blurred, there is no edge to swell, and the light simply gathers along the
-	 * top and left. A crisp masked ring of constant thickness is closer to how the Remotion
-	 * kit draws it, but it has to sit inside the border, and that second line just inside the
-	 * first reads as an inset outline rather than as a lit edge.
+	 * Two soft inset shadows, one pushed towards the light and one away from it. Towards it
+	 * the edge lights up; away from it the edge is in shade and darkens instead, because with
+	 * one light source the far side of a rounded edge turns away from it. Lighting both sides
+	 * is what makes a surface look evenly outlined rather than lit.
+	 *
+	 * The blur is what makes this work: with a hard edge an offset inset shadow is the gap
+	 * between two rounded rectangles, so it swells at the corner it points into and tapers
+	 * away at the far ends. Blurred, there is no edge to swell, and the light simply gathers
+	 * along the top and left. A crisp masked ring of constant thickness is closer to how the
+	 * Remotion kit draws it, but it has to sit inside the border, and that second line just
+	 * inside the first reads as an inset outline rather than as a lit edge.
 	 */
 	--glass-rim:
-		inset 0 0 1.5px rgba(255, 255, 255, 0.1), inset 4px 5px 12px -9px rgba(255, 255, 255, 0.5),
-		inset -4px -5px 12px -11px rgba(255, 255, 255, 0.16);
+		inset 0 0 1.5px rgba(255, 255, 255, 0.09), inset 3px 4px 11px -8px rgba(255, 255, 255, 0.42),
+		inset -1px -1px 2px -1px rgba(0, 0, 0, 0.2), inset -5px -6px 14px -10px rgba(0, 0, 0, 0.3);
 
 	/*
 	 * The body only says where the light comes from; the rim carries the shape. It stays in
@@ -96,8 +103,8 @@ html[data-theme='liquid'] {
 	--glass-sheen: linear-gradient(
 		160deg,
 		rgba(255, 255, 255, 0.14) 0%,
-		rgba(255, 255, 255, 0.07) 50%,
-		rgba(255, 255, 255, 0.02) 100%
+		rgba(255, 255, 255, 0.06) 50%,
+		rgba(0, 0, 0, 0.035) 100%
 	);
 
 	/*
