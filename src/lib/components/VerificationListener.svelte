@@ -213,7 +213,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-6 frosted-glass-shadow"
+			class="mx-2 w-full max-w-md rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-6"
 		>
 			{#if verificationStore.progress}
 				<p class="mb-2 text-sm text-gray-400">
@@ -241,13 +241,13 @@
 				{#if view.retry}
 					<button
 						onclick={() => verificationStore.respond?.('retry')}
-						class="w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass transition-colors hover:bg-accent-600/50"
+						class="w-full cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) py-3 text-white transition-colors hover:bg-accent-600/(--glass-tint-50)"
 						>{$t('common.retry')}</button
 					>
 				{/if}
 				<button
 					onclick={() => verificationStore.respond?.('cancel')}
-					class="w-full cursor-pointer rounded-full bg-gray-700/60 py-3 text-white frosted-glass transition-colors hover:bg-gray-600/50"
+					class="w-full cursor-pointer rounded-full frosted-glass bg-gray-700/(--glass-fill-60) py-3 text-white transition-colors hover:bg-gray-600/(--glass-fill-50)"
 					>{view.cancelLabel}</button
 				>
 			</div>

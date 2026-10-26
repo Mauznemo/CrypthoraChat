@@ -41,7 +41,7 @@
 
 	function getButtonClasses(variant: string = 'primary', outlined: boolean = false) {
 		let baseClasses =
-			'frosted-glass px-4 py-2 font-medium transition-colors rounded-full cursor-pointer disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400';
+			'frosted-glass px-4 py-2 font-medium transition-colors rounded-full cursor-pointer disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400';
 
 		if (outlined) {
 			baseClasses += ' outline outline-4 outline-orange-600';
@@ -75,7 +75,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/60 p-6 frosted-glass-shadow"
+			class="m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-6"
 		>
 			<!-- Header -->
 			<div class="mb-4 flex items-center justify-between">

@@ -93,7 +93,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="relative flex max-h-full max-w-full items-center justify-center rounded-4xl bg-gray-800/60 p-3 frosted-glass-shadow md:p-4"
+			class="relative flex max-h-full max-w-full items-center justify-center rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-3 md:p-4"
 		>
 			<button
 				onclick={() => imagePreviewStore.close()}

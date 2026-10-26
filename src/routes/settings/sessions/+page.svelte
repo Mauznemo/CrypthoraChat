@@ -39,7 +39,9 @@
 	<div class="flex flex-col gap-2">
 		{#each sessions as session}
 			{@const isActive = session.id === currentSessionId}
-			<div class="flex justify-between rounded-3xl bg-gray-600/40 p-3 px-5 frosted-glass">
+			<div
+				class="flex justify-between rounded-3xl frosted-glass bg-gray-600/(--glass-fill-40) p-3 px-5"
+			>
 				<div>
 					<div class="mb-2 flex items-center justify-start">
 						<p class="mr-5 text-xl font-bold">{session.deviceOs || 'Unknown OS'}</p>
@@ -60,7 +62,7 @@
 					{#if !isActive}
 						<button
 							onclick={() => handleLogout(session.id)}
-							class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
+							class="cursor-pointer rounded-full frosted-glass bg-red-800/(--glass-tint-40) px-4 py-2 text-white hover:bg-red-600/(--glass-tint-40)"
 							>{$t('settings.sessions.logout')}</button
 						>
 					{/if}

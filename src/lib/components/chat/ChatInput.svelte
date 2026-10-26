@@ -652,7 +652,7 @@
 <div class="sticky bottom-0 flex w-full gap-2 px-4 pt-2">
 	<button
 		onclick={handleAttachment}
-		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gray-600 frosted-glass transition-colors hover:bg-accent-600/60"
+		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full frosted-glass bg-gray-600/(--glass-fill-100) transition-colors hover:bg-accent-600/(--glass-tint-60)"
 		aria-label="Add attachments"
 	>
 		<IconMdiPlusThick class="size-6" />
@@ -672,7 +672,7 @@
 	<button
 		disabled={(!chatValue.trim() && selectedFiles.length === 0) || !socketStore.connected}
 		onclick={sendMessage}
-		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-accent-600/60 frosted-glass transition-colors hover:bg-accent-600/80 disabled:bg-gray-600"
+		class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full frosted-glass bg-accent-600/(--glass-tint-60) transition-colors hover:bg-accent-600/(--glass-tint-80) disabled:bg-gray-600/(--glass-fill-100)"
 		aria-label="Send Message"
 	>
 		<IconIcRoundSend class="ml-0.5 size-6" />

@@ -18,11 +18,13 @@
 				onclick={() => toastStore.dismiss(toast.id)}
 				aria-label="Dismiss"
 				transition:fly|global={{ duration: 200, x: 200 }}
-				class="flex max-w-md min-w-80 items-start gap-3 rounded-2xl p-4 text-start frosted-glass-shadow
-          {toast.type === 'success' ? 'border border-green-700 bg-green-900/60' : ''}
-          {toast.type === 'error' ? 'border border-red-700 bg-red-900/60' : ''}
-          {toast.type === 'warning' ? 'border border-yellow-700 bg-yellow-900/60' : ''}
-          {toast.type === 'info' ? 'border border-blue-700 bg-blue-900/60' : ''}"
+				class="flex max-w-md min-w-80 items-start gap-3 rounded-2xl frosted-glass-shadow p-4 text-start
+          {toast.type === 'success' ? 'border border-green-700 bg-green-900/(--glass-tint-60)' : ''}
+          {toast.type === 'error' ? 'border border-red-700 bg-red-900/(--glass-tint-60)' : ''}
+          {toast.type === 'warning'
+					? 'border border-yellow-700 bg-yellow-900/(--glass-tint-60)'
+					: ''}
+          {toast.type === 'info' ? 'border border-blue-700 bg-blue-900/(--glass-tint-60)' : ''}"
 			>
 				<div class="flex-1">
 					{#if toast.title}

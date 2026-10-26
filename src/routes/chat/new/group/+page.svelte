@@ -125,7 +125,7 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div
-		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 frosted-glass-shadow"
+		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60)"
 	>
 		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
 			<BackButton backPath="/chat" />
@@ -196,7 +196,7 @@
 			<input
 				bind:value={groupName}
 				type="text"
-				class="mt-2 flex-1 rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+				class="mt-2 flex-1 rounded-full frosted-glass bg-gray-600/(--glass-fill-100) px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				placeholder={$t('chat.new.group.group-name')}
 			/>
 		</div>
@@ -210,7 +210,7 @@
 		<button
 			onclick={handleCreateGroup}
 			disabled={selectedUsers.length < 1 || groupName.trim().length < 1 || loading}
-			class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="m-10 mt-7 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-8 py-4 font-semibold transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400"
 		>
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />

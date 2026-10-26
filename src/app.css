@@ -19,7 +19,116 @@
 	--color-background-2: var(--color-gray-900);
 }
 
-:root {
+/*
+ * Glass themes. Every glass surface reads the same handful of variables, so a theme is just a
+ * different set of values on <html data-theme>. 'liquid' is the default for anyone who has not
+ * picked one, 'frosted' is the original flat-ish blur kept for people who prefer it.
+ */
+:root,
+html[data-theme='liquid'] {
+	--glass-blur: 24px;
+	--glass-saturate: 160%;
+
+	/*
+	 * How solid a glass surface is. Every bg-* on a glass element reads one of these instead
+	 * of a literal alpha, named after the alpha it used to be, so a theme sets how much of
+	 * the background comes through. This is what decides whether a surface reads as glass at
+	 * all: the shading below only sculpts it. A fill at 60% is a tinted panel with a gradient
+	 * on it, however well that gradient is drawn.
+	 */
+	--glass-fill-20: 10%;
+	--glass-fill-40: 18%;
+	--glass-fill-50: 22%;
+	--glass-fill-60: 26%;
+	--glass-fill-80: 34%;
+	--glass-fill-100: 40%;
+
+	/*
+	 * Coloured surfaces sit higher than neutral ones. A grey panel can be almost all
+	 * background and still read as a panel, but an accent button at the same alpha stops
+	 * reading as the accent colour at all, and a primary action has to stay the loudest
+	 * thing on screen.
+	 */
+	--glass-tint-20: 16%;
+	--glass-tint-40: 32%;
+	--glass-tint-50: 40%;
+	--glass-tint-60: 46%;
+	--glass-tint-80: 58%;
+	--glass-tint-100: 62%;
+
+	/*
+	 * One hairline, the same colour the whole way round. It is tempting to light the top edge
+	 * more than the bottom, but a border whose four sides differ meets in a hard diagonal
+	 * miter at every rounded corner, and that seam is far more visible than the gain. The
+	 * sense of light falling from above comes from the wash below instead.
+	 */
+	--glass-border-width: 1px;
+	--glass-border-color: rgba(255, 255, 255, 0.1);
+
+	/*
+	 * The lit edge. In Apple's material the bending is governed by the curve of the rim:
+	 * across the middle of a flat pane almost nothing happens, and at the curved edge a lot
+	 * does, so the rim is the effect and the centre is just blurred background. It runs the
+	 * whole way round - a slab with a rounded edge seen from above, not a lit top lip - but
+	 * it is not evenly bright: it is lit from the top left and only picks up a little on the
+	 * opposite edges.
+	 *
+	 * Two soft inset glows, one pushed towards the light and one away from it. The blur is
+	 * what makes this work: with a hard edge an offset inset shadow is the gap between two
+	 * rounded rectangles, so it swells at the corner it points into and tapers away at the
+	 * far ends. Blurred, there is no edge to swell, and the light simply gathers along the
+	 * top and left. A crisp masked ring of constant thickness is closer to how the Remotion
+	 * kit draws it, but it has to sit inside the border, and that second line just inside the
+	 * first reads as an inset outline rather than as a lit edge.
+	 */
+	--glass-rim:
+		inset 0 0 1.5px rgba(255, 255, 255, 0.1), inset 4px 5px 12px -9px rgba(255, 255, 255, 0.5),
+		inset -4px -5px 12px -11px rgba(255, 255, 255, 0.16);
+
+	/*
+	 * The body only says where the light comes from; the rim carries the shape. It stays in
+	 * percentages: a gradient line is sized by the box it runs in, so one 160deg follows
+	 * whatever it lights. Measuring the Remotion render, a wide pane falls about 60% left to
+	 * right and only 16% top to bottom, while a square tile falls 28% top to bottom and not
+	 * at all across. Pinning it to px made every surface an even top-to-bottom ramp, which is
+	 * the Aero gradient whatever its colours are.
+	 */
+	--glass-sheen: linear-gradient(
+		160deg,
+		rgba(255, 255, 255, 0.14) 0%,
+		rgba(255, 255, 255, 0.07) 50%,
+		rgba(255, 255, 255, 0.02) 100%
+	);
+
+	/*
+	 * Close and soft. A glass surface sits just off its background; a deep pool under every
+	 * button reads as a drop shadow in a mockup rather than as a pane lying on something.
+	 */
+	--frosted-shadow: var(--glass-rim), 0 3px 10px -4px rgba(0, 0, 0, 0.35);
+	--frosted-shadow-lg: var(--glass-rim), 0 14px 30px -14px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme='frosted'] {
+	--glass-blur: 5px;
+	--glass-saturate: 100%;
+
+	/* The alphas the markup used to carry literally, so this theme is unchanged. */
+	--glass-fill-20: 20%;
+	--glass-fill-40: 40%;
+	--glass-fill-50: 50%;
+	--glass-fill-60: 60%;
+	--glass-fill-80: 80%;
+	--glass-fill-100: 100%;
+	--glass-tint-20: 20%;
+	--glass-tint-40: 40%;
+	--glass-tint-50: 50%;
+	--glass-tint-60: 60%;
+	--glass-tint-80: 80%;
+	--glass-tint-100: 100%;
+
+	--glass-border-width: 1px;
+	--glass-border-color: rgba(255, 255, 255, 0.059);
+	--glass-sheen: none;
 	--frosted-shadow:
 		inset 0 1px 10px rgba(255, 255, 255, 0.133), inset 0 -1px 10px rgba(255, 255, 255, 0.113);
 	--frosted-shadow-lg:
@@ -27,7 +136,10 @@
 		0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
+/* Flat mode drops all shading, whichever theme is active. Must stay after the theme blocks. */
 html[data-flat='true'] {
+	--glass-border-color: rgba(255, 255, 255, 0.1);
+	--glass-sheen: none;
 	--frosted-shadow: none;
 	--frosted-shadow-lg: none;
 }
@@ -84,20 +196,29 @@ html[data-flat='true'] .shadow-lg {
 }
 
 @utility frosted-glass {
-	backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
-	-webkit-backdrop-filter: blur(5px);
-	border: 1px solid rgba(255, 255, 255, 0.059);
+	/*Was removed in build so force it to keep it*/
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	border: var(--glass-border-width) solid;
+	border-color: var(--glass-border-color);
 	box-shadow: var(--frosted-shadow);
 }
 
 @utility frosted-glass-shadow {
-	backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
-	-webkit-backdrop-filter: blur(5px);
-	border: 1px solid rgba(255, 255, 255, 0.059);
+	/*Was removed in build so force it to keep it*/
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	border: var(--glass-border-width) solid;
+	border-color: var(--glass-border-color);
 	box-shadow: var(--frosted-shadow-lg);
 }
 
 @layer components {
+	.frosted-glass:not(select),
+	.frosted-glass-shadow:not(select) {
+		background-image: var(--glass-sheen);
+	}
+
 	[data-tooltip]:not([data-tooltip='false']) {
 		@apply relative;
 	}
@@ -119,9 +240,12 @@ html[data-flat='true'] .shadow-lg {
 		@apply shadow-lg;
 
 		isolation: isolate;
-		backdrop-filter: blur(5px) !important; /*Was removed in build so force it to keep it*/
-		-webkit-backdrop-filter: blur(5px);
-		border: 1px solid rgba(255, 255, 255, 0.059);
+		background-image: var(--glass-sheen);
+		/*Was removed in build so force it to keep it*/
+		backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) !important;
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+		border: var(--glass-border-width) solid;
+		border-color: var(--glass-border-color);
 		box-shadow: var(--frosted-shadow);
 	}
 

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
-	import { themeStore } from '$lib/stores/theme.svelte';
+	import { themeStore, themeStyles, type ThemeStyle } from '$lib/stores/theme.svelte';
+	import { tKey } from '$lib/t-key';
 	import { formatHex } from 'culori';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
@@ -16,6 +17,15 @@
 	let selectedBackgroundType = $state('circles');
 
 	let flatMode = $state(false);
+
+	const themeStyleLabels: Record<ThemeStyle, string> = {
+		liquid: tKey('settings.appearance.theme-liquid'),
+		frosted: tKey('settings.appearance.theme-frosted')
+	};
+
+	function handleThemeStyleChange(event: Event) {
+		themeStore.setThemeStyle((event.target as HTMLSelectElement).value as ThemeStyle);
+	}
 
 	function handleAccentColorChange(color: string) {
 		selectedAccentColor = color;
@@ -45,6 +55,19 @@
 	});
 </script>
 
+<p class="mt-4 mb-1 text-xl font-bold">{$t('settings.appearance.theme')}</p>
+
+<select
+	onchange={handleThemeStyleChange}
+	class="w-44 rounded-full border-2 frosted-glass border-gray-600 bg-gray-800/(--glass-fill-60) p-2.5 px-4 font-medium text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
+>
+	{#each themeStyles as style (style)}
+		<option selected={style === themeStore.themeStyle} value={style}
+			>{$t(themeStyleLabels[style])}</option
+		>
+	{/each}
+</select>
+
 <p class="mt-4 mb-1 text-xl font-bold">{$t('settings.appearance.accent-color')}</p>
 {#if currentAccentColor}
 	<ColorPicker
@@ -63,7 +86,7 @@
 
 <p class="mt-4 mb-1 text-lg font-bold">{$t('settings.appearance.preview')}</p>
 <div class="flex w-fit flex-col items-end gap-2 rounded-xl border border-gray-400 p-4">
-	<div class="relative w-fit rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow">
+	<div class="relative w-fit rounded-2xl frosted-glass-shadow bg-accent-700/(--glass-tint-60) p-3">
 		<p class="pr-8">{$t('settings.appearance.preview-message-1')}</p>
 		<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
 			{new Date().toLocaleTimeString([], {
@@ -72,7 +95,7 @@
 			})}
 		</div>
 	</div>
-	<div class="relative w-fit rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow">
+	<div class="relative w-fit rounded-2xl frosted-glass-shadow bg-accent-700/(--glass-tint-60) p-3">
 		<p class="pr-8">{$t('settings.appearance.preview-message-2')}</p>
 		<div class="absolute right-2 bottom-1 text-xs text-gray-300 opacity-70">
 			{new Date().toLocaleTimeString([], {
@@ -82,7 +105,7 @@
 		</div>
 	</div>
 
-	<div class="flex items-center gap-2 rounded-xl bg-gray-800/60 p-3 frosted-glass">
+	<div class="flex items-center gap-2 rounded-xl frosted-glass bg-gray-800/(--glass-fill-60) p-3">
 		<div class="h-6 w-5 rounded-full bg-accent-100"></div>
 		<div class="h-6 w-5 rounded-full bg-accent-50"></div>
 		<div class="h-6 w-5 rounded-full bg-accent-200"></div>
@@ -101,7 +124,7 @@
 
 <select
 	onchange={handleBackgroundChange}
-	class="w-32 rounded-full border-2 border-gray-600 bg-gray-800/60 p-2.5 px-4 font-medium text-white placeholder-gray-400 frosted-glass focus:border-blue-500 focus:ring-blue-500"
+	class="w-32 rounded-full border-2 frosted-glass border-gray-600 bg-gray-800/(--glass-fill-60) p-2.5 px-4 font-medium text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
 >
 	{#each backgroundTypes as type, index}
 		<option selected={type === selectedBackgroundType} value={type}

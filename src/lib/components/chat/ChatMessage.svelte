@@ -110,7 +110,7 @@
 
 		<!-- Chat message bubble -->
 		<div
-			class="relative max-w-full rounded-2xl bg-gray-700/60 p-3 frosted-glass-shadow {message.isEdited
+			class="relative max-w-full rounded-2xl bg-gray-700/(--glass-fill-60) p-3 frosted-glass-shadow {message.isEdited
 				? 'min-w-24 pb-5'
 				: ''}"
 		>

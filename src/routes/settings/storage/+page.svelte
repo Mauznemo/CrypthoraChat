@@ -36,6 +36,6 @@
 
 <button
 	onclick={handleClearCachedMedia}
-	class="cursor-pointer rounded-full bg-red-800/40 px-4 py-2 text-white frosted-glass hover:bg-red-600/40"
+	class="cursor-pointer rounded-full frosted-glass bg-red-800/(--glass-tint-40) px-4 py-2 text-white hover:bg-red-600/(--glass-tint-40)"
 	>{$t('settings.storage.clear-media')}</button
 >

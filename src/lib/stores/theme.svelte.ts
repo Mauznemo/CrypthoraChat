@@ -2,6 +2,12 @@ import { formatHex, oklch, type Oklch } from 'culori';
 type ColorShade = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950;
 type ColorScale = Record<ColorShade, string>;
 
+export type ThemeStyle = 'liquid' | 'frosted';
+export const themeStyles: ThemeStyle[] = ['liquid', 'frosted'];
+
+/** Anyone who never picked a theme gets this one. */
+const defaultThemeStyle: ThemeStyle = 'liquid';
+
 class Theme {
 	private generateColorScale(baseColor: string): ColorScale {
 		const base = oklch(baseColor) as Oklch;
@@ -37,6 +43,7 @@ class Theme {
 	}
 
 	backgroundType: 'circles' | 'gradient' | 'solid' = $state('circles');
+	themeStyle: ThemeStyle = $state(defaultThemeStyle);
 	flatMode = $state(false);
 	themeLoaded = $state(false);
 
@@ -49,6 +56,12 @@ class Theme {
 		localStorage.setItem('themeBaseColor', color);
 	}
 
+	setThemeStyle(style: ThemeStyle) {
+		this.themeStyle = style;
+		localStorage.setItem('themeStyle', style);
+		document.documentElement.dataset.theme = style;
+	}
+
 	setFlatMode(enabled: boolean) {
 		this.flatMode = enabled;
 		localStorage.setItem('flatMode', enabled ? 'true' : 'false');
@@ -56,6 +69,12 @@ class Theme {
 	}
 
 	loadTheme() {
+		const themeStyle = localStorage.getItem('themeStyle');
+		this.themeStyle = themeStyles.includes(themeStyle as ThemeStyle)
+			? (themeStyle as ThemeStyle)
+			: defaultThemeStyle;
+		document.documentElement.dataset.theme = this.themeStyle;
+
 		this.flatMode = localStorage.getItem('flatMode') === 'true';
 		document.documentElement.dataset.flat = this.flatMode ? 'true' : 'false';
 

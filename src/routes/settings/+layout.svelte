@@ -24,7 +24,7 @@
 	class="w-full p-2"
 >
 	<div
-		class="flex items-center justify-start gap-2 rounded-full bg-accent-600/20 px-5 py-3 frosted-glass-shadow"
+		class="flex items-center justify-start gap-2 rounded-full frosted-glass-shadow bg-accent-600/(--glass-tint-20) px-5 py-3"
 	>
 		{#if page.url.pathname !== '/settings'}
 			<BackButton backPath="/settings" />

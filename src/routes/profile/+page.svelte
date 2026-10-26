@@ -82,7 +82,7 @@
 	class="flex flex-col items-center p-8"
 >
 	<div
-		class="flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl bg-gray-800/60 p-4 frosted-glass"
+		class="flex w-full max-w-[500px] flex-col items-stretch gap-2 rounded-4xl frosted-glass bg-gray-800/(--glass-fill-60) p-4"
 	>
 		<div class="flex gap-2">
 			<BackButton backPath="/chat" />
@@ -200,7 +200,7 @@
 						}
 					});
 				}}
-				class="mt-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
+				class="mt-2 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 hover:bg-accent-600/(--glass-tint-50)"
 				>{$t('profile.change-password')}</button
 			>
 		{/if}
@@ -242,7 +242,7 @@
 					selectedFile = null;
 					toastStore.success($t('profile.update-success'));
 				}}
-				class="mt-5 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
+				class="mt-5 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 hover:bg-accent-600/(--glass-tint-50)"
 			>
 				{#if loadingSave}
 					<LoadingSpinner size="1.5rem" />
@@ -266,7 +266,7 @@
 					}
 				});
 			}}
-			class="mb-2 cursor-pointer rounded-full bg-red-800/40 px-4 py-2 frosted-glass hover:bg-red-600/40"
+			class="mb-2 cursor-pointer rounded-full frosted-glass bg-red-800/(--glass-tint-40) px-4 py-2 hover:bg-red-600/(--glass-tint-40)"
 			>{$t('profile.logout')}</button
 		>
 	</div>

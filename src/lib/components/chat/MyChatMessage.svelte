@@ -105,7 +105,7 @@
 	<div onmouseenter={onHover} class="message-bubble relative flex max-w-full flex-col items-end lg:max-w-[70%]">
 		<!-- Chat message bubble -->
 		<div
-			class="relative max-w-full rounded-2xl bg-accent-700/60 p-3 frosted-glass-shadow {message.isEdited
+			class="relative max-w-full rounded-2xl bg-accent-700/(--glass-tint-60) p-3 frosted-glass-shadow {message.isEdited
 				? 'min-w-24 pb-5'
 				: ''}"
 		>

@@ -204,7 +204,7 @@
 
 									toastStore.success($t('chat.info-bar.updated-successfully'));
 								}}
-								class="mb-2 cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 frosted-glass hover:bg-accent-600/50"
+								class="mb-2 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 hover:bg-accent-600/(--glass-tint-50)"
 								>{$t('common.save')}</button
 							>
 						{/if}

@@ -400,7 +400,7 @@
 		in:scale={{ duration: 200, easing: expoInOut }}
 		out:scale={{ duration: 200, easing: expoInOut }}
 		onwheel={handleWheel}
-		class="pointer-events-auto absolute z-20 flex items-center space-x-1 rounded-xl bg-gray-800/60 p-1 frosted-glass-shadow transition-all duration-200"
+		class="pointer-events-auto absolute z-20 flex items-center space-x-1 rounded-xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-1 transition-all duration-200"
 		style="top: {toolbarPosition.y}px; {activeMessageFromMe
 			? `right: ${toolbarPosition.x}px`
 			: `left: ${toolbarPosition.x}px`};"

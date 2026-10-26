@@ -94,7 +94,7 @@
 		tabindex="0"
 	>
 		<div
-			class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 text-white frosted-glass-shadow"
+			class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) text-white"
 		>
 			<h1 class="mx-5 my-5 text-center text-2xl font-bold lg:mx-14 lg:my-8 lg:text-4xl">
 				{$t('chat.add-user-to-chat.add-users-to', {
@@ -120,7 +120,7 @@
 			<button
 				onclick={handleAddUser}
 				disabled={selectedUsers.length < 1 || loading}
-				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+				class="m-10 mt-7 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-8 py-4 font-semibold transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400"
 				>{selectedUsers.length === 1
 					? $t('chat.add-user-to-chat.add-user')
 					: $t('chat.add-user-to-chat.add-users')}</button

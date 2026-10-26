@@ -83,7 +83,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl bg-gray-800/60 p-6 frosted-glass-shadow"
+			class="m-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-6"
 		>
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-xl font-semibold text-gray-100">
@@ -149,14 +149,14 @@
 			<div class="mt-6 flex justify-end gap-3">
 				<button
 					onclick={() => passwordConfirmStore.close()}
-					class="cursor-pointer rounded-full bg-gray-700 px-4 py-2 font-medium text-gray-100 frosted-glass transition-colors hover:bg-gray-600"
+					class="cursor-pointer rounded-full frosted-glass bg-gray-700/(--glass-fill-100) px-4 py-2 font-medium text-gray-100 transition-colors hover:bg-gray-600/(--glass-fill-100)"
 				>
 					{$t('common.cancel')}
 				</button>
 				<button
 					onclick={submit}
 					disabled={isChecking || !password}
-					class="cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50 disabled:cursor-not-allowed disabled:bg-gray-600/60 disabled:text-gray-400"
+					class="cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 font-medium text-white transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:cursor-not-allowed disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400"
 				>
 					{$t('common.confirm')}
 				</button>

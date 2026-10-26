@@ -12,6 +12,8 @@
 			try {
 				document.documentElement.dataset.flat =
 					localStorage.getItem('flatMode') === 'true' ? 'true' : 'false';
+				document.documentElement.dataset.theme =
+					localStorage.getItem('themeStyle') === 'frosted' ? 'frosted' : 'liquid';
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

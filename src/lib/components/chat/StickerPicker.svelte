@@ -215,7 +215,7 @@
 		class="absolute bottom-20 z-10 w-[90%] md:w-[50%]"
 	>
 		<div
-			class="mini-scrollbar flex h-[300px] w-full flex-wrap items-start justify-start gap-4 overflow-y-auto rounded-2xl bg-gray-600/60 p-6 frosted-glass"
+			class="mini-scrollbar flex h-[300px] w-full flex-wrap items-start justify-start gap-4 overflow-y-auto rounded-2xl frosted-glass bg-gray-600/(--glass-fill-60) p-6"
 		>
 			<!-- A real navigation, not `goto`: the editor's background removal needs the looser CSP
 			that hooks.server.ts attaches to that route, and a client-side navigation would keep
@@ -225,7 +225,7 @@
 				class="flex size-24 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
 			>
 				<div
-					class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-600 frosted-glass"
+					class="flex h-12 w-12 items-center justify-center rounded-full frosted-glass bg-gray-600/(--glass-fill-100)"
 				>
 					<IconMdiStickerPlusOutline class="size-6" />
 				</div>
@@ -236,7 +236,7 @@
 				class="flex size-24 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-800/60 hover:bg-gray-800/40"
 			>
 				<div
-					class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-600 frosted-glass"
+					class="flex h-12 w-12 items-center justify-center rounded-full frosted-glass bg-gray-600/(--glass-fill-100)"
 				>
 					<IconMdiImport class="size-6" />
 				</div>

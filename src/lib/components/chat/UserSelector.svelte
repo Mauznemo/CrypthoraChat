@@ -93,7 +93,7 @@
 			oninput={filterUsers}
 			bind:value={searchValue}
 			type="text"
-			class="my-2 w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+			class="my-2 w-full rounded-full frosted-glass bg-gray-600/(--glass-fill-100) px-3 py-3 text-sm text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 			placeholder={$t('chat.user-select.search-users-placeholder')}
 		/>
 		<ul class="mini-scrollbar overflow-y-auto">

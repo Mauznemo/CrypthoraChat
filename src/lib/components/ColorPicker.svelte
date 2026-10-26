@@ -112,7 +112,7 @@
 	<button
 		bind:this={buttonElement}
 		onclick={() => (isOpen = !isOpen)}
-		class="flex items-center gap-3 rounded-full border-2 bg-gray-800/60 p-6 px-4 py-2 pl-2 shadow-sm frosted-glass transition-colors hover:border-gray-400"
+		class="flex items-center gap-3 rounded-full border-2 frosted-glass bg-gray-800/(--glass-fill-60) p-6 px-4 py-2 pl-2 transition-colors hover:border-gray-400"
 	>
 		<div
 			class="h-8 w-8 rounded-full border-2 border-gray-700 shadow-inner"
@@ -132,7 +132,7 @@
 	{#if isOpen}
 		<div
 			bind:this={popupElement}
-			class="fixed z-50 min-w-[280px] rounded-4xl border bg-gray-800/60 p-4 frosted-glass-shadow"
+			class="fixed z-50 min-w-[280px] rounded-4xl border frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-4"
 			style="top: {popupPosition.top}px; left: {popupPosition.left}px;"
 		>
 			<div class="mb-4">
@@ -187,7 +187,7 @@
 					isOpen = false;
 					onColorChange(color);
 				}}
-				class="mt-4 w-full cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 font-medium text-white frosted-glass transition-colors hover:bg-accent-600/50"
+				class="mt-4 w-full cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 font-medium text-white transition-colors hover:bg-accent-600/(--glass-tint-50)"
 			>
 				{$t('common.done')}
 			</button>

@@ -61,7 +61,7 @@
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;');
 
-			const mentionHtml = `<span class="bg-violet-800/60 frosted-glass px-2 pb-0.5 rounded-full text-gray-300 font-bold">@${mention.username}</span>`;
+			const mentionHtml = `<span class="bg-violet-800/(--glass-tint-60) frosted-glass px-2 pb-0.5 rounded-full text-gray-300 font-bold">@${mention.username}</span>`;
 
 			processedText = processedText.replace(escapedMention, mentionHtml);
 		});
@@ -363,7 +363,7 @@
 	inputmode="text"
 	style:max-height={maxHeight}
 	style:min-height={minHeight}
-	class="no-scrollbar flex-1 resize-none overflow-y-auto rounded-4xl border bg-gray-600 px-4 pt-2.5 text-white frosted-glass placeholder:text-gray-300 empty:before:text-gray-300 empty:before:content-[attr(aria-placeholder)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+	class="no-scrollbar flex-1 resize-none overflow-y-auto rounded-4xl border frosted-glass bg-gray-600/(--glass-fill-100) px-4 pt-2.5 text-white placeholder:text-gray-300 empty:before:text-gray-300 empty:before:content-[attr(aria-placeholder)] focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
 	class:cursor-not-allowed={disabled}
 	oninput={handleInput}
 	onkeydown={handleKeyDown}

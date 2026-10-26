@@ -538,21 +538,21 @@
 			<button
 				onclick={handleImportClick}
 				data-tooltip={$t('utils.sticker-editor.add-image')}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40)"
 			>
 				<IconMdiImagePlus class="size-6" />
 			</button>
 			<button
 				onclick={handleImportClick}
 				data-tooltip={$t('utils.sticker-editor.add-sticker')}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40)"
 			>
 				<IconMdiStickerPlusOutline class="size-6" />
 			</button>
 			<button
 				onclick={handleAddText}
 				data-tooltip={$t('utils.sticker-editor.add-text')}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40)"
 			>
 				<IconMdiFormatText class="size-6" />
 			</button>
@@ -560,7 +560,7 @@
 				onclick={handleDuplicate}
 				data-tooltip={$t('utils.sticker-editor.duplicate')}
 				disabled={!selectedObj}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40) disabled:bg-gray-500/(--glass-fill-40) disabled:text-gray-400 disabled:hover:bg-gray-500/(--glass-fill-40) disabled:hover:text-gray-400"
 			>
 				<IconMdiContentCopy class="size-6" />
 			</button>
@@ -568,7 +568,7 @@
 				onclick={handleRemoveBackground}
 				data-tooltip={$t('utils.sticker-editor.remove-background')}
 				disabled={!selectedObj || removingBackground || selectedObj.backgroundRemoved}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40) disabled:bg-gray-500/(--glass-fill-40) disabled:text-gray-400 disabled:hover:bg-gray-500/(--glass-fill-40) disabled:hover:text-gray-400"
 			>
 				<IconMaterialSymbolsLightBackgroundReplaceRounded class="size-6" />
 			</button>
@@ -578,7 +578,7 @@
 					? $t('utils.sticker-editor.unlock-aspect-ratio')
 					: $t('utils.sticker-editor.lock-aspect-ratio')}
 				disabled={!selectedObj}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40) disabled:bg-gray-500/(--glass-fill-40) disabled:text-gray-400 disabled:hover:bg-gray-500/(--glass-fill-40) disabled:hover:text-gray-400"
 			>
 				{#if aspectRatioLocked}
 					<IconMdiLock class="size-6" />
@@ -590,7 +590,7 @@
 				onclick={handleDelete}
 				data-tooltip={$t('common.delete')}
 				disabled={!selectedObj}
-				class="rounded-full bg-accent-600/40 px-4 py-2 font-medium frosted-glass transition-colors hover:bg-accent-500/40 disabled:bg-gray-500/40 disabled:text-gray-400 disabled:hover:bg-gray-500/40 disabled:hover:text-gray-400"
+				class="rounded-full frosted-glass bg-accent-600/(--glass-tint-40) px-4 py-2 font-medium transition-colors hover:bg-accent-500/(--glass-tint-40) disabled:bg-gray-500/(--glass-fill-40) disabled:text-gray-400 disabled:hover:bg-gray-500/(--glass-fill-40) disabled:hover:text-gray-400"
 			>
 				<IconMdiDeleteForever class="size-6" />
 			</button>
@@ -675,7 +675,7 @@
 			<button
 				onclick={handleSaveSticker}
 				disabled={objects.length === 0}
-				class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+				class="m-10 mt-7 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-8 py-4 font-semibold transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400"
 			>
 				{$t('utils.sticker-editor.save-sticker')}
 			</button>

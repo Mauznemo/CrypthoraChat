@@ -47,7 +47,7 @@
 		bind:this={menuElement}
 		in:scale={{ duration: 200, easing: expoInOut }}
 		out:scale={{ duration: 200, easing: expoInOut }}
-		class="fixed z-50 min-w-48 rounded-2xl bg-gray-800/60 py-2 frosted-glass"
+		class="fixed z-50 min-w-48 rounded-2xl frosted-glass bg-gray-800/(--glass-fill-60) py-2"
 		style="left: {contextMenuStore.position.x}px; top: {contextMenuStore.position.y}px;"
 	>
 		{#each contextMenuStore.items as item}
@@ -71,7 +71,7 @@
 		bind:this={menuElement}
 		in:fly={{ y: 200, duration: 500, easing: expoInOut }}
 		out:fly={{ y: 200, duration: 500, easing: expoInOut }}
-		class="fixed right-0 bottom-0 left-0 z-50 rounded-t-4xl bg-gray-800/60 frosted-glass"
+		class="fixed right-0 bottom-0 left-0 z-50 rounded-t-4xl frosted-glass bg-gray-800/(--glass-fill-60)"
 	>
 		<!-- Handle -->
 		<div class="flex justify-center py-3">

@@ -171,7 +171,7 @@
 		<div
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
-			class="mx-2 w-full max-w-md rounded-4xl bg-gray-800/60 p-4 frosted-glass-shadow"
+			class="mx-2 w-full max-w-md rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60) p-4"
 		>
 			<button
 				onclick={() => emojiVerificationStore.close(false)}
@@ -206,12 +206,12 @@
 			<div class="mt-5 p-5">
 				<button
 					onclick={() => emojiVerificationStore.close(true)}
-					class="mb-5 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass transition-colors hover:bg-accent-600/50 focus:ring-blue-500"
+					class="mb-5 w-full cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) py-3 text-white transition-colors hover:bg-accent-600/(--glass-tint-50) focus:ring-blue-500"
 					>{$t('utils.emoji-key-verification.match')}</button
 				>
 				<button
 					onclick={() => emojiVerificationStore.close(false)}
-					class="w-full cursor-pointer rounded-full bg-red-800/40 py-3 text-white frosted-glass transition-colors hover:bg-red-600/40 focus:ring-blue-500"
+					class="w-full cursor-pointer rounded-full frosted-glass bg-red-800/(--glass-tint-40) py-3 text-white transition-colors hover:bg-red-600/(--glass-tint-40) focus:ring-blue-500"
 					>{$t('utils.emoji-key-verification.fail')}</button
 				>
 			</div>

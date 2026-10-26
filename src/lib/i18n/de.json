@@ -282,6 +282,9 @@
     },
     "appearance": {
       "background": "Hintergrund",
+      "theme": "Design",
+      "theme-liquid": "Liquid Glass",
+      "theme-frosted": "Frosted Glass",
       "accent-color": "Akzentfarbe",
       "background-tint": "Farbe",
       "bottom-right": "Unten rechts",

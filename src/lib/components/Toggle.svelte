@@ -14,7 +14,7 @@
 	<div class="relative">
 		<input type="checkbox" class="peer sr-only" bind:checked onchange={() => onchange?.(checked)} />
 		<div
-			class="peer h-8 w-14 rounded-full bg-gray-700/40 frosted-glass transition-colors peer-checked:bg-accent-600/60"
+			class="peer h-8 w-14 rounded-full frosted-glass bg-gray-700/(--glass-fill-40) transition-colors peer-checked:bg-accent-600/(--glass-tint-60)"
 		></div>
 		<div
 			class="absolute top-1 left-1 h-6 w-6 rounded-full bg-white transition-transform peer-checked:translate-x-6"

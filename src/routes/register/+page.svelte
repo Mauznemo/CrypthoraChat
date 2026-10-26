@@ -27,7 +27,7 @@
 </script>
 
 <div class="flex min-h-dvh items-center justify-center">
-	<div class="m-4 w-[400px] rounded-4xl bg-gray-800/60 p-5 frosted-glass">
+	<div class="m-4 w-[400px] rounded-4xl frosted-glass bg-gray-800/(--glass-fill-60) p-5">
 		<h1 class="mb-4 text-2xl">{$t('login.register')}</h1>
 
 		<form
@@ -53,7 +53,7 @@
 			<div class="mb-4">
 				<label class="mb-2" for="username">{$t('login.username')}</label>
 				<input
-					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full frosted-glass bg-gray-600/(--glass-fill-100) px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type="text"
 					id="username"
 					name="username"
@@ -65,7 +65,7 @@
 			<div class="relative mb-4">
 				<label class="mb-2" for="password">{$t('login.password')}</label>
 				<input
-					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full frosted-glass bg-gray-600/(--glass-fill-100) px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
 					id="password"
 					name="password"
@@ -88,7 +88,7 @@
 			<div class="relative mb-10">
 				<label class="mb-2" for="password">{$t('login.confirm-password')}</label>
 				<input
-					class="w-full rounded-full bg-gray-600 px-3 py-3 text-sm text-white frosted-glass focus:ring-2 focus:ring-blue-500 focus:outline-none"
+					class="w-full rounded-full frosted-glass bg-gray-600/(--glass-fill-100) px-3 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					type={showPassword ? 'text' : 'password'}
 					id="confirmPassword"
 					name="confirmPassword"
@@ -109,7 +109,7 @@
 			</div>
 
 			<button
-				class="mb-4 w-full cursor-pointer rounded-full bg-accent-700/60 py-3 text-white frosted-glass hover:bg-accent-600/50 focus:ring-blue-500"
+				class="mb-4 w-full cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) py-3 text-white hover:bg-accent-600/(--glass-tint-50) focus:ring-blue-500"
 				type="submit">{$t('login.register')}</button
 			>
 			<input

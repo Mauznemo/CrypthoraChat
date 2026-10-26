@@ -274,6 +274,9 @@
       "open-wrapper-settings": "Wrapper Settings"
     },
     "appearance": {
+      "theme": "Theme",
+      "theme-liquid": "Liquid Glass",
+      "theme-frosted": "Frosted Glass",
       "accent-color": "Accent Color",
       "flat-mode": "Flat Mode",
       "preview": "Preview",

@@ -139,7 +139,7 @@
 			in:scale={{ duration: 200, easing: expoInOut }}
 			out:scale={{ duration: 200, easing: expoInOut }}
 			bind:this={pickerElement}
-			class="fixed flex h-96 w-80 flex-col rounded-4xl bg-gray-800/60 frosted-glass-shadow"
+			class="fixed flex h-96 w-80 flex-col rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60)"
 			style="left: {adjustedPosition.x}px; top: {adjustedPosition.y}px;"
 		>
 			<!-- Header with search -->

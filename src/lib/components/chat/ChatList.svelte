@@ -206,7 +206,7 @@
 		<button
 			onclick={() => onCreateChat()}
 			disabled={!socketStore.connected}
-			class="cursor-pointer rounded-full bg-accent-700/60 px-4 py-2 text-sm font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400"
 			>{$t('chat.chat-list.new-chat')}</button
 		>
 	</div>

@@ -63,7 +63,7 @@
 
 <div class="flex min-h-dvh items-center justify-center">
 	<div
-		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl bg-gray-800/60 frosted-glass-shadow"
+		class="m-4 flex w-full max-w-[500px] flex-col items-stretch rounded-4xl frosted-glass-shadow bg-gray-800/(--glass-fill-60)"
 	>
 		<div class="my-5 flex items-center gap-2 px-5 lg:my-8">
 			<BackButton backPath="/chat" />
@@ -80,7 +80,7 @@
 		<button
 			onclick={handleDmGroup}
 			disabled={!selectedUser || loading}
-			class="m-10 mt-7 cursor-pointer rounded-full bg-accent-700/60 px-8 py-4 font-semibold frosted-glass transition-colors hover:bg-accent-600/50 disabled:bg-gray-600/60 disabled:text-gray-400 disabled:hover:bg-gray-600/60 disabled:hover:text-gray-400"
+			class="m-10 mt-7 cursor-pointer rounded-full frosted-glass bg-accent-700/(--glass-tint-60) px-8 py-4 font-semibold transition-colors hover:bg-accent-600/(--glass-tint-50) disabled:bg-gray-600/(--glass-fill-60) disabled:text-gray-400 disabled:hover:bg-gray-600/(--glass-fill-60) disabled:hover:text-gray-400"
 		>
 			{#if loading}
 				<LoadingSpinner size="1.5rem" />
