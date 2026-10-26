@@ -38,6 +38,12 @@
 	let inputField: CustomTextarea;
 	let chatInput: ChatInput;
 	let sideBar: SideBar;
+
+	// Measured, not assumed: the header grows a second line when a DM is online or the socket is
+	// down, and the composer grows with a reply preview, attachments and a multi-line draft. The
+	// messages pad themselves by these so the first and last one can still scroll into the clear.
+	let headerHeight = $state(0);
+	let composerHeight = $state(0);
 	let otherDmUser = $derived(getOtherDmUser(chatStore.activeChat, chatStore.user?.id));
 	let chatName: string | null = $derived.by(() => {
 		if (chatStore.activeChat) {
@@ -373,92 +379,126 @@
 		<button
 			onclick={() => goto('/settings')}
 			style="bottom: {layoutStore.safeAreaPadding.bottom + 8}px;"
-			class="absolute left-2 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white"
+			class="absolute left-2 cursor-pointer rounded-full frosted-glass bg-gray-600/(--glass-fill-100) p-2 text-sm font-bold text-gray-200 transition-colors hover:bg-gray-500/(--glass-fill-100) hover:text-white"
 			><IconMdiGear class="size-6" /></button
 		>
 	</SideBar>
 
-	<div
-		style="padding-top: {layoutStore.safeAreaPadding.top}px; padding-bottom: {layoutStore
-			.safeAreaPadding.bottom + 8}px;"
-		class="flex min-w-0 flex-1 flex-col p-2"
-	>
-		<div class="mb-5 flex h-15 w-full items-center justify-start space-x-2">
-			<!-- Menu button - only shown on mobile -->
-			<button
-				class="flex h-12 w-12 items-center justify-center rounded-full pt-1 text-3xl hover:bg-gray-700 md:hidden"
-				onclick={sideBar.toggle}
-			>
-				☰
-			</button>
-
-			<div class="flex items-center">
-				<div>
-					{#if socketStore.connected}
-						{@const dmOnline = presenceStore.isOnline(otherDmUser?.id)}
-						<p
-							class="line-clamp-1 px-3 text-3xl font-extrabold break-all text-white {dmOnline
-								? 'pt-3'
-								: 'py-2'}"
-						>
-							{chatName || $t('chat.chat')}
-						</p>
-						{#if dmOnline}
-							<div class="flex items-center space-x-1.5 px-3 pb-1">
-								<span class="size-2 rounded-full bg-green-500"></span>
-								<p class="text-sm text-white/60">{$t('chat.online')}</p>
-							</div>
-						{/if}
-					{:else}
-						<p class="line-clamp-1 px-3 pt-3 text-3xl font-extrabold break-all text-white">
-							{chatName || $t('chat.chat')} - {$t('common.offline')}
-						</p>
-						<p class="font-semi px-3 pb-1 text-sm text-white/60">
-							{$t('chat.offline-message')}
-						</p>
-					{/if}
+	<!--
+		The messages fill the column on their own and both bars float over them, rather than the
+		three sharing a flex column. In a column the scroll container ends where the bars begin,
+		so a message was clipped against a hard edge at the top and the bottom; now it passes
+		behind them. The bars carry the safe area insets themselves, so the messages can scroll
+		all the way under the notch too.
+	-->
+	<div class="relative min-w-0 flex-1">
+		<div class="absolute inset-0">
+			{#if !chatStore.activeChat && !chatStore.loadingChat}
+				<div class="flex h-full items-center justify-center">
+					<p class="text-2xl font-bold">{$t('chat.no-selected-chat')}</p>
 				</div>
+			{/if}
+
+			{#if chatStore.loadingChat}
+				<div class="flex h-full items-center justify-center">
+					<LoadingSpinner />
+				</div>
+			{:else if chatStore.activeChat}
+				<ChatMessages
+					bind:scrollView={chatStore.scrollView!}
+					topInset={headerHeight}
+					bottomInset={composerHeight}
+					onEdit={(message) => {
+						chatInput.editMessage(message);
+						inputField.focus();
+					}}
+					onReply={(message) => {
+						chatInput.replyToMessage(message);
+						inputField.focus();
+					}}
+					onDelete={(message) => messages.handleDeleteMessage(message)}
+					onInfo={messages.handleInfoMessage}
+					onReaction={(message, pos) => messages.handleReaction(message, pos, data.user?.id || '')}
+					onUpdateReaction={(message, encryptedReaction, operation) =>
+						messages.handleUpdateReaction(message, encryptedReaction, operation)}
+					onDecryptError={(error, message) =>
+						messages.handleDecryptError(error, message, data.user)}
+				></ChatMessages>
+			{/if}
+		</div>
+
+		<!--
+			Top bar. Frosted rather than solid, so a message stays visible behind it on its way
+			past, and masked so the blur fades out downwards instead of ending on a line.
+		-->
+		<div
+			bind:clientHeight={headerHeight}
+			style="padding-top: {layoutStore.safeAreaPadding.top}px;"
+			class="pointer-events-none absolute inset-x-0 top-0 z-20 px-2"
+		>
+			<div class="chat-top-bar absolute inset-0"></div>
+
+			<div
+				class="pointer-events-auto relative flex h-15 w-full items-center justify-start space-x-2"
+			>
+				<!-- Menu button - only shown on mobile -->
 				<button
-					aria-label="Info"
-					class="size-6 cursor-pointer rounded-full"
-					onclick={() => infoBarStore.openChatInfo()}
+					class="flex h-12 w-12 items-center justify-center rounded-full pt-1 text-3xl hover:bg-gray-700 md:hidden"
+					onclick={sideBar.toggle}
 				>
-					<IconMdiInformationOutline class="h-6 w-6 text-gray-300 hover:text-gray-100" />
+					☰
 				</button>
+
+				<div class="flex items-center">
+					<div>
+						{#if socketStore.connected}
+							{@const dmOnline = presenceStore.isOnline(otherDmUser?.id)}
+							<p
+								class="line-clamp-1 px-3 text-3xl font-extrabold break-all text-white {dmOnline
+									? 'pt-3'
+									: 'py-2'}"
+							>
+								{chatName || $t('chat.chat')}
+							</p>
+							{#if dmOnline}
+								<div class="flex items-center space-x-1.5 px-3 pb-1">
+									<span class="size-2 rounded-full bg-green-500"></span>
+									<p class="text-sm text-white/60">{$t('chat.online')}</p>
+								</div>
+							{/if}
+						{:else}
+							<p class="line-clamp-1 px-3 pt-3 text-3xl font-extrabold break-all text-white">
+								{chatName || $t('chat.chat')} - {$t('common.offline')}
+							</p>
+							<p class="font-semi px-3 pb-1 text-sm text-white/60">
+								{$t('chat.offline-message')}
+							</p>
+						{/if}
+					</div>
+					<button
+						aria-label="Info"
+						class="size-6 cursor-pointer rounded-full"
+						onclick={() => infoBarStore.openChatInfo()}
+					>
+						<IconMdiInformationOutline class="h-6 w-6 text-gray-300 hover:text-gray-100" />
+					</button>
+				</div>
 			</div>
 		</div>
 
-		{#if !chatStore.activeChat && !chatStore.loadingChat}
-			<div class="flex h-full items-center justify-center">
-				<p class="text-2xl font-bold">{$t('chat.no-selected-chat')}</p>
+		<!--
+			Bottom bar. Deliberately nothing behind it: the field and the buttons are glass
+			themselves, so the messages running under them are what they blur.
+		-->
+		<div
+			bind:clientHeight={composerHeight}
+			style="padding-bottom: {layoutStore.safeAreaPadding.bottom + 8}px;"
+			class="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-2"
+		>
+			<div class="pointer-events-auto">
+				<ChatInput bind:this={chatInput} bind:inputField></ChatInput>
 			</div>
-		{/if}
-
-		{#if chatStore.loadingChat}
-			<div class="flex h-full items-center justify-center">
-				<LoadingSpinner />
-			</div>
-		{:else if chatStore.activeChat}
-			<ChatMessages
-				bind:scrollView={chatStore.scrollView!}
-				onEdit={(message) => {
-					chatInput.editMessage(message);
-					inputField.focus();
-				}}
-				onReply={(message) => {
-					chatInput.replyToMessage(message);
-					inputField.focus();
-				}}
-				onDelete={(message) => messages.handleDeleteMessage(message)}
-				onInfo={messages.handleInfoMessage}
-				onReaction={(message, pos) => messages.handleReaction(message, pos, data.user?.id || '')}
-				onUpdateReaction={(message, encryptedReaction, operation) =>
-					messages.handleUpdateReaction(message, encryptedReaction, operation)}
-				onDecryptError={(error, message) => messages.handleDecryptError(error, message, data.user)}
-			></ChatMessages>
-		{/if}
-
-		<ChatInput bind:this={chatInput} bind:inputField></ChatInput>
+		</div>
 	</div>
 
 	<InfoSideBar />
@@ -467,3 +507,21 @@
 <AddUserToChat />
 <BigImagePreview />
 <BigDocumentPreview />
+
+<style>
+	/*
+	 * The top bar is blur and nothing else: no fill, no sheen, no saturation change, so it has
+	 * no colour of its own and takes whatever is behind it. Everything it was given instead -
+	 * a tint, the sheen, a lift or a damp on the saturation - made it a band of a slightly
+	 * different colour from the panels around it, which is exactly what it should not be. The
+	 * only marks it keeps are its own: a definite bottom edge rather than a fade, and the
+	 * theme's hairline on it.
+	 *
+	 * It is its own layer under the title so the frost has nothing of its own to blur through.
+	 */
+	.chat-top-bar {
+		backdrop-filter: blur(var(--glass-blur));
+		-webkit-backdrop-filter: blur(var(--glass-blur));
+		border-bottom: var(--glass-border-width) solid var(--glass-border-color);
+	}
+</style>

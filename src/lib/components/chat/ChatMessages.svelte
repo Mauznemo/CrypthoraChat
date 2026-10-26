@@ -21,6 +21,8 @@
 
 	let {
 		scrollView = $bindable<ScrollView>(),
+		topInset = 0,
+		bottomInset = 0,
 		onEdit,
 		onReply,
 		onDelete,
@@ -30,6 +32,10 @@
 		onDecryptError
 	}: {
 		scrollView: ScrollView;
+		/** Height of the bar floating over the top, so a message can scroll clear of it. */
+		topInset?: number;
+		/** Height of the composer floating over the bottom, same reason. */
+		bottomInset?: number;
 		onEdit: (message: MessageWithRelations) => void;
 		onReply: (message: MessageWithRelations) => void;
 		onDelete: (message: MessageWithRelations) => void;
@@ -329,7 +335,9 @@
 	bind:this={scrollView}
 	bind:container={messageContainer}
 	handleScroll={handleScrollUpdate}
-	class="min-h-0 p-2 pt-6"
+	{bottomInset}
+	class="min-h-0 px-4"
+	style="padding-top: {topInset + 8}px; padding-bottom: {bottomInset + 8}px;"
 >
 	<div use:observeTopElement class="flex h-10 max-w-full flex-col items-center justify-center">
 		{#if isLoadingOlder}

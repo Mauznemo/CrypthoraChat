@@ -8,11 +8,17 @@
 
 	let {
 		class: className = '',
+		style = '',
+		bottomInset = 0,
 		container = $bindable<HTMLElement | null>(),
 		handleScroll,
 		children
 	}: {
 		class?: string;
+		/** Inline style for the scroll container, for insets that have to be measured. */
+		style?: string;
+		/** Height of whatever floats over the bottom, so the down button clears it. */
+		bottomInset?: number;
 		container?: HTMLElement | null;
 		handleScroll?: () => void;
 		children: Snippet;
@@ -157,6 +163,7 @@
 <div
 	bind:this={container}
 	onscroll={onScroll}
+	{style}
 	class={`relative mini-scrollbar h-full overflow-x-hidden overflow-y-auto ${className}`}
 	aria-live="polite"
 >
@@ -172,10 +179,10 @@
 		<button
 			transition:fly|global={{ duration: 500, y: 200 }}
 			onclick={lockToBottom}
-			class="fixed z-50 cursor-pointer rounded-full bg-gray-600 p-2 text-sm font-bold text-gray-200 hover:text-white {infoBarStore.isOpen
+			class="fixed z-50 cursor-pointer rounded-full frosted-glass bg-gray-600/(--glass-fill-100) p-2 text-sm font-bold text-gray-200 transition-colors hover:bg-gray-500/(--glass-fill-100) hover:text-white {infoBarStore.isOpen
 				? 'right-[350px]'
 				: 'right-10'}"
-			style="bottom: {80 + layoutStore.safeAreaPadding.bottom}px;"
+			style="bottom: {bottomInset + 16}px;"
 		>
 			<IconMdiArrowDown class="size-6" />
 		</button>
