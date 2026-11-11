@@ -70,11 +70,23 @@
 		container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 	}
 
+	/** Where the previous scroll event left the container, to tell which way this one went */
+	let lastScrollTop = 0;
+
 	function onScroll() {
 		handleScroll?.();
 		syncScrollState();
+		if (!container) return;
 
-		if (!isNearBottom(10)) {
+		// Only a scroll that went up can mean the user left the bottom. Content growing under a
+		// locked view never moves scrollTop up, but it can land between a pin and the scroll
+		// event that pin queued: a message decrypting or an image loading in that gap made the
+		// event see a view that was no longer at the bottom, and used to drop the lock while
+		// the chat was still loading in.
+		const movedUp = container.scrollTop < lastScrollTop;
+		lastScrollTop = container.scrollTop;
+
+		if (movedUp && !isNearBottom(10)) {
 			if (!allowUnlock) return;
 			lockedToBottom = false;
 		}
